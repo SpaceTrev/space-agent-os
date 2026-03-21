@@ -1,0 +1,35 @@
+# Space-Claw network configuration
+# See .env / .env.example for actual secret values.
+
+tailscale:
+  ip: "100.102.161.30"
+  description: Tailscale node IP for this machine
+
+security:
+  allowed_ips:
+    - "100.102.161.30"  # Tailscale
+    - "127.0.0.1"       # localhost
+  # Env var override: ALLOWED_IPS (comma-separated)
+  allowed_ips_env: ALLOWED_IPS
+
+services:
+  openclaw_gateway:
+    host: localhost
+    port: 18789
+    base_url: "http://localhost:18789"
+    env_override: OPENCLAW_GATEWAY_URL
+    description: OpenClaw WhatsApp gateway (self-hosted)
+
+  ollama:
+    host: localhost
+    port: 11434
+    base_url: "http://localhost:11434"
+    env_override: OLLAMA_BASE_URL
+    description: Ollama local LLM inference server
+
+  space_claw_api:
+    host: "0.0.0.0"
+    port: 8000
+    env_override: API_PORT
+    description: Space-Claw local API (future)
+    bind_to_tailscale: true

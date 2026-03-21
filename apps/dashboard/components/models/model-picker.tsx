@@ -1,0 +1,167 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import { clsx } from 'clsx'
+import { ChevronDown, Search, Zap, DollarSign } from 'lucide-react'
+import { Badge } from '../shared/badge'
+import type { ModelProviderType } from '../../lib/types'
+
+interface ModelOption {
+  id: string
+  name: string
+  provider: ModelProviderType
+  providerName: string
+  contextWindow?: number
+  isFree: boolean
+  inputCostPerMillion?: number
+}
+
+interface ModelPickerProps {
+  value?: string
+  onChange: (modelId: string) => void
+  models: ModelOption[]
+  label?: string
+  disabled?: boolean
+  placeholder?: string
+}
+
+export function ModelPicker({
+  value,
+  onChange,
+  models,
+  label = 'Model',
+  disabled,
+  placeholder = 'Select a model...',
+}: ModelPickerProps) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const selected = models.find((m) => m.id === value)
+
+  const filtered = models.filter(
+    (m) =>
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      m.providerName.toLowerCase().includes(search.toLowerCase())
+  )
+
+  // Group by provider
+  const grouped = filtered.reduce<Record<string, ModelOption[]>>((acc, m) => {
+    if (!acc[m.providerName]) acc[m.providerName] = []
+    acc[m.providerName].push(m)
+    return acc
+  }, {})
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      {label && (
+        <label className="block text-sm font-medium text-gray-300 mb-1.5">{label}</label>
+      )}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((v) => !v)}
+        className={clsx(
+          'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm transition-colors',
+          'bg-gray-900 border-gray-600 hover:border-gray-500 text-left',
+          'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
+          'disabled:opacity-50 disabled:cursor-not-allowed'
+        )}
+      >
+        {selected ? (
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-white truncate">{selected.name}</span>
+            <span className="text-gray-500 text-xs flex-shrink-0">{selected.providerName}</span>
+            {selected.isFree ? (
+              <Badge variant="green" size="sm">Free</Badge>
+            ) : (
+              <Badge variant="gray" size="sm">Paid</Badge>
+            )}
+          </div>
+        ) : (
+          <span className="text-gray-500">{placeholder}</span>
+        )}
+        <ChevronDown className={clsx('w-4 h-4 text-gray-500 flex-shrink-0 transition-transform', open && 'rotate-180')} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden">
+          {/* Search */}
+          <div className="p-2 border-b border-gray-700">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+              <input
+                autoFocus
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search models..."
+                className="w-full pl-8 pr-3 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+
+          <div className="max-h-72 overflow-y-auto">
+            {Object.keys(grouped).length === 0 ? (
+              <p className="px-4 py-6 text-sm text-gray-500 text-center">No models found</p>
+            ) : (
+              Object.entries(grouped).map(([providerName, providerModels]) => (
+                <div key={providerName}>
+                  <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider bg-gray-800/80">
+                    {providerName}
+                  </div>
+                  {providerModels.map((model) => (
+                    <button
+                      key={model.id}
+                      type="button"
+                      onClick={() => {
+                        onChange(model.id)
+                        setOpen(false)
+                        setSearch('')
+                      }}
+                      className={clsx(
+                        'w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-gray-700 transition-colors text-left',
+                        model.id === value && 'bg-gray-700/60'
+                      )}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-gray-200 truncate">{model.name}</span>
+                        {model.contextWindow && (
+                          <span className="text-[10px] text-gray-600 flex-shrink-0">
+                            {model.contextWindow >= 1000 ? `${Math.round(model.contextWindow / 1000)}K ctx` : `${model.contextWindow} ctx`}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {model.isFree ? (
+                          <Badge variant="green" size="sm">
+                            <Zap className="w-2.5 h-2.5" />
+                            Free
+                          </Badge>
+                        ) : model.inputCostPerMillion != null ? (
+                          <span className="text-xs text-gray-500 font-mono">
+                            ${model.inputCostPerMillion.toFixed(2)}/1M
+                          </span>
+                        ) : null}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

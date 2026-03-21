@@ -1,0 +1,150 @@
+services:
+  # ─── Space-Claw Core Assistant ───────────────────────────────────────────────
+  space-claw:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: space-claw-core
+    restart: unless-stopped
+    environment:
+      # Ollama points to host machine (works on macOS/Linux with Docker Desktop)
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      ORCHESTRATOR_MODEL: llama3.3:8b
+      WORKER_MODEL: qwen3-coder:30b-a3b
+      # Anthropic API key for Architect tier — set in .env
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Tailscale mesh — used to advertise endpoints to remote devices
+      TAILSCALE_IP: "100.102.161.30"
+      SPACE_CLAW_WS_URL: "ws://100.102.161.30:8765"
+      SPACE_CLAW_CONTROL_URL: "http://100.102.161.30:8766"
+      # Comma-separated IP allowlist for WS/control API middleware
+      ALLOWED_IPS: ${ALLOWED_IPS:-100.102.161.30,127.0.0.1}
+    env_file:
+      - .env
+    volumes:
+      # Source code (read-write for live reload)
+      - ./agents:/app/agents
+      - ./config:/app/config
+      # Persistent logs on host
+      - ./logs:/app/logs
+      # TASKS files for heartbeat engine
+      - ./TASKS.md:/app/TASKS.md
+      - ./TASKS_DONE.md:/app/TASKS_DONE.md
+    ports:
+      # Bind to Tailscale IP so only devices on the mesh can connect
+      - "100.102.161.30:8765:8765"   # WebSocket API (remote control)
+      - "100.102.161.30:8766:8766"   # HTTP control/status API
+    # Required for host.docker.internal to resolve on Linux hosts
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - space-net
+    depends_on:
+      - sandbox
+      - ollama-proxy
+
+  # ─── Alpine Sandbox (isolated execution environment) ─────────────────────────
+  sandbox:
+    build:
+      context: ./sandbox
+      dockerfile: Dockerfile.sandbox
+    container_name: space-claw-sandbox
+    restart: unless-stopped
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    volumes:
+      # Sandbox has NO access to host filesystem by default.
+      # Only explicitly mounted workspace dirs are accessible.
+      - sandbox-workspace:/workspace
+      - ./logs:/logs:rw
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - space-net
+    # Resource limits to prevent runaway processes
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 8G
+
+  # ─── Heartbeat Engine ─────────────────────────────────────────────────────────
+  heartbeat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: space-claw-heartbeat
+    restart: unless-stopped
+    command: ["python", "-m", "agents.heartbeat"]
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      ORCHESTRATOR_MODEL: llama3.3:8b
+      HEARTBEAT_INTERVAL: "1800"   # 30 minutes
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ./agents:/app/agents
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./TASKS.md:/app/TASKS.md
+      - ./TASKS_DONE.md:/app/TASKS_DONE.md
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - space-net
+
+  # ─── Discord Bot (primary control channel) ───────────────────────────────
+  discord-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: space-claw-discord
+    restart: unless-stopped
+    command: ["python", "-m", "agents.discord_bot"]
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      ORCHESTRATOR_MODEL: llama3.3:8b
+      WORKER_MODEL: qwen3-coder:30b-a3b
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Discord credentials — set in .env
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
+      DISCORD_CHANNEL_ID: ${DISCORD_CHANNEL_ID:-0}
+      TASKS_PATH: /app/TASKS.md
+    env_file:
+      - .env
+    volumes:
+      - ./agents:/app/agents
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./TASKS.md:/app/TASKS.md
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - space-net
+    # No ports needed — bot connects OUT to Discord gateway
+
+  # ─── Nginx → Ollama Proxy (IP allowlist) ────────────────────────────────────
+  ollama-proxy:
+    image: nginx:1.27-alpine
+    container_name: space-claw-ollama-proxy
+    restart: unless-stopped
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      # Proxied Ollama endpoint — restricted by nginx allow/deny
+      - "100.102.161.30:11435:11435"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - space-net
+
+networks:
+  space-net:
+    driver: bridge
+
+volumes:
+  sandbox-workspace:
+    driver: local

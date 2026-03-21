@@ -1,0 +1,21 @@
+{
+  "name": "@space-agent-os/shared",
+  "version": "0.1.0",
+  "description": "Shared TypeScript types and API contracts for Space-Agent-OS",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

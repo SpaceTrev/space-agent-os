@@ -1,0 +1,61 @@
+# Space-Claw model tier configuration
+# See CLAUDE.md for full routing rules.
+
+tiers:
+
+  orchestrator:
+    model: llama3.3:8b
+    provider: ollama
+    base_url: ${OLLAMA_BASE_URL:-http://localhost:11434}
+    description: Fast routing, task triage, heartbeat decisions
+    use_cases:
+      - heartbeat triage
+      - task routing
+      - quick summaries
+      - channel dispatch decisions
+    context_window: 128000
+    max_tokens: 4096
+    temperature: 0.2
+
+  worker:
+    model: qwen3-coder:30b-a3b
+    provider: ollama
+    base_url: ${OLLAMA_BASE_URL:-http://localhost:11434}
+    description: Code generation, implementation, debugging
+    use_cases:
+      - code generation
+      - bug fixes
+      - refactoring (simple)
+      - test writing
+      - shell script generation
+    context_window: 32768
+    max_tokens: 8192
+    temperature: 0.1
+
+  architect:
+    model: claude-opus-4-6
+    provider: anthropic
+    description: Deep reasoning, system design, architecture decisions
+    use_cases:
+      - system architecture
+      - complex refactoring
+      - design reviews
+      - security analysis
+      - long-horizon planning
+    context_window: 200000
+    max_tokens: 16000
+    temperature: 0.3
+    triggers:
+      - /architect
+      - /refactor
+      - /deep
+      - /design
+
+routing:
+  default_tier: worker
+  escalation_tier: architect
+  heartbeat_tier: orchestrator
+  # Prefix triggers for architect escalation (see triggers above)
+  escalate_on_prefix: true
+  # Fallback if Ollama unreachable
+  ollama_fallback: architect

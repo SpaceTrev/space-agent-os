@@ -1,0 +1,20 @@
+FROM alpine:3.19
+
+# Minimal execution environment for untrusted scripts
+# Only explicitly mounted volumes are accessible from the host
+
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    bash \
+    curl \
+    git \
+    jq
+
+WORKDIR /workspace
+
+# Non-root user for safety
+RUN addgroup -S sandbox && adduser -S sandbox -G sandbox
+USER sandbox
+
+CMD ["sh"]

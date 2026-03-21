@@ -1,0 +1,56 @@
+# Space-Claw communication channel configuration
+# Credentials are NEVER stored here -- use .env or environment variables.
+
+channels:
+
+  whatsapp:
+    enabled: true
+    provider: openclaw
+    gateway_url: ${OPENCLAW_GATEWAY_URL:-http://localhost:18789}
+    token_env: OPENCLAW_TOKEN
+    poll_endpoint: /api/messages
+    send_endpoint: /api/send
+    poll_method: GET
+    auth: bearer
+    description: WhatsApp via OpenClaw self-hosted gateway
+    command_prefix: "!task"
+    capabilities:
+      - receive_messages
+      - queue_tasks
+      - send_replies  # TODO: implement send
+
+  gmail:
+    enabled: false  # pending MCP gmail integration
+    provider: google
+    auth: oauth2
+    scopes:
+      - https://www.googleapis.com/auth/gmail.readonly
+      - https://www.googleapis.com/auth/gmail.send
+    urgent_label: URGENT
+    description: Gmail via MCP gmail tool
+    capabilities:
+      - fetch_urgent  # TODO: wire up
+      - send_reply    # TODO: wire up
+
+  discord:
+    enabled: true
+    provider: discord
+    token_env: DISCORD_BOT_TOKEN
+    guild_id_env: DISCORD_GUILD_ID
+    channel_id_env: DISCORD_CHANNEL_ID
+    description: Discord notifications via REST API
+    capabilities:
+      - send_notification  # stub -- full impl pending
+    # Full discord.py bot integration is a future task
+
+  slack:
+    enabled: false
+    provider: slack
+    description: Slack integration -- not yet configured
+    capabilities: []
+
+  imessage:
+    enabled: false
+    provider: apple
+    description: iMessage via AppleScript MCP -- not yet configured
+    capabilities: []

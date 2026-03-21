@@ -1,0 +1,145 @@
+// ============================================================
+// Agent OS — OpenRouter Provider (OpenAI-compatible API)
+// Supports hundreds of models via a unified interface
+// ============================================================
+
+import OpenAI from 'openai'
+import type {
+  ModelCallOptions,
+  ModelCallResult,
+  ModelMessage,
+  ModelTool,
+} from '@/lib/types'
+
+// ============================================================
+// Convert our messages to OpenAI-compatible format
+// ============================================================
+
+function toOpenAIMessages(
+  messages: ModelMessage[],
+  system?: string
+): OpenAI.Chat.ChatCompletionMessageParam[] {
+  const result: OpenAI.Chat.ChatCompletionMessageParam[] = []
+
+  const systemFromMessages = messages
+    .filter((m) => m.role === 'system')
+    .map((m) => (typeof m.content === 'string' ? m.content : ''))
+    .join('\n\n')
+
+  const fullSystem = [system, systemFromMessages].filter(Boolean).join('\n\n')
+  if (fullSystem) {
+    result.push({ role: 'system', content: fullSystem })
+  }
+
+  for (const m of messages.filter((m) => m.role !== 'system')) {
+    if (m.role === 'user') {
+      if (typeof m.content === 'string') {
+        result.push({ role: 'user', content: m.content })
+      } else {
+        result.push({
+          role: 'user',
+          content: m.content.map((block) => {
+            if (block.type === 'text') return { type: 'text' as const, text: block.text ?? '' }
+            if (block.type === 'image_url' && block.image_url) {
+              return { type: 'image_url' as const, image_url: block.image_url }
+            }
+            return { type: 'text' as const, text: '' }
+          }),
+        })
+      }
+    } else if (m.role === 'assistant') {
+      result.push({
+        role: 'assistant',
+        content: typeof m.content === 'string' ? m.content : null,
+      })
+    } else if (m.role === 'tool') {
+      result.push({
+        role: 'tool',
+        content: typeof m.content === 'string' ? m.content : '',
+        tool_call_id: m.tool_call_id ?? '',
+      })
+    }
+  }
+
+  return result
+}
+
+// ============================================================
+// Convert our tools to OpenAI format
+// ============================================================
+
+function toOpenAITools(tools: ModelTool[]): OpenAI.Chat.ChatCompletionTool[] {
+  return tools.map((t) => ({
+    type: 'function' as const,
+    function: {
+      name: t.name,
+      description: t.description,
+      parameters: t.parameters,
+    },
+  }))
+}
+
+// ============================================================
+// Main callOpenRouterModel function
+// ============================================================
+
+export async function callOpenRouterModel(
+  options: ModelCallOptions
+): Promise<ModelCallResult> {
+  const apiKey = options.api_key ?? process.env.OPENROUTER_API_KEY
+  if (!apiKey) {
+    throw new Error('OpenRouter API key is required. Set OPENROUTER_API_KEY or pass api_key.')
+  }
+
+  const client = new OpenAI({
+    apiKey,
+    baseURL: options.base_url ?? 'https://openrouter.ai/api/v1',
+    defaultHeaders: {
+      'HTTP-Referer': process.env.NEXTAUTH_URL ?? 'https://agent-os.app',
+      'X-Title': 'Agent OS',
+    },
+  })
+
+  const openaiMessages = toOpenAIMessages(options.messages, options.system)
+  const tools = options.tools && options.tools.length > 0
+    ? toOpenAITools(options.tools)
+    : undefined
+
+  const response = await client.chat.completions.create({
+    model: options.model,
+    messages: openaiMessages,
+    max_tokens: options.max_tokens ?? 4096,
+    temperature: options.temperature ?? 0.7,
+    ...(tools ? { tools, tool_choice: 'auto' } : {}),
+  })
+
+  const choice = response.choices[0]
+  const message = choice.message
+
+  const toolCalls: ModelCallResult['tool_calls'] = message.tool_calls?.map((tc) => ({
+    id: tc.id,
+    name: tc.function.name,
+    arguments: (() => {
+      try {
+        return JSON.parse(tc.function.arguments) as Record<string, unknown>
+      } catch {
+        return { _raw: tc.function.arguments }
+      }
+    })(),
+  }))
+
+  let finishReason: ModelCallResult['finish_reason'] = 'stop'
+  if (choice.finish_reason === 'tool_calls') finishReason = 'tool_use'
+  else if (choice.finish_reason === 'length') finishReason = 'max_tokens'
+
+  return {
+    content: message.content ?? '',
+    tool_calls: toolCalls && toolCalls.length > 0 ? toolCalls : undefined,
+    tokens_input: response.usage?.prompt_tokens ?? 0,
+    tokens_output: response.usage?.completion_tokens ?? 0,
+    model: response.model,
+    provider: 'openrouter',
+    finish_reason: finishReason,
+    raw: response,
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "space-agent-os",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Space-Claw Agent OS — 24/7 personal AI assistant platform",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "format": "turbo run format"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
