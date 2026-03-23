@@ -29,6 +29,8 @@ from typing import Any
 
 import httpx
 import structlog
+from agents.intent_router import IntentRouter
+from agents.automations.whatsapp_notify import notify as whatsapp_notify
 
 structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(
@@ -40,6 +42,7 @@ log = structlog.get_logger()
 REPO_ROOT = Path(__file__).parent.parent
 TASKS_FILE = REPO_ROOT / 'TASKS.md'
 POLL_INTERVAL_SECONDS: int = int(os.getenv('HEARTBEAT_INTERVAL', '1800'))
+_intent_router = IntentRouter()
 OPENCLAW_GATEWAY_URL: str = os.getenv('OPENCLAW_GATEWAY_URL', 'http://localhost:18789')
 OPENCLAW_TOKEN: str = os.getenv('OPENCLAW_TOKEN', '')
 DISCORD_BOT_TOKEN: str = os.getenv('DISCORD_BOT_TOKEN', '')
@@ -117,12 +120,16 @@ async def dispatch_whatsapp_commands(
     messages: list[dict[str, Any]],
     queue: asyncio.Queue[dict[str, Any]],
 ) -> None:
-    '''Parse incoming WhatsApp messages and push actionable tasks to the queue.
+    '''Parse incoming WhatsApp messages, route via IntentRouter, and reply.
 
-    TODO: implement command parser (e.g. !task <description>).
+    Legacy !task prefix still queues directly; all other messages are
+    dispatched through the IntentRouter and the reply is sent back via
+    whatsapp_notify.
     '''
     for msg in messages:
         body: str = msg.get('body', '')
+        if not body:
+            continue
         if body.startswith('!task '):
             description = body[len('!task '):].strip()
             if description:
@@ -133,6 +140,13 @@ async def dispatch_whatsapp_commands(
                     'tags': ['whatsapp'],
                 })
                 log.info('whatsapp.task_queued', description=description)
+        else:
+            log.info('whatsapp.routing', body=body[:80])
+            try:
+                result = await _intent_router.dispatch(body)
+                await whatsapp_notify(result)
+            except Exception:
+                log.exception('whatsapp.dispatch_error', body=body[:80])
 
 
 async def notify_discord(message: str) -> None:
