@@ -2,19 +2,17 @@
 
 Responsibilities:
   - Poll TASKS.md every 30 minutes and surface URGENT/HIGH items
-  - Check incoming WhatsApp messages from OpenClaw gateway
+  - Post heartbeat summaries to Discord channel
   - Push actionable tasks to the Worker asyncio.Queue
   - Write last-heartbeat timestamp into TASKS.md footer
-  - Integration stubs for Gmail, WhatsApp, and Discord
+  - Integration stubs for Gmail
 
 Environment vars:
-  OPENCLAW_GATEWAY_URL  URL for the OpenClaw gateway (default: http://localhost:18789)
-  OPENCLAW_TOKEN        Bearer token for OpenClaw API
   HEARTBEAT_INTERVAL    polling interval in seconds (default 1800)
   LOG_LEVEL             structlog level (default INFO)
-  DISCORD_BOT_TOKEN     Discord bot token
+  DISCORD_TOKEN         Discord bot token (preferred) or DISCORD_BOT_TOKEN
   DISCORD_GUILD_ID      Discord guild/server ID
-  DISCORD_CHANNEL_ID    Discord channel ID to monitor
+  DISCORD_CHANNEL_ID    Discord channel ID to post heartbeat summaries
 '''
 from __future__ import annotations
 
@@ -40,11 +38,10 @@ log = structlog.get_logger()
 REPO_ROOT = Path(__file__).parent.parent
 TASKS_FILE = REPO_ROOT / 'TASKS.md'
 POLL_INTERVAL_SECONDS: int = int(os.getenv('HEARTBEAT_INTERVAL', '1800'))
-OPENCLAW_GATEWAY_URL: str = os.getenv('OPENCLAW_GATEWAY_URL', 'http://localhost:18789')
-OPENCLAW_TOKEN: str = os.getenv('OPENCLAW_TOKEN', '')
-DISCORD_BOT_TOKEN: str = os.getenv('DISCORD_BOT_TOKEN', '')
+DISCORD_TOKEN: str = os.getenv('DISCORD_TOKEN') or os.getenv('DISCORD_BOT_TOKEN', '')
 DISCORD_GUILD_ID: str = os.getenv('DISCORD_GUILD_ID', '')
 DISCORD_CHANNEL_ID: str = os.getenv('DISCORD_CHANNEL_ID', '')
+DISCORD_API_BASE = 'https://discord.com/api/v10'
 
 PRIORITY_RE = re.compile(
     r'^\s*-\s+\[(?P<priority>URGENT|HIGH|NORMAL|LOW)\]\s+(?P<description>.+)$'
@@ -76,75 +73,63 @@ def update_heartbeat_timestamp(content: str, ts: str) -> str:
     return content.rstrip() + f'\n\n---\n{new_line}\n'
 
 
-async def fetch_whatsapp_messages(
-    client: httpx.AsyncClient,
-) -> list[dict[str, Any]]:
-    '''Poll the OpenClaw gateway: GET /api/messages with Bearer token.'''
-    if not OPENCLAW_TOKEN:
-        log.debug('whatsapp.skip', reason='OPENCLAW_TOKEN not set')
-        return []
+# ---------------------------------------------------------------------------
+# Discord REST notification (no bot process required — pure REST)
+# ---------------------------------------------------------------------------
+
+async def notify_discord(message: str) -> None:
+    '''Post a heartbeat summary to the configured Discord channel via REST API.'''
+    if not DISCORD_TOKEN or not DISCORD_CHANNEL_ID:
+        log.debug('discord.skip', reason='DISCORD_TOKEN or DISCORD_CHANNEL_ID not set')
+        return
+    url = f'{DISCORD_API_BASE}/channels/{DISCORD_CHANNEL_ID}/messages'
+    headers = {'Authorization': f'Bot {DISCORD_TOKEN}', 'Content-Type': 'application/json'}
+    # Split long messages into 2000-char chunks (Discord limit)
+    chunks = [message[i:i + 1900] for i in range(0, max(len(message), 1), 1900)]
     try:
-        resp = await client.get(
-            '/api/messages',
-            headers={'Authorization': f'Bearer {OPENCLAW_TOKEN}'},
-            timeout=5.0,
-        )
-        resp.raise_for_status()
-        return resp.json().get('messages', [])
+        async with httpx.AsyncClient() as client:
+            for chunk in chunks:
+                resp = await client.post(url, headers=headers, json={'content': chunk}, timeout=10.0)
+                if resp.status_code not in (200, 201):
+                    log.warning('discord.post_failed', status=resp.status_code, body=resp.text[:200])
+                else:
+                    log.debug('discord.posted', channel_id=DISCORD_CHANNEL_ID, chars=len(chunk))
     except httpx.ConnectError:
-        log.warning('whatsapp.unreachable', url=OPENCLAW_GATEWAY_URL)
-        return []
-    except httpx.HTTPStatusError as exc:
-        log.error('whatsapp.http_error', status=exc.response.status_code)
-        return []
-
+        log.warning('discord.unreachable')
+    except Exception as exc:
+        log.error('discord.error', error=str(exc))
 
 
 # ---------------------------------------------------------------------------
-# Channel stubs -- wired up when tokens are present
+# Channel stubs
 # ---------------------------------------------------------------------------
 
-async def fetch_urgent_gmail(client: httpx.AsyncClient) -> list[dict[str, Any]]:
-    '''TODO: fetch unread URGENT-labelled Gmail via MCP gmail tool.
-
-    Placeholder -- returns empty list until Gmail MCP is connected.
-    '''
+async def fetch_urgent_gmail() -> list[dict[str, Any]]:
+    '''TODO: fetch unread URGENT-labelled Gmail via MCP gmail tool.'''
     log.debug('gmail.stub', reason='not yet wired')
     return []
 
 
-async def dispatch_whatsapp_commands(
-    messages: list[dict[str, Any]],
-    queue: asyncio.Queue[dict[str, Any]],
-) -> None:
-    '''Parse incoming WhatsApp messages and push actionable tasks to the queue.
+# ---------------------------------------------------------------------------
+# Discord summary builder
+# ---------------------------------------------------------------------------
 
-    TODO: implement command parser (e.g. !task <description>).
-    '''
-    for msg in messages:
-        body: str = msg.get('body', '')
-        if body.startswith('!task '):
-            description = body[len('!task '):].strip()
-            if description:
-                await queue.put({
-                    'id': msg.get('id', ''),
-                    'description': description,
-                    'priority': 'HIGH',
-                    'tags': ['whatsapp'],
-                })
-                log.info('whatsapp.task_queued', description=description)
-
-
-async def notify_discord(message: str) -> None:
-    '''Post a message to the configured Discord channel via REST.
-
-    Uses DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_CHANNEL_ID env vars.
-    TODO: replace stub with full discord.py or httpx implementation.
-    '''
-    if not DISCORD_BOT_TOKEN or not DISCORD_CHANNEL_ID:
-        log.debug('discord.skip', reason='DISCORD_BOT_TOKEN or DISCORD_CHANNEL_ID not set')
-        return
-    log.debug('discord.stub', channel_id=DISCORD_CHANNEL_ID, message=message[:80])
+def _build_discord_summary(
+    ts: str,
+    tasks: list[dict[str, str]],
+    urgent: list[dict[str, str]],
+) -> str:
+    '''Build a heartbeat summary string for posting to Discord.'''
+    lines = [f'**💓 Heartbeat** `{ts}`']
+    lines.append(f'Tasks total: **{len(tasks)}** | Urgent/High: **{len(urgent)}**')
+    if urgent:
+        lines.append('\n🔴 **Action required:**')
+        for t in urgent[:5]:
+            priority_emoji = '🚨' if t['priority'] == 'URGENT' else '🔶'
+            lines.append(f'{priority_emoji} [{t["priority"]}] {t["description"][:80]}')
+        if len(urgent) > 5:
+            lines.append(f'…and {len(urgent) - 5} more.')
+    return '\n'.join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -166,22 +151,21 @@ class HeartbeatEngine:
     async def run(self) -> None:
         '''Main loop: tick every POLL_INTERVAL_SECONDS until stopped.'''
         log.info('heartbeat.started', interval_s=POLL_INTERVAL_SECONDS)
-        async with httpx.AsyncClient(base_url=OPENCLAW_GATEWAY_URL) as client:
-            while not self._stop_event.is_set():
-                try:
-                    await self._tick(client)
-                except Exception:
-                    log.exception('heartbeat.tick_error')
-                try:
-                    await asyncio.wait_for(
-                        self._stop_event.wait(),
-                        timeout=float(POLL_INTERVAL_SECONDS),
-                    )
-                except asyncio.TimeoutError:
-                    pass
+        while not self._stop_event.is_set():
+            try:
+                await self._tick()
+            except Exception:
+                log.exception('heartbeat.tick_error')
+            try:
+                await asyncio.wait_for(
+                    self._stop_event.wait(),
+                    timeout=float(POLL_INTERVAL_SECONDS),
+                )
+            except asyncio.TimeoutError:
+                pass
         log.info('heartbeat.stopped')
 
-    async def _tick(self, client: httpx.AsyncClient) -> None:
+    async def _tick(self) -> None:
         '''Single heartbeat cycle.'''
         ts = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         log.info('heartbeat.tick', ts=ts)
@@ -198,14 +182,21 @@ class HeartbeatEngine:
                 tasks=[t['description'][:60] for t in urgent[:5]],
             )
 
-        # --- poll WhatsApp ---
-        wa_messages = await fetch_whatsapp_messages(client)
-        if wa_messages:
-            log.info('whatsapp.messages', count=len(wa_messages))
-            await dispatch_whatsapp_commands(wa_messages, self._queue)
+        # --- push urgent tasks to worker queue ---
+        for i, task in enumerate(urgent):
+            await self._queue.put({
+                'id': f'heartbeat-{ts}-{i}',
+                'description': task['description'],
+                'priority': task['priority'],
+                'tags': ['heartbeat'],
+            })
 
         # --- Gmail stub ---
-        await fetch_urgent_gmail(client)
+        await fetch_urgent_gmail()
+
+        # --- notify Discord ---
+        discord_summary = _build_discord_summary(ts, tasks, urgent)
+        await notify_discord(discord_summary)
 
         # --- stamp footer ---
         updated = update_heartbeat_timestamp(content, ts)
