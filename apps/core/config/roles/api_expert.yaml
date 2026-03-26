@@ -1,0 +1,20 @@
+role: api_expert
+display_name: API Expert
+description: REST/WebSocket API design, OpenAPI specs, and third-party service integrations.
+tier: worker
+model: qwen3-coder:30b-a3b
+provider: ollama
+
+capabilities:
+  - api_design
+  - openapi_specs
+  - client_wrappers
+  - retry_logic
+  - auth_flows
+
+constraints:
+  max_output_tokens: 8192
+  temperature: 0.05
+  output_format: python_code
+
+escalation: lead_architect

@@ -1,0 +1,20 @@
+role: frontend_engineer
+display_name: Frontend Engineer
+description: React/Next.js components, pages, and UI logic. Tailwind + Shadcn/UI stack.
+tier: worker
+model: qwen3-coder:30b-a3b
+provider: ollama
+
+capabilities:
+  - react_components
+  - nextjs_pages
+  - tailwind_styling
+  - typescript_interfaces
+  - accessibility_markup
+
+constraints:
+  max_output_tokens: 8192
+  temperature: 0.05
+  output_format: typescript_code
+
+escalation: lead_designer

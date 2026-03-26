@@ -1,0 +1,20 @@
+role: lead_architect
+display_name: Lead Architect
+description: System design, ADRs, and multi-file refactors. Top of the escalation chain.
+tier: architect
+model: claude-opus-4-6
+provider: anthropic
+
+capabilities:
+  - architecture_design
+  - adr_production
+  - system_review
+  - complex_refactor
+  - security_analysis
+
+constraints:
+  max_output_tokens: 8192
+  temperature: 0.3
+  output_format: adr_or_analysis
+
+escalation: null  # apex — no further escalation

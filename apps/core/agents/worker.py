@@ -10,6 +10,7 @@ Config (env vars):
     OLLAMA_BASE_URL   default http://localhost:11434
     WORKER_MODEL      default qwen3-coder:30b-a3b
     MAX_CONCURRENCY   default 3
+    OLLAMA_NUM_PARALLEL  number of parallel sequences Ollama can process (default 4)
     LOG_LEVEL         default INFO
 '''
 from __future__ import annotations
@@ -38,6 +39,7 @@ AUDIT_LOG = REPO_ROOT / 'logs' / 'audit.jsonl'
 OLLAMA_BASE_URL: str = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
 WORKER_MODEL: str = os.getenv('WORKER_MODEL', 'qwen3-coder:30b-a3b')
 MAX_CONCURRENCY: int = int(os.getenv('MAX_CONCURRENCY', '3'))
+OLLAMA_NUM_PARALLEL: int = int(os.getenv('OLLAMA_NUM_PARALLEL', '4'))
 
 SYSTEM_PROMPT = (
     'You are Space-Claw Worker, an autonomous coding assistant. '
@@ -62,6 +64,7 @@ async def stream_ollama(
         'prompt': prompt,
         'system': SYSTEM_PROMPT,
         'stream': True,
+        'options': {'num_parallel': OLLAMA_NUM_PARALLEL},
     }
     async with client.stream('POST', '/api/generate', json=payload, timeout=120.0) as resp:
         resp.raise_for_status()

@@ -1,0 +1,19 @@
+role: pm_agent
+display_name: Project Manager
+description: Decomposes goals into sprint-ready task lists with priorities, effort, and assignments.
+tier: orchestrator
+model: llama3.3:8b
+provider: ollama
+
+capabilities:
+  - task_decomposition
+  - sprint_planning
+  - priority_ordering
+  - blocker_identification
+
+constraints:
+  max_output_tokens: 2000
+  temperature: 0.2
+  output_format: markdown_checklist
+
+escalation: lead_architect  # escalate architecture blockers

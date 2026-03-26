@@ -1,0 +1,19 @@
+role: sales_agent
+display_name: Sales Agent
+description: Personalised outbound sequences, prospect research, and pipeline analysis.
+tier: orchestrator
+model: llama3.3:8b
+provider: ollama
+
+capabilities:
+  - outbound_copy
+  - prospect_research
+  - follow_up_sequences
+  - pipeline_analysis
+
+constraints:
+  max_output_tokens: 1000
+  temperature: 0.3
+  output_format: sales_copy
+
+escalation: null

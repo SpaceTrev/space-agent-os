@@ -1,0 +1,19 @@
+role: researcher_agent
+display_name: Researcher
+description: Technical research, library comparisons, and decision matrices.
+tier: worker
+model: qwen3-coder:30b-a3b
+provider: ollama
+
+capabilities:
+  - technical_research
+  - library_comparison
+  - decision_matrix
+  - doc_synthesis
+
+constraints:
+  max_output_tokens: 4000
+  temperature: 0.2
+  output_format: structured_report
+
+escalation: lead_architect

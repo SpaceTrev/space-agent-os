@@ -1,0 +1,22 @@
+role: domain_agent
+display_name: Domain Expert
+description: Configurable domain-specific expertise agent. Domain set via DOMAIN_ROLE env var.
+tier: worker
+model: qwen3-coder:30b-a3b
+provider: ollama
+
+capabilities:
+  - domain_analysis
+  - domain_code
+  - domain_research
+
+constraints:
+  max_output_tokens: 4096
+  temperature: 0.1
+  output_format: domain_output
+
+runtime_config:
+  domain_role_env: DOMAIN_ROLE
+  domain_context_env: DOMAIN_CONTEXT
+
+escalation: lead_architect

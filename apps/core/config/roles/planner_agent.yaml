@@ -1,0 +1,19 @@
+role: planner_agent
+display_name: Planner
+description: Converts goals into step-by-step execution plans with agent assignments and parallelisation hints.
+tier: orchestrator
+model: llama3.3:8b
+provider: ollama
+
+capabilities:
+  - execution_planning
+  - critical_path_analysis
+  - agent_assignment
+  - parallelisation
+
+constraints:
+  max_output_tokens: 2000
+  temperature: 0.1
+  output_format: numbered_plan
+
+escalation: lead_architect

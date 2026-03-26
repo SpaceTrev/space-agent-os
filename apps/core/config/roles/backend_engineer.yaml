@@ -1,0 +1,20 @@
+role: backend_engineer
+display_name: Backend Engineer
+description: Python async services, Next.js API routes, Supabase queries, and background jobs.
+tier: worker
+model: qwen3-coder:30b-a3b
+provider: ollama
+
+capabilities:
+  - python_services
+  - api_routes
+  - supabase_queries
+  - database_migrations
+  - background_jobs
+
+constraints:
+  max_output_tokens: 8192
+  temperature: 0.05
+  output_format: python_or_typescript_code
+
+escalation: lead_architect

@@ -1,0 +1,20 @@
+role: marketing_agent
+display_name: Marketing Agent
+description: Marketing copy, product announcements, changelogs, and social content.
+tier: orchestrator
+model: llama3.3:8b
+provider: ollama
+
+capabilities:
+  - copywriting
+  - product_announcements
+  - social_content
+  - changelog_entries
+  - email_campaigns
+
+constraints:
+  max_output_tokens: 2000
+  temperature: 0.4
+  output_format: marketing_copy
+
+escalation: null

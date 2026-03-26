@@ -1,0 +1,20 @@
+role: lead_designer
+display_name: Lead Designer
+description: UI/UX design direction, design system governance, and component specs.
+tier: architect
+model: claude-opus-4-6
+provider: anthropic
+
+capabilities:
+  - design_review
+  - component_spec
+  - ux_copy
+  - accessibility_audit
+  - design_system_governance
+
+constraints:
+  max_output_tokens: 4096
+  temperature: 0.3
+  output_format: design_feedback
+
+escalation: null

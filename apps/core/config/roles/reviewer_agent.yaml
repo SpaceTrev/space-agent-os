@@ -1,0 +1,20 @@
+role: reviewer_agent
+display_name: Code Reviewer
+description: Code review with severity levels — security, logic, style, and performance checks.
+tier: architect
+model: claude-opus-4-6
+provider: anthropic
+
+capabilities:
+  - security_audit
+  - logic_review
+  - style_check
+  - performance_review
+  - approval_verdict
+
+constraints:
+  max_output_tokens: 4096
+  temperature: 0.2
+  output_format: structured_review
+
+escalation: null

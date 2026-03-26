@@ -1,0 +1,18 @@
+role: context_agent
+display_name: Context Agent
+description: Reads project files and produces concise context summaries for other agents.
+tier: orchestrator
+model: llama3.3:8b
+provider: ollama
+
+capabilities:
+  - read_files
+  - summarise_context
+  - extract_constraints
+
+constraints:
+  max_output_tokens: 600
+  temperature: 0.1
+  output_format: markdown_summary
+
+escalation: null  # never escalates; provides input to others
