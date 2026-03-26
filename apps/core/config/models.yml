@@ -32,30 +32,37 @@ tiers:
     max_tokens: 8192
     temperature: 0.1
 
-  architect:
-    model: claude-opus-4-6
-    provider: anthropic
-    description: Deep reasoning, system design, architecture decisions
+  cloud:
+    model: ${CLOUD_MODEL:-gemini/gemini-2.0-flash}
+    provider: google
+    description: High-complexity tasks, multi-file reasoning, deep planning
     use_cases:
       - system architecture
       - complex refactoring
       - design reviews
       - security analysis
       - long-horizon planning
-    context_window: 200000
-    max_tokens: 16000
+    context_window: 1000000
+    max_tokens: 8192
     temperature: 0.3
     triggers:
       - /architect
       - /refactor
       - /deep
       - /design
+      - /cloud
+
+  # ── Anthropic (disabled — not using API key) ──────────────────────────────
+  # architect:
+  #   model: claude-opus-4-6
+  #   provider: anthropic
+  #   description: Kept here for reference if Anthropic API key is added later.
 
 routing:
   default_tier: worker
-  escalation_tier: architect
+  escalation_tier: cloud
   heartbeat_tier: orchestrator
-  # Prefix triggers for architect escalation (see triggers above)
+  # Prefix triggers for cloud escalation (see triggers above)
   escalate_on_prefix: true
   # Fallback if Ollama unreachable
-  ollama_fallback: architect
+  ollama_fallback: cloud
