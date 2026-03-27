@@ -229,15 +229,43 @@ async def health_check() -> dict[str, Any]:
         }
 
     # 4 — Supabase DB (env-var presence check; no live network call needed)
-    db_url = os.getenv("NEXT_PUBLIC_SUPABASE_URL") or os.getenv("SUPABASE_URL", "")
-    db_key = (
-        os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "")
+    # DB config lives in apps/dashboard/.env.local — load it if present
+    dashboard_env = DASHBOARD_DIR / ".env.local"
+    if dashboard_env.exists():
+        from dotenv import dotenv_values
+        dash_env = dotenv_values(dashboard_env)
+    else:
+        dash_env = {}
+    db_url = (
+        os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+        or os.getenv("SUPABASE_URL")
+        or dash_env.get("NEXT_PUBLIC_SUPABASE_URL")
+        or dash_env.get("SUPABASE_URL", "")
     )
+    db_key = (
+        os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        or os.getenv("SUPABASE_SERVICE_KEY")
+        or os.getenv("SUPABASE_ANON_KEY")
+        or dash_env.get("SUPABASE_SERVICE_KEY")
+        or dash_env.get("SUPABASE_ANON_KEY", "")
+    )
+    # Also do a live ping if URL is set
+    db_live = False
+    if db_url:
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                r = await client.get(f"{db_url}/rest/v1/", headers={
+                    "apikey": db_key,
+                    "Authorization": f"Bearer {db_key}",
+                })
+                db_live = r.status_code == 200
+        except Exception:
+            pass
     nodes["database"] = {
-        "ok": bool(db_url and db_key),
-        "status": "configured" if (db_url and db_key) else "not_configured",
-        "url_set": bool(db_url),
-        "key_set": bool(db_key),
+        "ok": bool(db_url and db_key and db_live),
+        "status": "live" if db_live else ("configured" if (db_url and db_key) else "not_configured"),
+        "url": db_url or "—",
+        "live": db_live,
     }
 
     # 5 — TASKS.md readable
