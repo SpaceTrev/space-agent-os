@@ -42,6 +42,7 @@ log = structlog.get_logger()
 
 
 class RouteTag(str, Enum):
+    CHAT = "chat"       # fast: single agent, direct response, no team pipeline
     PLAN = "plan"
     CODE = "code"
     RESEARCH = "research"
@@ -78,7 +79,8 @@ _ROUTE_KEYWORDS: dict[RouteTag, list[str]] = {
     RouteTag.RESEARCH:  ["/research", "compare", "best library", "which is better", "investigate"],
     RouteTag.PLAN:      ["/plan", "/sprint", "break down", "decompose", "sprint plan"],
     RouteTag.SWARM:     ["/swarm", "best of", "parallel"],
-    RouteTag.CODE:      ["/code", "implement", "write a", "create a", "build", "fix"],
+    RouteTag.CODE:      ["/code", "implement", "write a", "create a", "build", "fix", "debug"],
+    # CHAT has no keywords — it's the default for anything that doesn't match above
 }
 
 
@@ -164,7 +166,7 @@ class CentralBrain:
         ):
             if any(kw in text for kw in _ROUTE_KEYWORDS[tag]):
                 return tag
-        return RouteTag.CODE  # default: send to engineering team
+        return RouteTag.CHAT  # default: fast single-agent response
 
     # ── Dispatch ──────────────────────────────────────────────────────────────
 
@@ -175,6 +177,24 @@ class CentralBrain:
     ) -> tuple[str, list[str]]:
         """Execute the routed request and return (output, agent_roles)."""
         task = {"id": req.id, "description": req.goal, "priority": req.priority}
+
+        if route == RouteTag.CHAT:
+            # Fast path: direct LLM call with Space-Claw persona, no team overhead
+            from agents.role_spec import call_llm, RoleSpec, ModelTier
+            chat_spec = RoleSpec(
+                name="space-claw",
+                department="assistant",
+                expertise="general assistant",
+                model_tier=ModelTier.ORCHESTRATOR,
+                system_prompt=(
+                    "You are Space-Claw, an autonomous AI operating system built by Trev and Pablo. "
+                    "You are sharp, direct, and technical. No filler words. "
+                    "Answer questions concisely. For coding/build tasks, say you'll get to work. "
+                    "For status questions, be factual. You are running on Claude Max via a local proxy."
+                ),
+            )
+            output = await call_llm(chat_spec, req.goal)
+            return output, ["space-claw"]
 
         if route == RouteTag.ARCHITECT:
             result = await self._lead_arch.run_task(task)
