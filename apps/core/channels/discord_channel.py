@@ -1,29 +1,33 @@
-"""Discord Channel — production-grade channel adapter for Discord.
+"""
+discord_channel.py — Discord adapter for Space-Claw.
 
-Wraps the Discord REST API via httpx (no discord.py dependency in this layer).
-For bot slash commands, see agents/discord_bot.py.
+Responsibilities:
+  - Connect as a bot via discord.py
+  - Listen for messages in DISCORD_CHANNEL_ID (or DMs / @mentions)
+  - Route incoming requests to the CentralBrain
+  - Send rich embeds back: agent status, ticket creation, pipeline progress
+  - Expose send_message() / send_embed() helpers for heartbeat and other services
 
-This module provides:
-  DiscordChannel.send()   — post a message to a channel
-  DiscordChannel.notify() — send a structured embed notification
-  DiscordChannel.listen() — async generator yielding inbound messages
-
-Config (env vars):
-  DISCORD_BOT_TOKEN     required
-  DISCORD_CHANNEL_ID    default channel to send to
-  DISCORD_GUILD_ID      server/guild ID
+Environment vars:
+  DISCORD_TOKEN      Bot token (preferred; falls back to DISCORD_BOT_TOKEN)
+  DISCORD_GUILD_ID   Server / guild ID (integer)
+  DISCORD_CHANNEL_ID Channel ID the bot monitors (integer; 0 = DMs only)
 """
 from __future__ import annotations
 
 import asyncio
 import logging
 import os
-import time
 from dataclasses import dataclass
-from typing import Any, AsyncIterator
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any
 
-import httpx
+import discord
 import structlog
+from discord import app_commands
+
+if TYPE_CHECKING:
+    from orchestration.central_brain import CentralBrain
 
 structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(
@@ -32,188 +36,241 @@ structlog.configure(
 )
 log = structlog.get_logger()
 
-DISCORD_API_BASE = "https://discord.com/api/v10"
-BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN", "")
-DEFAULT_CHANNEL_ID: str = os.getenv("DISCORD_CHANNEL_ID", "")
-GUILD_ID: str = os.getenv("DISCORD_GUILD_ID", "")
+# ─── Config ──────────────────────────────────────────────────────────────────
 
-# Discord rate-limit: 5 requests per 5 seconds per channel
-_RATE_LIMIT_CALLS = 5
-_RATE_LIMIT_WINDOW = 5.0
+BOT_TOKEN: str = os.getenv("DISCORD_TOKEN") or os.environ["DISCORD_BOT_TOKEN"]
+GUILD_ID: int = int(os.environ["DISCORD_GUILD_ID"])
+CHANNEL_ID: int = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
+
+
+# ─── Data types ──────────────────────────────────────────────────────────────
 
 
 @dataclass
-class DiscordMessage:
-    """Parsed inbound Discord message."""
+class IncomingRequest:
+    """Normalised request passed from the Discord adapter to the CentralBrain."""
+
     id: str
-    channel_id: str
-    author_id: str
-    author_name: str
+    source: str          # "discord"
+    author: str          # discord username
+    author_id: int
     content: str
-    timestamp: str
-    is_bot: bool
+    channel_id: int
+    timestamp: datetime
+
+
+# ─── Discord channel adapter ─────────────────────────────────────────────────
 
 
 class DiscordChannel:
-    """REST-based Discord channel adapter with rate limiting."""
+    """
+    Wraps a discord.py bot client.  Owns the bot lifecycle; routes messages to
+    a CentralBrain instance injected at startup.
 
-    def __init__(
-        self,
-        token: str = BOT_TOKEN,
-        channel_id: str = DEFAULT_CHANNEL_ID,
-    ) -> None:
-        if not token:
-            raise ValueError("DISCORD_BOT_TOKEN not set")
-        self._token = token
-        self._channel_id = channel_id
-        self._headers = {
-            "Authorization": f"Bot {self._token}",
-            "Content-Type": "application/json",
-            "User-Agent": "SpaceClaw/1.0 (https://github.com/SpaceTrev/space-agent-os)",
-        }
-        # Simple token-bucket rate limiter
-        self._bucket: list[float] = []
+    Usage:
+        brain = CentralBrain()
+        channel = DiscordChannel(brain)
+        await channel.run()          # blocks until bot disconnects
+    """
 
-    # ── Rate limiting ─────────────────────────────────────────────────────────
+    def __init__(self, brain: "CentralBrain") -> None:
+        self._brain = brain
 
-    async def _rate_limit(self) -> None:
-        """Block until we're within the Discord rate limit."""
-        now = time.monotonic()
-        # Remove calls outside the current window
-        self._bucket = [t for t in self._bucket if now - t < _RATE_LIMIT_WINDOW]
-        if len(self._bucket) >= _RATE_LIMIT_CALLS:
-            oldest = min(self._bucket)
-            wait = _RATE_LIMIT_WINDOW - (now - oldest) + 0.05
-            log.debug("discord.rate_limit", wait_s=round(wait, 2))
-            await asyncio.sleep(wait)
-        self._bucket.append(time.monotonic())
+        intents = discord.Intents.default()
+        intents.message_content = True
+        self._client = discord.Client(intents=intents)
+        self._tree = app_commands.CommandTree(self._client)
+        self._guild = discord.Object(id=GUILD_ID)
 
-    # ── Core send ─────────────────────────────────────────────────────────────
+        # Wire event handlers and slash commands
+        self._client.event(self._on_ready)
+        self._client.event(self._on_message)
+        self._register_commands()
 
-    async def send(
-        self,
-        content: str,
-        *,
-        channel_id: str | None = None,
-        reply_to: str | None = None,
-    ) -> dict[str, Any]:
-        """Post a plain-text message. Returns the created message object."""
-        cid = channel_id or self._channel_id
+    # ── Lifecycle ─────────────────────────────────────────────────────────
+
+    async def run(self) -> None:
+        """Start the bot.  Blocks until disconnected."""
+        await self._client.start(BOT_TOKEN)
+
+    async def close(self) -> None:
+        await self._client.close()
+
+    # ── Outbound helpers ──────────────────────────────────────────────────
+
+    async def send_message(self, content: str, channel_id: int | None = None) -> None:
+        """Post a plain text message to a channel."""
+        cid = channel_id or CHANNEL_ID
         if not cid:
-            raise ValueError("channel_id required")
+            return
+        ch = self._client.get_channel(cid)
+        if ch and isinstance(ch, discord.TextChannel):
+            for part in _chunk(content):
+                await ch.send(part)
 
-        await self._rate_limit()
-        payload: dict[str, Any] = {"content": content[:2000]}  # Discord limit
-        if reply_to:
-            payload["message_reference"] = {"message_id": reply_to}
-
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                f"{DISCORD_API_BASE}/channels/{cid}/messages",
-                headers=self._headers,
-                json=payload,
-                timeout=10.0,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            log.info("discord.sent", channel=cid, msg_id=data.get("id"))
-            return data
-
-    async def notify(
+    async def send_embed(
         self,
         title: str,
-        description: str,
+        fields: dict[str, str],
         *,
-        color: int = 0x5865F2,  # Discord blurple
-        channel_id: str | None = None,
-        fields: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
-        """Send an embed notification."""
-        cid = channel_id or self._channel_id
+        color: discord.Color | None = None,
+        channel_id: int | None = None,
+    ) -> None:
+        """Post a rich embed to a channel."""
+        cid = channel_id or CHANNEL_ID
         if not cid:
-            raise ValueError("channel_id required")
+            return
+        ch = self._client.get_channel(cid)
+        if not ch or not isinstance(ch, discord.TextChannel):
+            return
+        embed = discord.Embed(
+            title=title,
+            color=color or discord.Color.blurple(),
+            timestamp=datetime.now(timezone.utc),
+        )
+        for name, value in fields.items():
+            embed.add_field(name=name, value=value or "—", inline=False)
+        await ch.send(embed=embed)
 
-        await self._rate_limit()
-        embed: dict[str, Any] = {
-            "title": title[:256],
-            "description": description[:4096],
-            "color": color,
-        }
-        if fields:
-            embed["fields"] = fields[:25]  # Discord max 25 fields
+    # ── Discord events ────────────────────────────────────────────────────
 
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                f"{DISCORD_API_BASE}/channels/{cid}/messages",
-                headers=self._headers,
-                json={"embeds": [embed]},
-                timeout=10.0,
+    async def _on_ready(self) -> None:
+        await self._tree.sync(guild=self._guild)
+        log.info(
+            "discord.ready",
+            bot=str(self._client.user),
+            guild_id=GUILD_ID,
+            channel_id=CHANNEL_ID or "DMs only",
+        )
+        if CHANNEL_ID:
+            ch = self._client.get_channel(CHANNEL_ID)
+            if ch and isinstance(ch, discord.TextChannel):
+                await ch.send("🤖 **Space-Claw online.** Type `/ask` or mention me to start.")
+
+    async def _on_message(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
+
+        is_dm = isinstance(message.channel, discord.DMChannel)
+        is_mention = self._client.user in message.mentions  # type: ignore[operator]
+        in_channel = CHANNEL_ID and message.channel.id == CHANNEL_ID
+
+        if not (is_dm or is_mention or in_channel):
+            return
+
+        content = message.content
+        if self._client.user:
+            content = content.replace(f"<@{self._client.user.id}>", "").strip()
+        if not content:
+            return
+
+        log.info("discord.message", author=str(message.author), channel=str(message.channel))
+
+        req = IncomingRequest(
+            id=str(message.id),
+            source="discord",
+            author=str(message.author),
+            author_id=message.author.id,
+            content=content,
+            channel_id=message.channel.id,
+            timestamp=message.created_at or datetime.now(timezone.utc),
+        )
+
+        async with message.channel.typing():
+            result = await self._brain.handle(req)
+
+        for part in _chunk(result):
+            await message.reply(part)
+
+    # ── Slash commands ────────────────────────────────────────────────────
+
+    def _register_commands(self) -> None:
+        guild = self._guild
+        tree = self._tree
+
+        @tree.command(guild=guild, name="ask", description="Send a task to Space-Claw")
+        @app_commands.describe(message="What should Space-Claw do?")
+        async def ask_cmd(interaction: discord.Interaction, message: str) -> None:
+            await interaction.response.defer(thinking=True)
+            req = IncomingRequest(
+                id=str(interaction.id),
+                source="discord",
+                author=str(interaction.user),
+                author_id=interaction.user.id,
+                content=message,
+                channel_id=interaction.channel_id or CHANNEL_ID,
+                timestamp=datetime.now(timezone.utc),
             )
-            resp.raise_for_status()
-            data = resp.json()
-            log.info("discord.embed_sent", channel=cid, title=title[:40])
-            return data
+            result = await self._brain.handle(req)
+            for part in _chunk(result):
+                await interaction.followup.send(part)
 
-    # ── Receive / poll ────────────────────────────────────────────────────────
-
-    async def fetch_messages(
-        self,
-        *,
-        channel_id: str | None = None,
-        limit: int = 50,
-        after: str | None = None,
-    ) -> list[DiscordMessage]:
-        """Fetch recent messages from a channel."""
-        cid = channel_id or self._channel_id
-        params: dict[str, Any] = {"limit": min(limit, 100)}
-        if after:
-            params["after"] = after
-
-        await self._rate_limit()
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"{DISCORD_API_BASE}/channels/{cid}/messages",
-                headers=self._headers,
-                params=params,
-                timeout=10.0,
+        @tree.command(guild=guild, name="status", description="Show Space-Claw system status")
+        async def status_cmd(interaction: discord.Interaction) -> None:
+            await interaction.response.defer(thinking=True)
+            status = await self._brain.status()
+            embed = discord.Embed(
+                title="🤖 Space-Claw Status",
+                color=discord.Color.green(),
+                timestamp=datetime.now(timezone.utc),
             )
-            resp.raise_for_status()
-            raw: list[dict[str, Any]] = resp.json()
+            for k, v in status.items():
+                embed.add_field(name=k, value=str(v), inline=False)
+            await interaction.followup.send(embed=embed)
 
-        return [
-            DiscordMessage(
-                id=m["id"],
-                channel_id=cid,
-                author_id=m["author"]["id"],
-                author_name=m["author"]["username"],
-                content=m.get("content", ""),
-                timestamp=m["timestamp"],
-                is_bot=m["author"].get("bot", False),
+        @tree.command(guild=guild, name="tasks", description="Show current TASKS.md")
+        async def tasks_cmd(interaction: discord.Interaction) -> None:
+            await interaction.response.defer(thinking=True)
+            from pathlib import Path
+            tasks_path = Path(__file__).parent.parent / "TASKS.md"
+            if not tasks_path.exists():
+                await interaction.followup.send("❌ `TASKS.md` not found.")
+                return
+            content = tasks_path.read_text(encoding="utf-8").strip()
+            for part in _chunk(content, code_block="md"):
+                await interaction.followup.send(part)
+
+        @tree.command(guild=guild, name="swarm", description="Launch a multi-team swarm")
+        @app_commands.describe(task="Complex task for the swarm")
+        async def swarm_cmd(interaction: discord.Interaction, task: str) -> None:
+            await interaction.response.defer(thinking=True)
+            req = IncomingRequest(
+                id=str(interaction.id),
+                source="discord",
+                author=str(interaction.user),
+                author_id=interaction.user.id,
+                content=f"/swarm {task}",
+                channel_id=interaction.channel_id or CHANNEL_ID,
+                timestamp=datetime.now(timezone.utc),
             )
-            for m in raw
-        ]
+            result = await self._brain.handle(req)
+            for part in _chunk(result):
+                await interaction.followup.send(part)
 
-    async def listen(
-        self,
-        *,
-        channel_id: str | None = None,
-        poll_interval: float = 5.0,
-        skip_bots: bool = True,
-    ) -> AsyncIterator[DiscordMessage]:
-        """Async generator that polls for new messages (long-poll fallback)."""
-        last_id: str | None = None
-        while True:
-            try:
-                msgs = await self.fetch_messages(
-                    channel_id=channel_id,
-                    after=last_id,
-                    limit=20,
-                )
-                for msg in reversed(msgs):  # oldest first
-                    if skip_bots and msg.is_bot:
-                        continue
-                    last_id = msg.id
-                    yield msg
-            except httpx.HTTPError as exc:
-                log.error("discord.poll_error", exc=str(exc))
-            await asyncio.sleep(poll_interval)
+
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+
+
+def _chunk(text: str, limit: int = 1900, code_block: str | None = None) -> list[str]:
+    """Split text into Discord-safe chunks (≤2000 chars)."""
+    parts = [text[i : i + limit] for i in range(0, max(len(text), 1), limit)]
+    if code_block:
+        return [f"```{code_block}\n{p}\n```" for p in parts]
+    return parts
+
+
+# ─── Entry point (standalone bot mode) ───────────────────────────────────────
+
+
+async def _main() -> None:
+    """Run the Discord bot in standalone mode (no CentralBrain wired)."""
+    from orchestration.central_brain import CentralBrain
+
+    brain = CentralBrain()
+    channel = DiscordChannel(brain)
+    log.info("discord_channel.starting")
+    await channel.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(_main())
