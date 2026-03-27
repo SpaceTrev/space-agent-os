@@ -107,10 +107,8 @@ class CentralBrain:
             max_concurrency=3,
         ))
 
-        # Research swarm (3x same model, synthesised by architect)
-        self._research_swarm = SwarmCoordinator([
-            ResearcherAgent(), ResearcherAgent(), ResearcherAgent(),
-        ])
+        # Research swarm — lazy init on first use to avoid startup crashes
+        self._research_swarm: SwarmCoordinator | None = None
 
     # ── Public interface ──────────────────────────────────────────────────────
 
@@ -205,6 +203,10 @@ class CentralBrain:
             return result, [self._reviewer.ROLE]
 
         if route == RouteTag.RESEARCH:
+            if self._research_swarm is None:
+                self._research_swarm = SwarmCoordinator([
+                    ResearcherAgent(), ResearcherAgent(), ResearcherAgent(),
+                ])
             result = await self._research_swarm.consensus(
                 req.goal, judge=self._lead_arch
             )
@@ -215,6 +217,10 @@ class CentralBrain:
             return result, [self._pm.ROLE]
 
         if route == RouteTag.SWARM:
+            if self._research_swarm is None:
+                self._research_swarm = SwarmCoordinator([
+                    ResearcherAgent(), ResearcherAgent(), ResearcherAgent(),
+                ])
             result = await self._research_swarm.best_of_n(req.goal)
             return result, ["Researcher x3 (best-of-N)"]
 

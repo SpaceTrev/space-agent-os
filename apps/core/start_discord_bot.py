@@ -48,3 +48,8 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         log.info("space_claw.discord.stopped")
+    except Exception as exc:
+        import traceback
+        log.error("space_claw.discord.crashed", error=str(exc))
+        traceback.print_exc()
+        raise
