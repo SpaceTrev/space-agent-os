@@ -1,216 +1,166 @@
-'''Space-Claw Heartbeat Engine -- Orchestrator Tier
+"""Space-Claw Heartbeat — Discord gateway for pipeline injection.
 
-Responsibilities:
-  - Poll TASKS.md every 30 minutes and surface URGENT/HIGH items
-  - Check incoming WhatsApp messages from OpenClaw gateway
-  - Push actionable tasks to the Worker asyncio.Queue
-  - Write last-heartbeat timestamp into TASKS.md footer
-  - Integration stubs for Gmail, WhatsApp, and Discord
+The 30-minute polling loop is gone. The heartbeat now runs a Discord bot
+that listens for human commands and injects tasks directly into the
+event-driven pipeline via PipelineManager.inject().
+
+Human commands (in the configured channel):
+  !task <description>   — inject a new pipeline run
+  !status               — report pipeline readiness
 
 Environment vars:
-  OPENCLAW_GATEWAY_URL  URL for the OpenClaw gateway (default: http://localhost:18789)
-  OPENCLAW_TOKEN        Bearer token for OpenClaw API
-  HEARTBEAT_INTERVAL    polling interval in seconds (default 1800)
+  DISCORD_BOT_TOKEN     Discord bot token (required for bot to start)
+  DISCORD_CHANNEL_ID    Channel ID to listen in
   LOG_LEVEL             structlog level (default INFO)
-  DISCORD_BOT_TOKEN     Discord bot token
-  DISCORD_GUILD_ID      Discord guild/server ID
-  DISCORD_CHANNEL_ID    Discord channel ID to monitor
-'''
+"""
 from __future__ import annotations
 
 import asyncio
 import logging
 import os
-import re
 import signal
-from datetime import datetime, timezone
-from pathlib import Path
+import uuid
 from typing import Any
 
 import httpx
 import structlog
 
+from orchestration import EventBus, PipelineManager
+
 structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(
-        logging.getLevelName(os.getenv('LOG_LEVEL', 'INFO'))
+        logging.getLevelName(os.getenv("LOG_LEVEL", "INFO"))
     ),
 )
 log = structlog.get_logger()
 
-REPO_ROOT = Path(__file__).parent.parent
-TASKS_FILE = REPO_ROOT / 'TASKS.md'
-POLL_INTERVAL_SECONDS: int = int(os.getenv('HEARTBEAT_INTERVAL', '1800'))
-OPENCLAW_GATEWAY_URL: str = os.getenv('OPENCLAW_GATEWAY_URL', 'http://localhost:18789')
-OPENCLAW_TOKEN: str = os.getenv('OPENCLAW_TOKEN', '')
-DISCORD_BOT_TOKEN: str = os.getenv('DISCORD_BOT_TOKEN', '')
-DISCORD_GUILD_ID: str = os.getenv('DISCORD_GUILD_ID', '')
-DISCORD_CHANNEL_ID: str = os.getenv('DISCORD_CHANNEL_ID', '')
-
-PRIORITY_RE = re.compile(
-    r'^\s*-\s+\[(?P<priority>URGENT|HIGH|NORMAL|LOW)\]\s+(?P<description>.+)$'
-)
-
-
-def parse_tasks(content: str) -> list[dict[str, str]]:
-    '''Parse TASKS.md and return task dicts with priority + description.'''
-    tasks: list[dict[str, str]] = []
-    for line in content.splitlines():
-        m = PRIORITY_RE.match(line)
-        if m:
-            tasks.append({
-                'priority': m.group('priority'),
-                'description': m.group('description').strip(),
-            })
-    return tasks
-
-
-def update_heartbeat_timestamp(content: str, ts: str) -> str:
-    '''Upsert the *Last heartbeat* footer line in TASKS.md.'''
-    marker = '*Last heartbeat:'
-    new_line = f'*Last heartbeat: {ts}*'
-    lines = content.splitlines()
-    for i, line in enumerate(lines):
-        if line.strip().startswith(marker):
-            lines[i] = new_line
-            return '\n'.join(lines) + '\n'
-    return content.rstrip() + f'\n\n---\n{new_line}\n'
-
-
-async def fetch_whatsapp_messages(
-    client: httpx.AsyncClient,
-) -> list[dict[str, Any]]:
-    '''Poll the OpenClaw gateway: GET /api/messages with Bearer token.'''
-    if not OPENCLAW_TOKEN:
-        log.debug('whatsapp.skip', reason='OPENCLAW_TOKEN not set')
-        return []
-    try:
-        resp = await client.get(
-            '/api/messages',
-            headers={'Authorization': f'Bearer {OPENCLAW_TOKEN}'},
-            timeout=5.0,
-        )
-        resp.raise_for_status()
-        return resp.json().get('messages', [])
-    except httpx.ConnectError:
-        log.warning('whatsapp.unreachable', url=OPENCLAW_GATEWAY_URL)
-        return []
-    except httpx.HTTPStatusError as exc:
-        log.error('whatsapp.http_error', status=exc.response.status_code)
-        return []
-
+DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN", "")
+DISCORD_CHANNEL_ID: str = os.getenv("DISCORD_CHANNEL_ID", "")
+DISCORD_API = "https://discord.com/api/v10"
 
 
 # ---------------------------------------------------------------------------
-# Channel stubs -- wired up when tokens are present
+# Discord REST helpers (no library dependency)
 # ---------------------------------------------------------------------------
 
-async def fetch_urgent_gmail(client: httpx.AsyncClient) -> list[dict[str, Any]]:
-    '''TODO: fetch unread URGENT-labelled Gmail via MCP gmail tool.
-
-    Placeholder -- returns empty list until Gmail MCP is connected.
-    '''
-    log.debug('gmail.stub', reason='not yet wired')
-    return []
-
-
-async def dispatch_whatsapp_commands(
-    messages: list[dict[str, Any]],
-    queue: asyncio.Queue[dict[str, Any]],
-) -> None:
-    '''Parse incoming WhatsApp messages and push actionable tasks to the queue.
-
-    TODO: implement command parser (e.g. !task <description>).
-    '''
-    for msg in messages:
-        body: str = msg.get('body', '')
-        if body.startswith('!task '):
-            description = body[len('!task '):].strip()
-            if description:
-                await queue.put({
-                    'id': msg.get('id', ''),
-                    'description': description,
-                    'priority': 'HIGH',
-                    'tags': ['whatsapp'],
-                })
-                log.info('whatsapp.task_queued', description=description)
-
-
-async def notify_discord(message: str) -> None:
-    '''Post a message to the configured Discord channel via REST.
-
-    Uses DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_CHANNEL_ID env vars.
-    TODO: replace stub with full discord.py or httpx implementation.
-    '''
-    if not DISCORD_BOT_TOKEN or not DISCORD_CHANNEL_ID:
-        log.debug('discord.skip', reason='DISCORD_BOT_TOKEN or DISCORD_CHANNEL_ID not set')
+async def _post_message(client: httpx.AsyncClient, channel_id: str, content: str) -> None:
+    if not DISCORD_BOT_TOKEN or not channel_id:
         return
-    log.debug('discord.stub', channel_id=DISCORD_CHANNEL_ID, message=message[:80])
+    try:
+        await client.post(
+            f"{DISCORD_API}/channels/{channel_id}/messages",
+            headers={"Authorization": f"Bot {DISCORD_BOT_TOKEN}"},
+            json={"content": content},
+            timeout=10.0,
+        )
+    except Exception as exc:
+        log.warning("discord.post_failed", error=str(exc))
+
+
+async def _get_gateway_url(client: httpx.AsyncClient) -> str:
+    resp = await client.get(
+        f"{DISCORD_API}/gateway/bot",
+        headers={"Authorization": f"Bot {DISCORD_BOT_TOKEN}"},
+        timeout=10.0,
+    )
+    resp.raise_for_status()
+    return resp.json()["url"]
 
 
 # ---------------------------------------------------------------------------
-# HeartbeatEngine
+# Gateway WebSocket loop
 # ---------------------------------------------------------------------------
 
-class HeartbeatEngine:
-    '''Polls TASKS.md, checks channels, stamps footer, pushes urgent work.'''
+async def _gateway_loop(
+    pipeline: PipelineManager,
+    stop: asyncio.Event,
+    client: httpx.AsyncClient,
+) -> None:
+    """Connect to Discord Gateway, handle HELLO/heartbeat, dispatch MESSAGE_CREATE."""
+    import json
 
-    def __init__(self, queue: asyncio.Queue[dict[str, Any]]) -> None:
-        self._queue = queue
-        self._stop_event = asyncio.Event()
+    gateway_url = await _get_gateway_url(client)
+    ws_url = f"{gateway_url}/?v=10&encoding=json"
 
-    def stop(self) -> None:
-        '''Signal the engine to stop after the current tick.'''
-        log.info('heartbeat.stopping')
-        self._stop_event.set()
+    log.info("discord.gateway_connecting", url=ws_url)
 
-    async def run(self) -> None:
-        '''Main loop: tick every POLL_INTERVAL_SECONDS until stopped.'''
-        log.info('heartbeat.started', interval_s=POLL_INTERVAL_SECONDS)
-        async with httpx.AsyncClient(base_url=OPENCLAW_GATEWAY_URL) as client:
-            while not self._stop_event.is_set():
-                try:
-                    await self._tick(client)
-                except Exception:
-                    log.exception('heartbeat.tick_error')
-                try:
-                    await asyncio.wait_for(
-                        self._stop_event.wait(),
-                        timeout=float(POLL_INTERVAL_SECONDS),
-                    )
-                except asyncio.TimeoutError:
-                    pass
-        log.info('heartbeat.stopped')
+    # httpx doesn't support WebSocket — use asyncio low-level websockets if available,
+    # fall back to a long-poll stub that just keeps the process alive.
+    try:
+        import websockets  # type: ignore
 
-    async def _tick(self, client: httpx.AsyncClient) -> None:
-        '''Single heartbeat cycle.'''
-        ts = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-        log.info('heartbeat.tick', ts=ts)
+        async with websockets.connect(ws_url) as ws:
+            heartbeat_interval: float = 41.25  # seconds, overwritten by HELLO
+            sequence: int | None = None
+            hb_task: asyncio.Task[None] | None = None
 
-        # --- read TASKS.md ---
-        content = TASKS_FILE.read_text(encoding='utf-8')
-        tasks = parse_tasks(content)
+            async def _send_heartbeat() -> None:
+                while not stop.is_set():
+                    await ws.send(json.dumps({"op": 1, "d": sequence}))
+                    log.debug("discord.heartbeat_sent")
+                    await asyncio.sleep(heartbeat_interval)
 
-        urgent = [t for t in tasks if t['priority'] in ('URGENT', 'HIGH')]
-        if urgent:
-            log.warning(
-                'heartbeat.urgent_tasks',
-                count=len(urgent),
-                tasks=[t['description'][:60] for t in urgent[:5]],
-            )
+            async for raw in ws:
+                if stop.is_set():
+                    break
+                msg: dict[str, Any] = json.loads(raw)
+                op: int = msg.get("op", -1)
+                data: Any = msg.get("d")
 
-        # --- poll WhatsApp ---
-        wa_messages = await fetch_whatsapp_messages(client)
-        if wa_messages:
-            log.info('whatsapp.messages', count=len(wa_messages))
-            await dispatch_whatsapp_commands(wa_messages, self._queue)
+                if op == 10:  # HELLO
+                    heartbeat_interval = data["heartbeat_interval"] / 1000.0
+                    hb_task = asyncio.ensure_future(_send_heartbeat())
+                    # IDENTIFY
+                    await ws.send(json.dumps({
+                        "op": 2,
+                        "d": {
+                            "token": DISCORD_BOT_TOKEN,
+                            "intents": 1 << 9,  # GUILD_MESSAGES
+                            "properties": {"os": "linux", "browser": "space-claw", "device": "space-claw"},
+                        },
+                    }))
 
-        # --- Gmail stub ---
-        await fetch_urgent_gmail(client)
+                elif op == 0:  # DISPATCH
+                    sequence = msg.get("s")
+                    t: str = msg.get("t", "")
+                    if t == "MESSAGE_CREATE" and isinstance(data, dict):
+                        await _handle_message(data, pipeline, client)
 
-        # --- stamp footer ---
-        updated = update_heartbeat_timestamp(content, ts)
-        TASKS_FILE.write_text(updated, encoding='utf-8')
-        log.debug('heartbeat.stamped', ts=ts)
+            if hb_task:
+                hb_task.cancel()
+
+    except ImportError:
+        log.warning(
+            "discord.websockets_unavailable",
+            reason="websockets package not installed — bot running in stub mode (process stays alive)",
+        )
+        await stop.wait()
+
+
+async def _handle_message(
+    msg: dict[str, Any],
+    pipeline: PipelineManager,
+    client: httpx.AsyncClient,
+) -> None:
+    channel_id: str = msg.get("channel_id", "")
+    if DISCORD_CHANNEL_ID and channel_id != DISCORD_CHANNEL_ID:
+        return
+
+    content: str = msg.get("content", "").strip()
+    author: str = msg.get("author", {}).get("username", "unknown")
+
+    if content.startswith("!task "):
+        description = content[len("!task "):].strip()
+        if not description:
+            return
+        task_id = str(uuid.uuid4())[:8]
+        task = {"id": task_id, "description": description, "source": "discord", "author": author}
+        log.info("discord.task_injected", task_id=task_id, description=description[:80])
+        await pipeline.inject(task)
+        await _post_message(client, channel_id, f"Pipeline started `{task_id}`: {description[:80]}")
+
+    elif content == "!status":
+        await _post_message(client, channel_id, "Space-Claw online. Pipeline ready.")
 
 
 # ---------------------------------------------------------------------------
@@ -218,22 +168,27 @@ class HeartbeatEngine:
 # ---------------------------------------------------------------------------
 
 async def main() -> None:
-    '''Bootstrap heartbeat engine with shared asyncio.Queue and signal handlers.'''
-    queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
-    engine = HeartbeatEngine(queue)
+    if not DISCORD_BOT_TOKEN:
+        log.warning("heartbeat.no_discord_token", reason="DISCORD_BOT_TOKEN not set — running idle")
+
+    bus = EventBus()
+    pipeline = PipelineManager(bus)
+    stop = asyncio.Event()
 
     loop = asyncio.get_running_loop()
-
-    def _handle_signal() -> None:
-        log.info('signal.received')
-        engine.stop()
-
     for sig in (signal.SIGTERM, signal.SIGINT):
-        loop.add_signal_handler(sig, _handle_signal)
+        loop.add_signal_handler(sig, stop.set)
 
-    log.info('heartbeat.main', tasks_file=str(TASKS_FILE))
-    await engine.run()
+    log.info("heartbeat.started", mode="event_driven")
+
+    async with httpx.AsyncClient() as client:
+        if DISCORD_BOT_TOKEN:
+            await _gateway_loop(pipeline, stop, client)
+        else:
+            await stop.wait()
+
+    log.info("heartbeat.stopped")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
