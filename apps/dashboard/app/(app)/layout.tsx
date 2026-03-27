@@ -28,28 +28,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-950 light:bg-gray-100 text-white light:text-gray-900 items-center justify-center">
+      <div className="flex h-screen bg-background text-text-primary items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500 light:text-gray-600">Loading...</p>
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-text-muted">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex h-screen bg-gray-950 light:bg-gray-100 text-white light:text-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-background text-text-primary overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 flex flex-col bg-gray-900 light:bg-white border-r border-gray-800 light:border-gray-200">
+      <aside className="w-56 flex-shrink-0 flex flex-col bg-surface border-r border-border-base">
         {/* Logo / Org */}
-        <div className="px-4 py-4 border-b border-gray-800 light:border-gray-200">
+        <div className="px-4 py-4 border-b border-border-base">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
               <Bot className="w-4 h-4 text-white" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white light:text-gray-900 truncate">{orgName}</p>
-              <p className="text-[10px] text-gray-500 light:text-gray-600">Agent OS</p>
+              <p className="text-sm font-semibold text-text-primary truncate">{orgName}</p>
+              <p className="text-[10px] text-text-muted">Agent OS</p>
             </div>
           </div>
         </div>
@@ -62,8 +62,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             className={clsx(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
               pathname === '/dashboard'
-                ? 'bg-gray-800 light:bg-gray-200 text-white light:text-gray-900 font-medium'
-                : 'text-gray-400 light:text-gray-600 hover:text-white light:hover:text-gray-900 hover:bg-gray-800 light:hover:bg-gray-100'
+                ? 'bg-border-base text-text-primary font-medium'
+                : 'text-text-secondary hover:text-text-primary hover:bg-border-base'
             )}
           >
             <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
@@ -76,8 +76,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             className={clsx(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
               pathname === '/mission-control'
-                ? 'bg-gray-800 light:bg-gray-200 text-white light:text-gray-900 font-medium'
-                : 'text-gray-400 light:text-gray-600 hover:text-white light:hover:text-gray-900 hover:bg-gray-800 light:hover:bg-gray-100'
+                ? 'bg-border-base text-text-primary font-medium'
+                : 'text-text-secondary hover:text-text-primary hover:bg-border-base'
             )}
           >
             <Terminal className="w-4 h-4 flex-shrink-0" />
@@ -88,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="pt-4">
             <button
               onClick={() => setWorkspacesExpanded((v) => !v)}
-              className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold text-gray-500 light:text-gray-600 uppercase tracking-wider hover:text-gray-400 light:hover:text-gray-700 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold text-text-muted uppercase tracking-wider hover:text-text-secondary transition-colors"
             >
               Workspaces
               {workspacesExpanded ? (
@@ -107,11 +107,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     className={clsx(
                       'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors group',
                       pathname.startsWith(`/${ws.slug}`)
-                        ? 'bg-gray-800 light:bg-gray-200 text-white light:text-gray-900 font-medium'
-                        : 'text-gray-400 light:text-gray-600 hover:text-white light:hover:text-gray-900 hover:bg-gray-800 light:hover:bg-gray-100'
+                        ? 'bg-border-base text-text-primary font-medium'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-border-base'
                     )}
                   >
-                    <div className="w-5 h-5 rounded bg-gray-700 light:bg-gray-300 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-600 light:group-hover:bg-gray-400 text-[10px] font-bold text-gray-300 light:text-gray-700">
+                    <div className="w-5 h-5 rounded bg-border-base flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-text-secondary">
                       {ws.name[0]}
                     </div>
                     <span className="flex-1 truncate">{ws.name}</span>
@@ -123,7 +123,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 light:text-gray-500 hover:text-gray-400 light:hover:text-gray-700 hover:bg-gray-800 light:hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text-secondary hover:bg-border-base transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   New workspace
@@ -134,11 +134,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* User menu */}
-        <div className="px-2 py-3 border-t border-gray-800 light:border-gray-200">
+        <div className="px-2 py-3 border-t border-border-base">
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen((v) => !v)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-800 light:hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-border-base transition-colors"
             >
               <div className="w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0">
                 <span className="text-[10px] font-bold text-white">
@@ -146,30 +146,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </span>
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-medium text-gray-200 light:text-gray-700 truncate">{user?.name ?? 'User'}</p>
+                <p className="text-xs font-medium text-text-secondary truncate">{user?.name ?? 'User'}</p>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-500 light:text-gray-600 flex-shrink-0" />
+              <ChevronDown className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
             </button>
 
             {userMenuOpen && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 bg-gray-800 light:bg-white border border-gray-700 light:border-gray-200 rounded-xl shadow-2xl overflow-hidden z-50">
-                <div className="px-3 py-2 border-b border-gray-700 light:border-gray-200">
-                  <p className="text-xs text-gray-400 light:text-gray-600 truncate">{user?.email ?? ''}</p>
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border-base rounded-xl shadow-2xl overflow-hidden z-50">
+                <div className="px-3 py-2 border-b border-border-base">
+                  <p className="text-xs text-text-secondary truncate">{user?.email ?? ''}</p>
                 </div>
-                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700 light:border-gray-200">
-                  <span className="text-xs text-gray-400 light:text-gray-600">Theme</span>
+                <div className="flex items-center justify-between px-3 py-2 border-b border-border-base">
+                  <span className="text-xs text-text-secondary">Theme</span>
                   <ThemeToggle />
                 </div>
                 <Link
                   href="/settings"
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 light:text-gray-700 hover:text-white light:hover:text-gray-900 hover:bg-gray-700 light:hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-border-base transition-colors"
                 >
                   <Settings className="w-4 h-4" />
                   Settings
                 </Link>
                 <button
                   onClick={logout}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 light:text-red-600 hover:text-red-300 light:hover:text-red-700 hover:bg-gray-700 light:hover:bg-gray-100 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-border-base transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign out
@@ -183,12 +183,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="h-12 flex items-center px-6 border-b border-gray-800 light:border-gray-200 bg-gray-900 light:bg-white flex-shrink-0">
+        <header className="h-12 flex items-center px-6 border-b border-border-base bg-surface flex-shrink-0">
           <div className="flex-1" />
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500 light:text-gray-600">{orgName}</span>
-            <div className="w-px h-4 bg-gray-700 light:bg-gray-300" />
-            <div className="flex items-center gap-1.5 text-xs text-gray-400 light:text-gray-600">
+            <span className="text-xs text-text-muted">{orgName}</span>
+            <div className="w-px h-4 bg-border-base" />
+            <div className="flex items-center gap-1.5 text-xs text-text-secondary">
               <User className="w-3.5 h-3.5" />
               {user?.name ?? 'User'}
             </div>
@@ -196,7 +196,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-gray-950 light:bg-gray-50">
+        <main className="flex-1 overflow-y-auto bg-background">
           {children}
         </main>
       </div>
