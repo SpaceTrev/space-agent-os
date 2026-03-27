@@ -49,7 +49,7 @@ def _chunk(text: str, limit: int = 1900, code_block: str | None = None) -> list[
     return parts
 
 
-def _to_brain_request(req: IncomingRequest) -> Any:
+def _to_brain_request(req: IncomingRequest, history: list[dict[str, str]] | None = None) -> Any:
     from orchestration.central_brain import BrainRequest
     return BrainRequest(
         id=req.id,
@@ -57,6 +57,7 @@ def _to_brain_request(req: IncomingRequest) -> Any:
         channel="discord",
         priority="NORMAL",
         metadata={"author": req.author, "author_id": req.author_id},
+        history=history or [],
     )
 
 
@@ -97,16 +98,23 @@ class _SpaceClawClient(discord.Client):
         if not content:
             return
 
+        from memory.conversation import append_message, get_history
+        channel_id = message.channel.id
+        history = get_history(channel_id)
+        append_message(channel_id, "user", content, author=str(message.author))
+
         req = IncomingRequest(
             id=str(message.id), source="discord", author=str(message.author),
             author_id=message.author.id, content=content,
-            channel_id=message.channel.id,
+            channel_id=channel_id,
             timestamp=message.created_at or datetime.now(timezone.utc),
         )
         async with message.channel.typing():
-            brain_req = _to_brain_request(req)
+            brain_req = _to_brain_request(req, history=history)
             response = await self._brain.handle(brain_req)
             result = response.output if response.output else (response.error or "⚠️ No output.")
+
+        append_message(channel_id, "assistant", result)
         for part in _chunk(result):
             await message.reply(part)
 
@@ -118,15 +126,20 @@ class _SpaceClawClient(discord.Client):
         @app_commands.describe(message="What should Space-Claw do?")
         async def ask_cmd(interaction: discord.Interaction, message: str) -> None:
             await interaction.response.defer(thinking=True)
+            from memory.conversation import append_message, get_history
+            channel_id = interaction.channel_id or CHANNEL_ID
+            history = get_history(channel_id)
+            append_message(channel_id, "user", message, author=str(interaction.user))
             req = IncomingRequest(
                 id=str(interaction.id), source="discord", author=str(interaction.user),
                 author_id=interaction.user.id, content=message,
-                channel_id=interaction.channel_id or CHANNEL_ID,
+                channel_id=channel_id,
                 timestamp=datetime.now(timezone.utc),
             )
-            brain_req = _to_brain_request(req)
+            brain_req = _to_brain_request(req, history=history)
             response = await self._brain.handle(brain_req)
             result = response.output if response.output else (response.error or "⚠️ No output.")
+            append_message(channel_id, "assistant", result)
             for part in _chunk(result):
                 await interaction.followup.send(part)
 

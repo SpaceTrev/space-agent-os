@@ -61,6 +61,7 @@ class BrainRequest:
     priority: str = "NORMAL"
     tags: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
+    history: list[dict[str, str]] = field(default_factory=list)  # conversation history
 
 
 @dataclass
@@ -177,21 +178,59 @@ class CentralBrain:
         task = {"id": req.id, "description": req.goal, "priority": req.priority}
 
         if route == RouteTag.CHAT:
-            # Fast path: direct LLM call with Space-Claw persona, no team overhead
-            from agents.role_spec import call_llm, RoleSpec, ModelTier
-            chat_spec = RoleSpec(
-                name="space-claw",
-                department="assistant",
-                expertise="general assistant",
-                model_tier=ModelTier.ORCHESTRATOR,
-                system_prompt=(
-                    "You are Space-Claw, an autonomous AI operating system built by Trev and Pablo. "
-                    "You are sharp, direct, and technical. No filler words. "
-                    "Answer questions concisely. For coding/build tasks, say you'll get to work. "
-                    "For status questions, be factual. You are running on Claude Max via a local proxy."
-                ),
+            # Fast path: direct LLM call with Space-Claw persona + conversation history
+            from agents.role_spec import _resolve_model, _call_openai_compat, _call_anthropic, _call_ollama, RoleSpec, ModelTier
+            from agents.role_spec import CLAUDE_MAX_PROXY_URL, CLAUDE_MAX_MODEL, PRIMARY_BACKEND, ANTHROPIC_API_KEY, OLLAMA_ENABLED, ORCHESTRATOR_MODEL
+
+            system = (
+                "You are Space-Claw — an autonomous AI operating system built by Trev Benavides and Pablo Strada. "
+                "You are sharp, direct, and technical. No filler. No sycophancy. "
+                "You have full context of the space-agent-os project and all prior conversations. "
+                "Answer concisely. For build tasks, confirm and act. For questions, be factual. "
+                "You run on Claude Max via a local proxy on Trev's MacBook."
             )
-            output = await call_llm(chat_spec, req.goal)
+
+            # Build messages with history
+            messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+            if req.history:
+                messages.extend(req.history)
+            messages.append({"role": "user", "content": req.goal})
+
+            backend = PRIMARY_BACKEND.lower()
+            if backend == "claude_max":
+                import httpx
+                async with httpx.AsyncClient(base_url=CLAUDE_MAX_PROXY_URL, timeout=120.0) as client:
+                    resp = await client.post("/chat/completions", json={
+                        "model": CLAUDE_MAX_MODEL,
+                        "messages": messages,
+                        "max_tokens": 2048,
+                    })
+                    resp.raise_for_status()
+                    output = resp.json()["choices"][0]["message"]["content"].strip()
+            elif backend == "anthropic" and ANTHROPIC_API_KEY:
+                import anthropic
+                client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+                # Convert system message
+                chat_msgs = [m for m in messages if m["role"] != "system"]
+                r = await client.messages.create(
+                    model="claude-sonnet-4-6", max_tokens=2048,
+                    system=system, messages=chat_msgs,
+                )
+                output = r.content[0].text
+            else:
+                # Ollama fallback — no history support, just use context string
+                context = "\n".join(f"{m['role']}: {m['content']}" for m in (req.history or [])[-6:])
+                import httpx
+                async with httpx.AsyncClient(base_url="http://localhost:11434", timeout=120.0) as client:
+                    resp = await client.post("/api/generate", json={
+                        "model": ORCHESTRATOR_MODEL,
+                        "prompt": req.goal,
+                        "system": system + (f"\n\nRecent context:\n{context}" if context else ""),
+                        "stream": False,
+                    })
+                    resp.raise_for_status()
+                    output = resp.json().get("response", "").strip()
+
             return output, ["space-claw"]
 
         if route == RouteTag.ARCHITECT:
