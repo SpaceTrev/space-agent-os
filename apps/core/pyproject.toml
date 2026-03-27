@@ -13,6 +13,8 @@ dependencies = [
     "discord-py>=2.4.0",
     "pyyaml>=6.0.2",
     # "anthropic>=0.40.0",  # disabled — using Gemini for cloud tier
+    "fastmcp>=3.1.1",
+    "mcp>=1.0.0",
 ]
 
 [dependency-groups]
