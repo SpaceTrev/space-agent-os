@@ -100,6 +100,20 @@ class DiscordChannel:
     async def close(self) -> None:
         await self._client.close()
 
+    # ── Request adapter ───────────────────────────────────────────────────
+
+    @staticmethod
+    def _to_brain_request(req: IncomingRequest) -> Any:
+        """Convert a Discord IncomingRequest to a CentralBrain BrainRequest."""
+        from orchestration.central_brain import BrainRequest
+        return BrainRequest(
+            id=req.id,
+            goal=req.content,
+            channel="discord",
+            priority="NORMAL",
+            metadata={"author": req.author, "author_id": req.author_id, "channel_id": req.channel_id},
+        )
+
     # ── Outbound helpers ──────────────────────────────────────────────────
 
     async def send_message(self, content: str, channel_id: int | None = None) -> None:
@@ -181,7 +195,9 @@ class DiscordChannel:
         )
 
         async with message.channel.typing():
-            result = await self._brain.handle(req)
+            brain_req = self._to_brain_request(req)
+            response = await self._brain.handle(brain_req)
+            result = response.output if response.output else (response.error or "⚠️ No output.")
 
         for part in _chunk(result):
             await message.reply(part)
@@ -205,7 +221,9 @@ class DiscordChannel:
                 channel_id=interaction.channel_id or CHANNEL_ID,
                 timestamp=datetime.now(timezone.utc),
             )
-            result = await self._brain.handle(req)
+            brain_req = DiscordChannel._to_brain_request(req)
+            response = await self._brain.handle(brain_req)
+            result = response.output if response.output else (response.error or "⚠️ No output.")
             for part in _chunk(result):
                 await interaction.followup.send(part)
 
@@ -247,7 +265,9 @@ class DiscordChannel:
                 channel_id=interaction.channel_id or CHANNEL_ID,
                 timestamp=datetime.now(timezone.utc),
             )
-            result = await self._brain.handle(req)
+            brain_req = DiscordChannel._to_brain_request(req)
+            response = await self._brain.handle(brain_req)
+            result = response.output if response.output else (response.error or "⚠️ No output.")
             for part in _chunk(result):
                 await interaction.followup.send(part)
 

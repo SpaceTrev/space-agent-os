@@ -112,6 +112,20 @@ class CentralBrain:
 
     # ── Public interface ──────────────────────────────────────────────────────
 
+    async def status(self) -> dict[str, Any]:
+        """Return system health for /status command and Mission Control."""
+        from agents.role_spec import get_backend_status
+        backend = get_backend_status()
+        return {
+            "🤖 Active Backend": backend["active_backend"],
+            "🧠 Active Model": backend["active_model"],
+            "🔑 Anthropic API": "✅ configured" if backend["anthropic_configured"] else "❌ not set",
+            "🌐 Gemini API": "✅ configured" if backend["gemini_configured"] else "❌ not set",
+            "💻 Ollama": "✅ enabled" if backend["ollama_enabled"] else "off (default)",
+            "⚠️ Warning": backend.get("warning", "—"),
+            "🏠 Agents": f"{len(self.__dict__)} loaded",
+        }
+
     async def handle(self, req: BrainRequest) -> BrainResponse:
         """Route a request and return the response."""
         route = self._route(req)
