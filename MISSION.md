@@ -74,3 +74,26 @@ Use only when: offline, privacy-sensitive data that can't leave the machine, hig
 - Social and Discord presence is not an afterthought — it IS the sales funnel
 - The platform serves non-technical Mexican business owners — keep UX and language accessible
 - We use it ourselves first. If it doesn't work for us, it doesn't ship to clients.
+
+## The Core Product Insight
+
+**Space-Agent-OS gets more efficient the more it works.**
+
+Every workflow an agent completes can be saved as a reusable template. Over time the system accumulates a library of battle-tested patterns — instead of reasoning from scratch every time, agents compose from proven building blocks.
+
+This means:
+- **Token costs drop** as workflows are reused instead of regenerated
+- **Speed increases** as agents skip reasoning they've already done
+- **Quality improves** as templates are refined through repeated use
+- **The moat deepens** — each client deployment makes the platform smarter for all clients
+
+### How it works in practice
+1. Agent completes a task (e.g. "write a product launch email sequence")
+2. The workflow is extracted, parameterized, and saved to the workflow library
+3. Next time a similar task arrives, the agent loads the template and fills in variables — 10x faster, fraction of the tokens
+4. Workflows can be shared across client deployments or kept private per tenant
+
+### What we're really building
+Not just an agent runner — a **compound intelligence platform**. The platform learns the shape of work, encodes it, and gets better at that work permanently. This is the defensible business, not the models themselves.
+
+Client value proposition: "Our AI agents don't start from zero. They inherit every workflow your industry has already solved."
