@@ -160,10 +160,11 @@ class DiscordChannel:
             guild_id=GUILD_ID,
             channel_id=CHANNEL_ID or "DMs only",
         )
+        print(f"[Space-Claw] Discord bot online: {self._client.user}", flush=True)
         if CHANNEL_ID:
             ch = self._client.get_channel(CHANNEL_ID)
             if ch and isinstance(ch, discord.TextChannel):
-                await ch.send("🤖 **Space-Claw online.** Type `/ask` or mention me to start.")
+                await ch.send("🛸 **Space-Claw online.** Use `/ask`, `/status`, `/tasks`, or `/swarm`.")
 
     async def _on_message(self, message: discord.Message) -> None:
         if message.author.bot:
