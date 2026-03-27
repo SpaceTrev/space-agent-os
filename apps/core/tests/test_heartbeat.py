@@ -205,7 +205,7 @@ def test_role_spec_backend_status_no_key():
     orig_ollama = os.environ.get("OLLAMA_ENABLED", "false")
     orig_backend = os.environ.get("PRIMARY_BACKEND", "ollama")
     os.environ["OLLAMA_ENABLED"] = "false"
-    os.environ["PRIMARY_BACKEND"] = "anthropic"  # wants anthropic but no key
+    os.environ["PRIMARY_BACKEND"] = "anthropic"  # wants API key but none set
     try:
         import agents.role_spec as rs
         importlib.reload(rs)
@@ -220,16 +220,19 @@ def test_role_spec_backend_status_no_key():
 
 
 def test_role_spec_backend_status_ollama():
-    """get_backend_status returns ollama backend when OLLAMA_ENABLED=true."""
+    """get_backend_status returns ollama backend when PRIMARY_BACKEND=ollama."""
     import os, importlib
-    orig = os.environ.pop("ANTHROPIC_API_KEY", None)
+    orig_key = os.environ.pop("ANTHROPIC_API_KEY", None)
+    orig_backend = os.environ.get("PRIMARY_BACKEND", "ollama")
     os.environ["OLLAMA_ENABLED"] = "true"
+    os.environ["PRIMARY_BACKEND"] = "ollama"
     try:
         import agents.role_spec as rs
         importlib.reload(rs)
         status = rs.get_backend_status()
         assert status["active_backend"] == "ollama"
     finally:
-        if orig:
-            os.environ["ANTHROPIC_API_KEY"] = orig
+        if orig_key:
+            os.environ["ANTHROPIC_API_KEY"] = orig_key
         os.environ["OLLAMA_ENABLED"] = "false"
+        os.environ["PRIMARY_BACKEND"] = orig_backend
