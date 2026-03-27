@@ -152,8 +152,30 @@ class CentralBrain:
 
     # ── Routing ───────────────────────────────────────────────────────────────
 
+    # Channel name → forced route (override keyword matching)
+    _CHANNEL_ROUTES: dict[str, RouteTag] = {
+        "dev":          RouteTag.CODE,
+        "builds":       RouteTag.CODE,
+        "engineering":  RouteTag.CODE,
+        "code":         RouteTag.CODE,
+        "planning":     RouteTag.PLAN,
+        "sprint":       RouteTag.PLAN,
+        "tasks":        RouteTag.PLAN,
+        "research":     RouteTag.RESEARCH,
+        "architect":    RouteTag.ARCHITECT,
+        "design":       RouteTag.ARCHITECT,
+        "swarm":        RouteTag.SWARM,
+    }
+
     def _route(self, req: BrainRequest) -> RouteTag:
-        """Classify the request into a route tag."""
+        """Classify the request — channel name takes priority over keywords."""
+        # Channel-based routing (no commands needed)
+        channel_name = str(req.metadata.get("channel_name", "")).lower().strip("#")
+        for pattern, tag in self._CHANNEL_ROUTES.items():
+            if pattern in channel_name:
+                return tag
+
+        # Keyword-based routing
         text = req.goal.lower()
         for tag in (
             RouteTag.ARCHITECT,
@@ -165,7 +187,8 @@ class CentralBrain:
         ):
             if any(kw in text for kw in _ROUTE_KEYWORDS[tag]):
                 return tag
-        return RouteTag.CHAT  # default: fast single-agent response
+
+        return RouteTag.CHAT  # default: fluid chat with memory
 
     # ── Dispatch ──────────────────────────────────────────────────────────────
 

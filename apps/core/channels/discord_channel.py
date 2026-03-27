@@ -49,14 +49,14 @@ def _chunk(text: str, limit: int = 1900, code_block: str | None = None) -> list[
     return parts
 
 
-def _to_brain_request(req: IncomingRequest, history: list[dict[str, str]] | None = None) -> Any:
+def _to_brain_request(req: IncomingRequest, history: list[dict[str, str]] | None = None, channel_name: str = "") -> Any:
     from orchestration.central_brain import BrainRequest
     return BrainRequest(
         id=req.id,
         goal=req.content,
         channel="discord",
         priority="NORMAL",
-        metadata={"author": req.author, "author_id": req.author_id},
+        metadata={"author": req.author, "author_id": req.author_id, "channel_name": channel_name},
         history=history or [],
     )
 
@@ -100,6 +100,7 @@ class _SpaceClawClient(discord.Client):
 
         from memory.conversation import append_message, get_history
         channel_id = message.channel.id
+        channel_name = getattr(message.channel, "name", "")
         history = get_history(channel_id)
         append_message(channel_id, "user", content, author=str(message.author))
 
@@ -110,7 +111,7 @@ class _SpaceClawClient(discord.Client):
             timestamp=message.created_at or datetime.now(timezone.utc),
         )
         async with message.channel.typing():
-            brain_req = _to_brain_request(req, history=history)
+            brain_req = _to_brain_request(req, history=history, channel_name=channel_name)
             response = await self._brain.handle(brain_req)
             result = response.output if response.output else (response.error or "⚠️ No output.")
 
