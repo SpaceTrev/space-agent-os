@@ -24,3 +24,7 @@
 - [NORMAL] ✅ Orchestrator smoke test passed — llama3.1:8b responded "SPACE-CLAW ONLINE" in 3s @space-claw
 - [NORMAL] ✅ .env synced to new model architecture (PRIMARY_MODEL=claude-sonnet-4-6, ORCHESTRATOR_MODEL=llama3.1:8b, OLLAMA_ENABLED=false) @space-claw
 - [FIX] ✅ git pull origin main — updated model tier strategy (Claude Max primary, Ollama optional) @space-claw
+- [DONE] 2026-03-27T04:16:39Z - [NORMAL] Implement notify_discord via httpx REST (replace stub) @trev #channels
+  Result: Replaced stub with full discord_notify.py httpx REST implementation. Wired into heartbeat.
+- [DONE] 2026-03-27T04:18:53Z - [LOW] Add pytest smoke tests for heartbeat and worker
+  Result: 12 tests passing: EventBus pub/sub, PipelineManager stage chaining, HeartbeatEngine event publishing, role_spec backend routing
