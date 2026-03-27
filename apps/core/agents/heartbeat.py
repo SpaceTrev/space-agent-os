@@ -150,15 +150,9 @@ async def dispatch_whatsapp_commands(
 
 
 async def notify_discord(message: str) -> None:
-    '''Post a message to the configured Discord channel via REST.
-
-    Uses DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_CHANNEL_ID env vars.
-    TODO: replace stub with full discord.py or httpx implementation.
-    '''
-    if not DISCORD_BOT_TOKEN or not DISCORD_CHANNEL_ID:
-        log.debug('discord.skip', reason='DISCORD_BOT_TOKEN or DISCORD_CHANNEL_ID not set')
-        return
-    log.debug('discord.stub', channel_id=DISCORD_CHANNEL_ID, message=message[:80])
+    '''Post a message to the configured Discord channel via REST.'''
+    from agents.automations.discord_notify import notify as _discord_notify
+    await _discord_notify(message)
 
 
 # ---------------------------------------------------------------------------

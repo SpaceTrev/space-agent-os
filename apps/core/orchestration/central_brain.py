@@ -21,15 +21,15 @@ from typing import Any
 
 import structlog
 
-from ..agents.backend_engineer import BackendEngineerAgent
-from ..agents.context_agent import ContextAgent
-from ..agents.domain_agent import DomainAgent
-from ..agents.frontend_engineer import FrontendEngineerAgent
-from ..agents.lead_architect import LeadArchitectAgent
-from ..agents.planner_agent import PlannerAgent
-from ..agents.pm_agent import PMAgent
-from ..agents.researcher_agent import ResearcherAgent
-from ..agents.reviewer_agent import ReviewerAgent
+from agents.backend_engineer import BackendEngineerAgent
+from agents.context_agent import ContextAgent
+from agents.domain_agent import DomainAgent
+from agents.frontend_engineer import FrontendEngineerAgent
+from agents.lead_architect import LeadArchitectAgent
+from agents.planner_agent import PlannerAgent
+from agents.pm_agent import PMAgent
+from agents.researcher_agent import ResearcherAgent
+from agents.reviewer_agent import ReviewerAgent
 from .swarm_coordinator import SwarmCoordinator
 from .team_orchestrator import TeamConfig, TeamOrchestrator
 

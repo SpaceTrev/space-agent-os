@@ -38,8 +38,8 @@ AUDIT_LOG = REPO_ROOT / "logs" / "audit.jsonl"
 # ── Model config ──────────────────────────────────────────────────────────────
 OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_NUM_PARALLEL: int = int(os.getenv("OLLAMA_NUM_PARALLEL", "4"))
-ORCHESTRATOR_MODEL: str = os.getenv("ORCHESTRATOR_MODEL", "llama3.3:8b")
-WORKER_MODEL: str = os.getenv("WORKER_MODEL", "qwen3-coder:30b-a3b")
+ORCHESTRATOR_MODEL: str = os.getenv("ORCHESTRATOR_MODEL", "llama3.1:8b")
+WORKER_MODEL: str = os.getenv("WORKER_MODEL", "qwen3-coder:30b")
 ARCHITECT_MODEL: str = os.getenv("ARCHITECT_MODEL", "claude-opus-4-6")
 ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
 

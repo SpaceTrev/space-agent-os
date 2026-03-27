@@ -77,7 +77,11 @@ class DiscordChannel:
         self._brain = brain
 
         intents = discord.Intents.default()
-        intents.message_content = True
+        # message_content is a Privileged Intent — requires enabling in Discord Dev Portal
+        # (discord.com/developers/applications → Bot → Privileged Gateway Intents)
+        # Set DISCORD_MESSAGE_CONTENT_INTENT=true once enabled to allow @mention/DM routing
+        if os.getenv("DISCORD_MESSAGE_CONTENT_INTENT", "").lower() == "true":
+            intents.message_content = True
         self._client = discord.Client(intents=intents)
         self._tree = app_commands.CommandTree(self._client)
         self._guild = discord.Object(id=GUILD_ID)

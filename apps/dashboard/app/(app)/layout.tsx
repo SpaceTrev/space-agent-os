@@ -13,6 +13,7 @@ import {
   LogOut,
   Plus,
   User,
+  Terminal,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
@@ -67,6 +68,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
             Dashboard
+          </Link>
+
+          {/* Mission Control */}
+          <Link
+            href="/mission-control"
+            className={clsx(
+              'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+              pathname === '/mission-control'
+                ? 'bg-gray-800 light:bg-gray-200 text-white light:text-gray-900 font-medium'
+                : 'text-gray-400 light:text-gray-600 hover:text-white light:hover:text-gray-900 hover:bg-gray-800 light:hover:bg-gray-100'
+            )}
+          >
+            <Terminal className="w-4 h-4 flex-shrink-0" />
+            Mission Control
           </Link>
 
           {/* Workspaces section */}
