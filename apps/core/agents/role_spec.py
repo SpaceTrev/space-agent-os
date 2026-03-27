@@ -37,7 +37,13 @@ log = structlog.get_logger()
 
 # ─── Config ──────────────────────────────────────────────────────────────────
 
-# Primary: Claude via Anthropic API
+# Primary: Claude Max via local proxy (claude-max-api-proxy at localhost:3456)
+#   Start with: claude auth login && claude-max-api
+#   Then set PRIMARY_BACKEND=claude_max in .env
+CLAUDE_MAX_PROXY_URL: str = os.getenv("CLAUDE_MAX_PROXY_URL", "http://localhost:3456/v1")
+CLAUDE_MAX_MODEL: str = "claude-sonnet-4"   # proxy model name
+
+# Fallback: Anthropic API key (if someone has one)
 ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
 PRIMARY_MODEL: str = os.getenv("PRIMARY_MODEL", "claude-sonnet-4-6")
 
@@ -45,33 +51,55 @@ PRIMARY_MODEL: str = os.getenv("PRIMARY_MODEL", "claude-sonnet-4-6")
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 SECONDARY_MODEL: str = os.getenv("SECONDARY_MODEL", "gemini-2.0-flash")
 
-# Local: Ollama (off by default)
+# Local: Ollama
 OLLAMA_ENABLED: bool = os.getenv("OLLAMA_ENABLED", "false").lower() == "true"
 OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 ORCHESTRATOR_MODEL: str = os.getenv("ORCHESTRATOR_MODEL", "llama3.1:8b")
 WORKER_MODEL: str = os.getenv("WORKER_MODEL", "qwen3-coder:30b")
 
+# Which backend to use (claude_max | anthropic | ollama)
+PRIMARY_BACKEND: str = os.getenv("PRIMARY_BACKEND", "ollama")
+
+
+def _probe_claude_max_proxy() -> bool:
+    """Check if the Claude Max proxy is reachable (sync, fast)."""
+    import urllib.request
+    try:
+        url = CLAUDE_MAX_PROXY_URL.replace("/v1", "") + "/health"
+        urllib.request.urlopen(url, timeout=2)
+        return True
+    except Exception:
+        return False
+
 
 def _resolve_model(tier: "ModelTier") -> tuple[str, str]:
     """
-    Return (backend, model_name) for the given tier using available credentials.
+    Return (backend, model_name) for the given tier.
 
     Resolution order:
-      1. Anthropic API (if ANTHROPIC_API_KEY set)
-      2. Ollama         (if OLLAMA_ENABLED=true)
-      3. Raise          (no working backend configured)
+      1. claude_max  — Claude Max subscription via local proxy (PRIMARY_BACKEND=claude_max)
+      2. anthropic   — Direct Anthropic API key (PRIMARY_BACKEND=anthropic)
+      3. ollama      — Local Ollama (PRIMARY_BACKEND=ollama or OLLAMA_ENABLED=true)
+      4. Raise       — nothing configured
     """
-    if ANTHROPIC_API_KEY:
+    backend = PRIMARY_BACKEND.lower()
+
+    if backend == "claude_max":
+        return "claude_max", CLAUDE_MAX_MODEL
+
+    if backend == "anthropic" and ANTHROPIC_API_KEY:
         return "anthropic", PRIMARY_MODEL
 
-    if OLLAMA_ENABLED:
+    if backend == "ollama" or OLLAMA_ENABLED:
         if tier == ModelTier.ORCHESTRATOR:
             return "ollama", ORCHESTRATOR_MODEL
         return "ollama", WORKER_MODEL
 
     raise RuntimeError(
-        "No LLM backend configured. Set ANTHROPIC_API_KEY in .env, "
-        "or set OLLAMA_ENABLED=true to use local Ollama models."
+        "No LLM backend active. Options:\n"
+        "  • Claude Max: run 'claude auth login && claude-max-api', set PRIMARY_BACKEND=claude_max\n"
+        "  • Anthropic API: set ANTHROPIC_API_KEY + PRIMARY_BACKEND=anthropic\n"
+        "  • Ollama: set OLLAMA_ENABLED=true + PRIMARY_BACKEND=ollama"
     )
 
 
@@ -176,12 +204,35 @@ async def call_llm(
 
     log.debug("call_llm.route", agent=spec.name, tier=spec.model_tier.value, backend=backend, model=model)
 
+    if backend == "claude_max":
+        return await _call_openai_compat(model, spec.system_prompt, prompt, context, base_url=CLAUDE_MAX_PROXY_URL)
     if backend == "anthropic":
         return await _call_anthropic(spec, prompt, context, model)
     if backend == "ollama":
         return await _call_ollama(model, spec.system_prompt, prompt, context)
 
     raise RuntimeError(f"Unknown backend: {backend}")
+
+
+async def _call_openai_compat(
+    model: str,
+    system_prompt: str,
+    prompt: str,
+    context: str,
+    base_url: str = "http://localhost:3456/v1",
+) -> str:
+    """Call any OpenAI-compatible endpoint (Claude Max proxy, LiteLLM, etc.)."""
+    messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
+    if context.strip():
+        messages.append({"role": "user", "content": f"Context:\n{context}"})
+        messages.append({"role": "assistant", "content": "Context received. Ready."})
+    messages.append({"role": "user", "content": prompt})
+
+    payload = {"model": model, "messages": messages, "max_tokens": 4096}
+    async with httpx.AsyncClient(base_url=base_url, timeout=120.0) as client:
+        resp = await client.post("/chat/completions", json=payload)
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"].strip()
 
 
 async def _call_anthropic(
@@ -239,12 +290,13 @@ async def _call_ollama(
 
 
 def get_backend_status() -> dict[str, Any]:
-    """
-    Return a dict describing which backends are configured and active.
-    Used by CentralBrain.status() and the Discord /status command.
-    """
+    """Return observable health dict for /status and Mission Control."""
+    proxy_reachable = _probe_claude_max_proxy() if PRIMARY_BACKEND == "claude_max" else False
+
     status: dict[str, Any] = {
-        "primary_model": PRIMARY_MODEL,
+        "primary_backend": PRIMARY_BACKEND,
+        "claude_max_proxy": CLAUDE_MAX_PROXY_URL,
+        "claude_max_proxy_reachable": proxy_reachable,
         "anthropic_configured": bool(ANTHROPIC_API_KEY),
         "gemini_configured": bool(GEMINI_API_KEY),
         "ollama_enabled": OLLAMA_ENABLED,
@@ -253,17 +305,24 @@ def get_backend_status() -> dict[str, Any]:
         "worker_model": WORKER_MODEL,
     }
 
-    # Determine active backend
-    if ANTHROPIC_API_KEY:
+    if PRIMARY_BACKEND == "claude_max":
+        if proxy_reachable:
+            status["active_backend"] = "claude_max"
+            status["active_model"] = CLAUDE_MAX_MODEL
+        else:
+            status["active_backend"] = "claude_max (proxy down)"
+            status["active_model"] = "—"
+            status["warning"] = "Proxy unreachable. Run: claude auth login && claude-max-api"
+    elif PRIMARY_BACKEND == "anthropic" and ANTHROPIC_API_KEY:
         status["active_backend"] = "anthropic"
         status["active_model"] = PRIMARY_MODEL
-    elif OLLAMA_ENABLED:
+    elif OLLAMA_ENABLED or PRIMARY_BACKEND == "ollama":
         status["active_backend"] = "ollama"
         status["active_model"] = WORKER_MODEL
     else:
         status["active_backend"] = "none"
         status["active_model"] = "—"
-        status["warning"] = "No LLM backend configured. Set ANTHROPIC_API_KEY in .env."
+        status["warning"] = "No LLM backend active."
 
     return status
 

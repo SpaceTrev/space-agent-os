@@ -199,24 +199,24 @@ async def test_heartbeat_publishes_urgent_tasks(tmp_path):
 # ── role_spec routing ────────────────────────────────────────────────────────
 
 def test_role_spec_backend_status_no_key():
-    """get_backend_status returns warning when no API key is set."""
-    import os
-    # Temporarily clear key for this test
-    orig = os.environ.pop("ANTHROPIC_API_KEY", None)
+    """get_backend_status returns 'none' warning when no backend is usable."""
+    import os, importlib
+    orig_key = os.environ.pop("ANTHROPIC_API_KEY", None)
     orig_ollama = os.environ.get("OLLAMA_ENABLED", "false")
+    orig_backend = os.environ.get("PRIMARY_BACKEND", "ollama")
     os.environ["OLLAMA_ENABLED"] = "false"
+    os.environ["PRIMARY_BACKEND"] = "anthropic"  # wants anthropic but no key
     try:
-        # Re-import to pick up env change
-        import importlib
         import agents.role_spec as rs
         importlib.reload(rs)
         status = rs.get_backend_status()
         assert status["active_backend"] == "none"
         assert "warning" in status
     finally:
-        if orig:
-            os.environ["ANTHROPIC_API_KEY"] = orig
+        if orig_key:
+            os.environ["ANTHROPIC_API_KEY"] = orig_key
         os.environ["OLLAMA_ENABLED"] = orig_ollama
+        os.environ["PRIMARY_BACKEND"] = orig_backend
 
 
 def test_role_spec_backend_status_ollama():
