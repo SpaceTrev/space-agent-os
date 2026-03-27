@@ -29,8 +29,8 @@ log = structlog.get_logger()
 # ─── Config ──────────────────────────────────────────────────────────────────
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "llama3.3:8b")
-WORKER_MODEL = os.getenv("WORKER_MODEL", "qwen3-coder:30b-a3b")
+ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "llama3.1:8b")
+WORKER_MODEL = os.getenv("WORKER_MODEL", "qwen3-coder:30b")
 
 # Comma-separated list of allowed IPs/CIDRs, e.g. "100.102.161.30,127.0.0.1"
 # If unset, all IPs are allowed (local-only dev default).

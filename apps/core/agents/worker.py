@@ -112,13 +112,19 @@ class WorkerAgent:
     async def run(self) -> None:
         '''Process tasks until stopped and queue is empty.'''
         log.info('worker.started', model=WORKER_MODEL, max_concurrency=MAX_CONCURRENCY)
+        pending: set[asyncio.Task] = set()
         async with httpx.AsyncClient(base_url=OLLAMA_BASE_URL) as client:
             while self._running or not self._queue.empty():
                 try:
                     task = await asyncio.wait_for(self._queue.get(), timeout=1.0)
                 except asyncio.TimeoutError:
                     continue
-                asyncio.create_task(self._handle(task, client))
+                t = asyncio.create_task(self._handle(task, client))
+                pending.add(t)
+                t.add_done_callback(pending.discard)
+            # drain all in-flight tasks before closing the client
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
         log.info('worker.stopped')
 
     async def _handle(
