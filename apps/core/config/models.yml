@@ -1,68 +1,52 @@
-# Space-Claw model tier configuration
-# See CLAUDE.md for full routing rules.
+# Space-Claw model tier configuration — updated 2026-03-26
+# Strategy: Claude Max (via OpenClaw) is primary. Ollama is available but not the default.
 
 tiers:
-
-  orchestrator:
-    model: llama3.3:8b
-    provider: ollama
-    base_url: ${OLLAMA_BASE_URL:-http://localhost:11434}
-    description: Fast routing, task triage, heartbeat decisions
+  primary:
+    model: claude-sonnet-4-6
+    provider: openclaw
+    description: Default for all tasks — reasoning, code, planning, orchestration
     use_cases:
-      - heartbeat triage
-      - task routing
-      - quick summaries
-      - channel dispatch decisions
-    context_window: 128000
-    max_tokens: 4096
+      - all general tasks
+      - code generation and review
+      - architecture and planning
+      - agent orchestration
+      - complex reasoning
+    context_window: 200000
+    max_tokens: 8096
     temperature: 0.2
 
-  worker:
-    model: qwen3-coder:30b-a3b
+  cloud_secondary:
+    model: gemini/gemini-2.0-flash
+    provider: google
+    description: Parallel tasks, long-context document processing, Gemini-specific features
+    use_cases:
+      - parallel agent runs (when Claude Max is busy)
+      - very long context (>100k tokens)
+      - Google integrations
+      - fallback if OpenClaw unreachable
+    context_window: 1000000
+    max_tokens: 8192
+    temperature: 0.2
+
+  local:
+    model: qwen3-coder:30b
     provider: ollama
     base_url: ${OLLAMA_BASE_URL:-http://localhost:11434}
-    description: Code generation, implementation, debugging
+    description: Optional — offline work, cost-sensitive batch tasks, privacy-sensitive data
     use_cases:
-      - code generation
-      - bug fixes
-      - refactoring (simple)
-      - test writing
-      - shell script generation
+      - offline development
+      - high-volume cheap tasks
+      - privacy-sensitive operations
+      - cost optimization at scale
     context_window: 32768
     max_tokens: 8192
     temperature: 0.1
-
-  cloud:
-    model: ${CLOUD_MODEL:-gemini/gemini-2.0-flash}
-    provider: google
-    description: High-complexity tasks, multi-file reasoning, deep planning
-    use_cases:
-      - system architecture
-      - complex refactoring
-      - design reviews
-      - security analysis
-      - long-horizon planning
-    context_window: 1000000
-    max_tokens: 8192
-    temperature: 0.3
-    triggers:
-      - /architect
-      - /refactor
-      - /deep
-      - /design
-      - /cloud
-
-  # ── Anthropic (disabled — not using API key) ──────────────────────────────
-  # architect:
-  #   model: claude-opus-4-6
-  #   provider: anthropic
-  #   description: Kept here for reference if Anthropic API key is added later.
+    enabled: ${OLLAMA_ENABLED:-false}
 
 routing:
-  default_tier: worker
-  escalation_tier: cloud
-  heartbeat_tier: orchestrator
-  # Prefix triggers for cloud escalation (see triggers above)
-  escalate_on_prefix: true
-  # Fallback if Ollama unreachable
-  ollama_fallback: cloud
+  default_tier: primary
+  fallback_tier: cloud_secondary
+  local_tier: local
+  # Use local only when explicitly requested or OLLAMA_ENABLED=true
+  prefer_local: false
