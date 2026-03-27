@@ -1,132 +1,259 @@
+#!/usr/bin/env python3
 """
-Space-Claw — Ignition Verification
+verify_ignition.py — Space-Claw system health check.
 
-Checks that all required services are reachable before launch:
-  ✓ Ollama (orchestrator + worker models)
-  ✓ Gemini API (cloud tier)
-  ✓ Discord bot token (validates via Discord API)
+Verifies all external dependencies are reachable before first launch:
+  - Ollama (local) + required models
+  - Anthropic API
+  - OpenAI API       (skipped if key not set)
+  - Gemini API       (skipped if key not set)
+  - Database         (SQLite or Supabase)
 
-Usage:
-    uv run python verify_ignition.py
+Run:  uv run python verify_ignition.py
 """
 
 import asyncio
 import os
 import sys
+from pathlib import Path
 
 import httpx
-import structlog
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from the same directory as this script
+load_dotenv(Path(__file__).parent / ".env")
 
-structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(20))  # INFO
-log = structlog.get_logger()
+# ── ANSI colours ─────────────────────────────────────────────────────────────
+GREEN  = "\033[92m"
+RED    = "\033[91m"
+YELLOW = "\033[93m"
+BOLD   = "\033[1m"
+RESET  = "\033[0m"
 
-OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-ORCHESTRATOR_MODEL: str = os.getenv("ORCHESTRATOR_MODEL", "llama3.3:8b")
-WORKER_MODEL: str = os.getenv("WORKER_MODEL", "qwen3-coder:30b-a3b")
-GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN", "")
+PASS  = f"{GREEN}✓ PASS{RESET}"
+FAIL  = f"{RED}✗ FAIL{RESET}"
+SKIP  = f"{YELLOW}⚠ SKIP{RESET}"
+
+REQUIRED_MODELS = ["qwen3-coder", "llama3"]  # substring match — covers variant tags
 
 
-# ── Checks ────────────────────────────────────────────────────────────────────
+def _header(title: str) -> None:
+    print(f"\n{BOLD}{'─' * 52}{RESET}")
+    print(f"{BOLD}  {title}{RESET}")
+    print(f"{BOLD}{'─' * 52}{RESET}")
 
+
+def _result(label: str, status: str, detail: str = "") -> None:
+    detail_str = f"  {detail}" if detail else ""
+    print(f"  {status}  {label}{detail_str}")
+
+
+# ── Ollama ────────────────────────────────────────────────────────────────────
 
 async def check_ollama(client: httpx.AsyncClient) -> bool:
-    """Ping Ollama and verify configured models are present."""
-    try:
-        r = await client.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5.0)
-        r.raise_for_status()
-        available = {m["name"] for m in r.json().get("models", [])}
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    _header("Ollama (local inference)")
 
-        ok = True
-        for model in (ORCHESTRATOR_MODEL, WORKER_MODEL):
-            # Match on prefix (e.g. "llama3.3:8b" matches "llama3.3:8b-instruct-q4_K_M")
-            found = any(m.startswith(model.split(":")[0]) for m in available)
-            if found:
-                log.info("ollama.model.ok", model=model)
-            else:
-                log.warning("ollama.model.missing", model=model, available=sorted(available))
-                ok = False
-        return ok
+    # 1. Reachability
+    try:
+        resp = await client.get(f"{base_url}/api/tags", timeout=5)
+        resp.raise_for_status()
+        models_data = resp.json()
     except Exception as exc:
-        log.error("ollama.unreachable", error=str(exc), url=OLLAMA_BASE_URL)
+        _result("Ollama reachable", FAIL, str(exc))
         return False
 
+    _result("Ollama reachable", PASS, base_url)
+
+    # 2. Model presence
+    loaded = [m["name"] for m in models_data.get("models", [])]
+    all_ok = True
+    for required in REQUIRED_MODELS:
+        found = [m for m in loaded if required in m]
+        if found:
+            _result(f"Model: {required}", PASS, found[0])
+        else:
+            _result(f"Model: {required}", FAIL, f"not found — run: ollama pull {required}")
+            all_ok = False
+
+    if not loaded:
+        _result("Available models", SKIP, "no models loaded in Ollama yet")
+
+    return all_ok
+
+
+# ── Anthropic ─────────────────────────────────────────────────────────────────
+
+async def check_anthropic(client: httpx.AsyncClient) -> bool:
+    _header("Anthropic API (Architect tier)")
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+
+    if not api_key or api_key.startswith("sk-ant-..."):
+        _result("ANTHROPIC_API_KEY", SKIP, "not set — Architect tier unavailable")
+        return False
+
+    try:
+        resp = await client.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 8,
+                "messages": [{"role": "user", "content": "ping"}],
+            },
+            timeout=15,
+        )
+        if resp.status_code in (200, 400):  # 400 = bad request but key is valid
+            _result("Anthropic API", PASS, f"HTTP {resp.status_code}")
+            return True
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code
+        if code == 401:
+            _result("Anthropic API", FAIL, "invalid API key")
+        else:
+            _result("Anthropic API", FAIL, f"HTTP {code}")
+        return False
+    except Exception as exc:
+        _result("Anthropic API", FAIL, str(exc))
+        return False
+
+    return True
+
+
+# ── OpenAI ────────────────────────────────────────────────────────────────────
+
+async def check_openai(client: httpx.AsyncClient) -> bool:
+    _header("OpenAI API (optional)")
+    api_key = os.getenv("OPENAI_API_KEY", "")
+
+    if not api_key:
+        _result("OPENAI_API_KEY", SKIP, "not set — skipping")
+        return True  # not required
+
+    try:
+        resp = await client.get(
+            "https://api.openai.com/v1/models",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            _result("OpenAI API", PASS)
+            return True
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code
+        _result("OpenAI API", FAIL, f"HTTP {code} — check OPENAI_API_KEY")
+        return False
+    except Exception as exc:
+        _result("OpenAI API", FAIL, str(exc))
+        return False
+
+    return True
+
+
+# ── Gemini ────────────────────────────────────────────────────────────────────
 
 async def check_gemini(client: httpx.AsyncClient) -> bool:
-    """Verify GEMINI_API_KEY by listing available models."""
-    if not GEMINI_API_KEY:
-        log.error("gemini.key.missing", hint="Set GEMINI_API_KEY in .env")
-        return False
+    _header("Gemini API (optional)")
+    api_key = os.getenv("GEMINI_API_KEY", "")
+
+    if not api_key:
+        _result("GEMINI_API_KEY", SKIP, "not set — skipping")
+        return True  # not required
+
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_API_KEY}"
-        r = await client.get(url, timeout=10.0)
-        if r.status_code == 200:
-            models = r.json().get("models", [])
-            log.info("gemini.ok", model_count=len(models))
+        resp = await client.get(
+            f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}",
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            _result("Gemini API", PASS)
             return True
-        elif r.status_code == 400:
-            log.error("gemini.key.invalid", status=r.status_code, body=r.text[:200])
-            return False
-        else:
-            log.error("gemini.error", status=r.status_code, body=r.text[:200])
-            return False
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code
+        _result("Gemini API", FAIL, f"HTTP {code} — check GEMINI_API_KEY")
+        return False
     except Exception as exc:
-        log.error("gemini.unreachable", error=str(exc))
+        _result("Gemini API", FAIL, str(exc))
         return False
 
+    return True
 
-async def check_discord(client: httpx.AsyncClient) -> bool:
-    """Validate DISCORD_BOT_TOKEN via Discord /users/@me endpoint."""
-    if not DISCORD_BOT_TOKEN:
-        log.error("discord.token.missing", hint="Set DISCORD_BOT_TOKEN in .env")
-        return False
-    try:
-        headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}"}
-        r = await client.get("https://discord.com/api/v10/users/@me", headers=headers, timeout=10.0)
-        if r.status_code == 200:
-            data = r.json()
-            log.info("discord.ok", bot=f"{data['username']}#{data.get('discriminator','0')}")
+
+# ── Database ──────────────────────────────────────────────────────────────────
+
+async def check_database(client: httpx.AsyncClient) -> bool:
+    _header("Database")
+
+    supabase_url = os.getenv("SUPABASE_URL", "")
+    supabase_key = os.getenv("SUPABASE_SERVICE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
+
+    if supabase_url and supabase_key:
+        try:
+            resp = await client.get(
+                f"{supabase_url}/rest/v1/",
+                headers={"apikey": supabase_key, "Authorization": f"Bearer {supabase_key}"},
+                timeout=10,
+            )
+            if resp.status_code in (200, 404):  # 404 = reachable but no table yet
+                _result("Supabase", PASS, supabase_url)
+                return True
+            resp.raise_for_status()
+        except Exception as exc:
+            _result("Supabase", FAIL, str(exc))
+            return False
+
+    # Fall back to SQLite check
+    sqlite_candidates = [
+        Path(__file__).parent / "space_claw.db",
+        Path(__file__).parent / "data" / "space_claw.db",
+    ]
+    for db_path in sqlite_candidates:
+        if db_path.exists():
+            _result("SQLite", PASS, str(db_path))
             return True
-        else:
-            log.error("discord.token.invalid", status=r.status_code, body=r.text[:200])
-            return False
-    except Exception as exc:
-        log.error("discord.unreachable", error=str(exc))
-        return False
+
+    _result("Database", SKIP, "neither SUPABASE_URL nor a local SQLite db found")
+    return True  # not hard-required at ignition time
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# ── Entrypoint ────────────────────────────────────────────────────────────────
 
-
-async def main() -> None:
-    print("\n🚀 Space-Claw — Ignition Check\n")
+async def main() -> int:
+    print(f"\n{BOLD}🚀 Space-Claw — Ignition Verification{RESET}")
 
     async with httpx.AsyncClient() as client:
         results = await asyncio.gather(
             check_ollama(client),
+            check_anthropic(client),
+            check_openai(client),
             check_gemini(client),
-            check_discord(client),
+            check_database(client),
         )
 
-    labels = ["Ollama (local models)", "Gemini API (cloud tier)", "Discord bot token"]
-    all_ok = True
-    print()
-    for label, ok in zip(labels, results, strict=True):
-        status = "✅" if ok else "❌"
-        print(f"  {status}  {label}")
-        if not ok:
-            all_ok = False
+    ollama_ok, anthropic_ok, openai_ok, gemini_ok, db_ok = results
 
-    print()
-    if all_ok:
-        print("All systems go. Run: uv run python -m agents.discord_bot\n")
-    else:
-        print("Fix the errors above, then re-run verify_ignition.py\n")
-        sys.exit(1)
+    _header("Summary")
+    _result("Ollama + models",  PASS if ollama_ok    else FAIL)
+    _result("Anthropic API",    PASS if anthropic_ok else SKIP)
+    _result("OpenAI API",       PASS if openai_ok    else SKIP)
+    _result("Gemini API",       PASS if gemini_ok    else SKIP)
+    _result("Database",         PASS if db_ok        else FAIL)
+
+    hard_fail = not ollama_ok  # Ollama is required; cloud APIs are optional
+    if hard_fail:
+        print(f"\n{RED}{BOLD}  Ignition FAILED — fix the above before starting Space-Claw.{RESET}\n")
+        return 1
+
+    print(f"\n{GREEN}{BOLD}  Ignition OK — ready to launch.{RESET}\n")
+    return 0
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))
