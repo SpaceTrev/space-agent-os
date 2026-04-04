@@ -51,3 +51,24 @@ apps/core/
   integrations/
     github_connector.py             ← GitHub webhook handler scaffold
 ```
+
+## Open Questions
+- How should agents handle Linear issues that are missing acceptance criteria? (Assume a best-effort spec and proceed, or escalate to Planning?)
+- What's the retry/failure strategy when OpenClaw is unreachable mid-task?
+- Should project brain updates be committed to git automatically, or only on explicit agent instruction?
+
+## Key Decisions Made
+- **Three-level brain system** — company / department / project brains load in order, always in context. Chosen over a vector DB retrieval approach for simplicity and determinism.
+- **uv for Python deps** — `pip` is banned in `apps/core`. All Python package management via `uv`.
+- **OpenClaw as the single agent gateway** — all model calls route through OpenClaw (port 18789), not directly to Anthropic/Google APIs.
+- **Paperclip as orchestration layer** — Paperclip owns workflow coordination; `apps/core` agents are workers, not orchestrators.
+- **Railway over Vercel** — Paperclip's persistent event loop is incompatible with serverless. Railway is the deployment target.
+
+## Relevant File Paths
+- `apps/core/agents/` — agent worker implementations
+- `apps/core/agents/heartbeat.py` — heartbeat engine, polls TASKS.md every 30 min
+- `apps/dashboard/` — Next.js frontend for monitoring and config
+- `packages/shared/` — TypeScript types shared between dashboard and core
+- `ARCHITECTURE.md` — full system architecture and operating principles
+- `TASKS.md` — current task queue (source of truth for pending work)
+- `brains/projects/space-agent-os/ground-control-product-spec.md` — Ground Control full product spec
