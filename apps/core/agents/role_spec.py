@@ -76,29 +76,49 @@ def _resolve_model(tier: "ModelTier") -> tuple[str, str]:
     """
     Return (backend, model_name) for the given tier.
 
-    Resolution order:
-      1. claude_max  — Claude Max subscription via local proxy (PRIMARY_BACKEND=claude_max)
-      2. anthropic   — Direct Anthropic API key (PRIMARY_BACKEND=anthropic)
-      3. ollama      — Local Ollama (PRIMARY_BACKEND=ollama or OLLAMA_ENABLED=true)
-      4. Raise       — nothing configured
+    Resolution: tries PRIMARY_BACKEND first, then cascades through all
+    available backends so dispatch never hard-crashes.
+
+    Cascade: claude_max → anthropic → gemini → ollama → raise
     """
     backend = PRIMARY_BACKEND.lower()
 
+    # Build ordered fallback chain starting with preferred backend
+    chain: list[tuple[str, str]] = []
+
     if backend == "claude_max":
-        return "claude_max", CLAUDE_MAX_MODEL
-
-    if backend == "anthropic" and ANTHROPIC_API_KEY:
-        return "anthropic", PRIMARY_MODEL
-
+        chain.append(("claude_max", CLAUDE_MAX_MODEL))
+    if backend == "anthropic" or ANTHROPIC_API_KEY:
+        chain.append(("anthropic", PRIMARY_MODEL))
+    if GEMINI_API_KEY:
+        chain.append(("gemini", SECONDARY_MODEL))
     if backend == "ollama" or OLLAMA_ENABLED:
-        if tier == ModelTier.ORCHESTRATOR:
-            return "ollama", ORCHESTRATOR_MODEL
-        return "ollama", WORKER_MODEL
+        ollama_model = ORCHESTRATOR_MODEL if tier == ModelTier.ORCHESTRATOR else WORKER_MODEL
+        chain.append(("ollama", ollama_model))
+
+    # If preferred wasn't already added, prepend remaining options
+    if backend == "claude_max" and ("anthropic", PRIMARY_MODEL) not in chain and ANTHROPIC_API_KEY:
+        chain.insert(1, ("anthropic", PRIMARY_MODEL))
+
+    for be, model in chain:
+        if be == "claude_max":
+            if _probe_claude_max_proxy():
+                return be, model
+            log.warning("resolve_model.fallback", reason="claude_max proxy unreachable, trying next")
+            continue
+        if be == "anthropic" and not ANTHROPIC_API_KEY:
+            continue
+        if be == "gemini" and not GEMINI_API_KEY:
+            continue
+        if be == "ollama":
+            return be, model
+        return be, model
 
     raise RuntimeError(
-        "No LLM backend active. Options:\n"
+        "No LLM backend reachable. Tried all configured backends.\n"
         "  • Claude Max: run 'claude auth login && claude-max-api', set PRIMARY_BACKEND=claude_max\n"
         "  • Anthropic API: set ANTHROPIC_API_KEY + PRIMARY_BACKEND=anthropic\n"
+        "  • Gemini: set GEMINI_API_KEY\n"
         "  • Ollama: set OLLAMA_ENABLED=true + PRIMARY_BACKEND=ollama"
     )
 
@@ -198,18 +218,39 @@ async def call_llm(
     """
     Route a prompt to the best available backend for this tier.
 
-    Resolution: Anthropic (primary) → Ollama (local fallback).
+    Resolution: cascade through all reachable backends.
     """
     backend, model = _resolve_model(spec.model_tier)
 
     log.debug("call_llm.route", agent=spec.name, tier=spec.model_tier.value, backend=backend, model=model)
 
-    if backend == "claude_max":
-        return await _call_openai_compat(model, spec.system_prompt, prompt, context, base_url=CLAUDE_MAX_PROXY_URL)
-    if backend == "anthropic":
-        return await _call_anthropic(spec, prompt, context, model)
-    if backend == "ollama":
-        return await _call_ollama(model, spec.system_prompt, prompt, context)
+    try:
+        if backend == "claude_max":
+            return await _call_openai_compat(model, spec.system_prompt, prompt, context, base_url=CLAUDE_MAX_PROXY_URL)
+        if backend == "anthropic":
+            return await _call_anthropic(spec, prompt, context, model)
+        if backend == "gemini":
+            return await _call_gemini(spec, prompt, context, model)
+        if backend == "ollama":
+            return await _call_ollama(model, spec.system_prompt, prompt, context)
+    except Exception as exc:
+        log.warning("call_llm.primary_failed", backend=backend, error=str(exc))
+        # Try fallback backends
+        fallbacks = [
+            ("anthropic", ANTHROPIC_API_KEY, lambda: _call_anthropic(spec, prompt, context)),
+            ("gemini", GEMINI_API_KEY, lambda: _call_gemini(spec, prompt, context)),
+            ("ollama", OLLAMA_ENABLED, lambda: _call_ollama(ORCHESTRATOR_MODEL, spec.system_prompt, prompt, context)),
+        ]
+        for fb_name, fb_available, fb_fn in fallbacks:
+            if not fb_available or fb_name == backend:
+                continue
+            try:
+                log.info("call_llm.fallback", trying=fb_name)
+                return await fb_fn()
+            except Exception as fb_exc:
+                log.warning("call_llm.fallback_failed", backend=fb_name, error=str(fb_exc))
+                continue
+        raise  # re-raise original if all fallbacks fail
 
     raise RuntimeError(f"Unknown backend: {backend}")
 
@@ -261,6 +302,31 @@ async def _call_anthropic(
         messages=messages,  # type: ignore[arg-type]
     )
     return response.content[0].text  # type: ignore[union-attr]
+
+
+async def _call_gemini(
+    spec: RoleSpec,
+    prompt: str,
+    context: str,
+    model: str = SECONDARY_MODEL,
+) -> str:
+    """Call Google Gemini via the generativelanguage REST API."""
+    if not GEMINI_API_KEY:
+        raise RuntimeError("GEMINI_API_KEY not set")
+
+    full_prompt = f"{spec.system_prompt}\n\nContext:\n{context}\n\n---\n\n{prompt}" if context.strip() else f"{spec.system_prompt}\n\n{prompt}"
+
+    # Use Gemini REST API directly (no SDK dependency needed)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+    payload = {
+        "contents": [{"parts": [{"text": full_prompt}]}],
+        "generationConfig": {"maxOutputTokens": 4096},
+    }
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        resp = await client.post(url, json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
 
 
 async def _call_ollama(
