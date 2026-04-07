@@ -39,9 +39,9 @@ BOT_TOKEN: str = os.environ["DISCORD_BOT_TOKEN"]           # required
 GUILD_ID: int = int(os.environ["DISCORD_GUILD_ID"])        # your server ID
 CHANNEL_ID: int = int(os.getenv("DISCORD_CHANNEL_ID", "0"))  # 0 = DMs only
 OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-ORCHESTRATOR_MODEL: str = os.getenv("ORCHESTRATOR_MODEL", "llama3.3:8b")
-WORKER_MODEL: str = os.getenv("WORKER_MODEL", "qwen3-coder:30b-a3b")
-TASKS_PATH: Path = Path(os.getenv("TASKS_PATH", "/app/TASKS.md"))
+ORCHESTRATOR_MODEL: str = os.getenv("ORCHESTRATOR_MODEL", "llama3.1:8b")
+WORKER_MODEL: str = os.getenv("WORKER_MODEL", "qwen3-coder:30b")
+TASKS_PATH: Path = Path(os.getenv("TASKS_PATH", str(Path(__file__).parent.parent / "TASKS.md")))
 
 # ─── Ollama helpers ──────────────────────────────────────────────────────────
 

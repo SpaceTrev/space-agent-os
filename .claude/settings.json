@@ -10,7 +10,7 @@
       "WebFetch(*)",
       "WebSearch(*)",
       "mcp__*",
-      "computer(*)",
+      "Computer(*)",
       "Task(*)",
       "TodoWrite(*)",
       "TodoRead(*)"

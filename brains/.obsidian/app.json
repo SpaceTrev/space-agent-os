@@ -1,0 +1,11 @@
+{
+  "strictLineBreaks": false,
+  "showFrontmatter": true,
+  "livePreview": true,
+  "defaultViewMode": "source",
+  "attachmentFolderPath": "_attachments",
+  "newFileLocation": "folder",
+  "newFileFolderPath": "inbox",
+  "useMarkdownLinks": false,
+  "showLineNumber": true
+}

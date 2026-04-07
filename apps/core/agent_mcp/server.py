@@ -60,6 +60,8 @@ DASHBOARD_DIR = REPO_ROOT / "apps" / "dashboard"
 OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 DASHBOARD_URL: str = os.getenv("DASHBOARD_URL", "http://localhost:3000")
 ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
+CLAUDE_MAX_PROXY_URL: str = os.getenv("CLAUDE_MAX_PROXY_URL", "http://localhost:3456/v1")
+PRIMARY_BACKEND: str = os.getenv("PRIMARY_BACKEND", "ollama")
 
 # ── Server ────────────────────────────────────────────────────────────────────
 
@@ -181,30 +183,44 @@ async def health_check() -> dict[str, Any]:
             "error": str(exc),
         }
 
-    # 2 — Anthropic API
-    if not ANTHROPIC_API_KEY:
-        nodes["anthropic"] = {
-            "ok": False,
-            "status": "missing_key",
-            "error": "ANTHROPIC_API_KEY is not set in environment",
-        }
-    else:
+    # 2 — Claude (Max proxy or direct API key)
+    if PRIMARY_BACKEND == "claude_max":
+        try:
+            proxy_health = CLAUDE_MAX_PROXY_URL.replace("/v1", "") + "/health"
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                resp = await client.get(proxy_health)
+                nodes["anthropic"] = {
+                    "ok": resp.status_code == 200,
+                    "status": "claude_max_proxy_ok" if resp.status_code == 200 else "proxy_error",
+                    "backend": "claude-max-api-proxy",
+                    "url": proxy_health,
+                }
+        except Exception as exc:
+            nodes["anthropic"] = {
+                "ok": False,
+                "status": "proxy_unreachable",
+                "error": str(exc),
+                "hint": "Run: claude-max-api",
+            }
+    elif ANTHROPIC_API_KEY:
         try:
             async with httpx.AsyncClient(timeout=8.0) as client:
                 resp = await client.get(
                     "https://api.anthropic.com/v1/models",
-                    headers={
-                        "x-api-key": ANTHROPIC_API_KEY,
-                        "anthropic-version": "2023-06-01",
-                    },
+                    headers={"x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01"},
                 )
                 nodes["anthropic"] = {
                     "ok": resp.status_code == 200,
-                    "status": "ok" if resp.status_code == 200 else f"http_{resp.status_code}",
-                    "key_prefix": ANTHROPIC_API_KEY[:12] + "...",
+                    "status": "api_key_ok" if resp.status_code == 200 else f"http_{resp.status_code}",
                 }
         except Exception as exc:
             nodes["anthropic"] = {"ok": False, "status": "error", "error": str(exc)}
+    else:
+        nodes["anthropic"] = {
+            "ok": False,
+            "status": "not_configured",
+            "hint": "Set PRIMARY_BACKEND=claude_max and run claude-max-api, or set ANTHROPIC_API_KEY",
+        }
 
     # 3 — Dashboard build artifact (.next/BUILD_ID)
     build_id_file = DASHBOARD_DIR / ".next" / "BUILD_ID"
@@ -229,15 +245,43 @@ async def health_check() -> dict[str, Any]:
         }
 
     # 4 — Supabase DB (env-var presence check; no live network call needed)
-    db_url = os.getenv("NEXT_PUBLIC_SUPABASE_URL") or os.getenv("SUPABASE_URL", "")
-    db_key = (
-        os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "")
+    # DB config lives in apps/dashboard/.env.local — load it if present
+    dashboard_env = DASHBOARD_DIR / ".env.local"
+    if dashboard_env.exists():
+        from dotenv import dotenv_values
+        dash_env = dotenv_values(dashboard_env)
+    else:
+        dash_env = {}
+    db_url = (
+        os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+        or os.getenv("SUPABASE_URL")
+        or dash_env.get("NEXT_PUBLIC_SUPABASE_URL")
+        or dash_env.get("SUPABASE_URL", "")
     )
+    db_key = (
+        os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        or os.getenv("SUPABASE_SERVICE_KEY")
+        or os.getenv("SUPABASE_ANON_KEY")
+        or dash_env.get("SUPABASE_SERVICE_KEY")
+        or dash_env.get("SUPABASE_ANON_KEY", "")
+    )
+    # Also do a live ping if URL is set
+    db_live = False
+    if db_url:
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                r = await client.get(f"{db_url}/rest/v1/", headers={
+                    "apikey": db_key,
+                    "Authorization": f"Bearer {db_key}",
+                })
+                db_live = r.status_code == 200
+        except Exception:
+            pass
     nodes["database"] = {
-        "ok": bool(db_url and db_key),
-        "status": "configured" if (db_url and db_key) else "not_configured",
-        "url_set": bool(db_url),
-        "key_set": bool(db_key),
+        "ok": bool(db_url and db_key and db_live),
+        "status": "live" if db_live else ("configured" if (db_url and db_key) else "not_configured"),
+        "url": db_url or "—",
+        "live": db_live,
     }
 
     # 5 — TASKS.md readable

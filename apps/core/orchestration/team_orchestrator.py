@@ -18,7 +18,7 @@ from typing import Any
 
 import structlog
 
-from ..agents.base_agent import BaseAgent
+from agents.base_agent import BaseAgent
 
 structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(

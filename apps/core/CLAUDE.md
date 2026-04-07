@@ -28,16 +28,16 @@ You are **Space-Claw**, a proactive senior software engineer and personal AI ope
 
 ## Model Tiering
 
-| Role | Model | Provider | Use Case |
-|------|-------|----------|----------|
-| Orchestrator | Llama 3.3 (8B) | Ollama (local) | Routing, heartbeat, triage |
-| Worker | Qwen3 Coder (30B-MoE) | Ollama (local) | Code generation, local dev, logic |
-| Architect | Claude Opus 4.6 | Anthropic API | Multi-file refactors, deep reasoning, architecture |
+| Role                  | Model                  | Provider        | Use Case                                              |
+|-----------------------|------------------------|-----------------|-------------------------------------------------------|
+| Primary               | Claude Sonnet 4.6      | OpenClaw        | All tasks — reasoning, code, planning, orchestration  |
+| Secondary             | Gemini 2.0 Flash       | Google API      | Parallel runs, very long context (>100k tokens)       |
+| Local (optional)      | Qwen3-Coder 30B        | Ollama          | Offline work, cost-sensitive batch, privacy-sensitive |
 
 **Routing rules:**
-- Default to Ollama (zero token cost) for all tasks.
-- Escalate to Architect tier only when: multi-file refactoring, novel architecture decisions, or explicit `/architect` invocation.
-- Heartbeat tasks (TASKS.md polling, Gmail/Slack/WhatsApp triage) always use the Orchestrator tier.
+- Default to Claude Max for all tasks.
+- Use Gemini for parallel runs or very long context.
+- Use Ollama only when explicitly needed (`OLLAMA_ENABLED=true` or `/local` invocation).
 
 ## Security Rules
 
