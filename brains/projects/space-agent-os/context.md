@@ -1,3 +1,15 @@
+---
+type: project
+subtype: context
+status: active
+priority: high
+owner: "trev"
+team: [trev, pablo]
+tags: [space-agent-os, context]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # space-agent-os — Project Context
 
 ## Current Product Direction (as of 2026-04-01)
@@ -36,7 +48,7 @@ Upstream Paperclip is designed as a general-purpose AI assistant platform. Groun
 
 **Railway is the deployment target.** It supports long-running processes and provides managed Postgres. Architecture: single persistent Node process + Railway Postgres for state.
 
-**Pending:** Railway project name and credentials from Trev are required before the first deploy can happen. Do not attempt Railway deploy until credentials are confirmed.
+**Pending:** Railway project name and credentials from [[people/trev]] are required before the first deploy can happen. Do not attempt Railway deploy until credentials are confirmed.
 
 ### Repo Structure Additions
 

@@ -1,3 +1,10 @@
+---
+type: company
+tags: [company, mission]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Mission
 
 **Space Trading** builds a self-improving autonomous AI team that completes work end-to-end with increasing accuracy over time.

@@ -1,3 +1,13 @@
+---
+type: department
+status: active
+lead: ""
+members: []
+tags: [engineering]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Engineering Department
 
 ## Role

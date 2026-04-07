@@ -1,7 +1,17 @@
+---
+type: department
+status: active
+lead: ""
+members: []
+tags: [qa]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # QA Department
 
 ## Role
-QA owns quality gates. It reviews Engineering's output against the spec, runs tests, and either approves work for merge or returns it with clear, actionable feedback.
+QA owns quality gates. It reviews [[departments/engineering/README]]'s output against the spec, runs tests, and either approves work for merge or returns it with clear, actionable feedback.
 
 ## Responsibilities
 - Review PRs against acceptance criteria from the Planning spec.

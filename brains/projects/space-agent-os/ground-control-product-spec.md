@@ -1,7 +1,19 @@
+---
+type: project
+subtype: spec
+status: active
+priority: high
+owner: "trev"
+team: [trev, pablo]
+tags: [space-agent-os, spec, ground-control]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Ground Control — Product Spec
 
 **Status:** Working name confirmed. Pre-deploy. Railway credentials pending.
-**Owner:** Trev + Pablo
+**Owner:** [[people/trev]] + [[people/pablo]]
 **Last updated:** 2026-04-01
 
 ---
@@ -176,8 +188,8 @@ OPENCLAW_API_KEY
 ```
 
 **Pending — required before first deploy:**
-- Railway project name (from Trev)
-- Railway API credentials / CLI token (from Trev)
+- Railway project name (from [[people/trev]])
+- Railway API credentials / CLI token (from [[people/trev]])
 - GitHub App creation and private key
 - Linear webhook endpoint configuration (needs Railway URL first)
 
