@@ -1,3 +1,10 @@
+---
+type: company
+tags: [company, tech-stack]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Tech Stack
 
 ## Agent Runtime

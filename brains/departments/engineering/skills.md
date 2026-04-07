@@ -1,3 +1,11 @@
+---
+type: department
+subtype: skills
+tags: [engineering, skills]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Engineering Skills
 
 ## Languages & Frameworks

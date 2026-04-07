@@ -1,3 +1,11 @@
+---
+type: department
+subtype: dependencies
+tags: [planning, dependencies]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Planning Dependencies
 
 ## Needs from Upstream (Humans)
@@ -11,7 +19,7 @@ Planning can proceed with reasonable assumptions on most details, but cannot set
 - Feature spec including: description, motivation, acceptance criteria.
 - Affected files or modules (best estimate).
 - Linear issue ID with status set to "Todo" or "In Progress".
-- Any known constraints or risks Engineering should be aware of.
+- Any known constraints or risks [[departments/engineering/README]] should be aware of.
 
 ## Shared Contracts
 - All specs live in Linear. Engineering should never start work without a corresponding Linear issue.

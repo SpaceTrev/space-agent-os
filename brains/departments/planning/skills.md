@@ -1,3 +1,11 @@
+---
+type: department
+subtype: skills
+tags: [planning, skills]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Planning Skills
 
 ## Spec Writing

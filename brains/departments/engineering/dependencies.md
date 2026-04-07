@@ -1,3 +1,11 @@
+---
+type: department
+subtype: dependencies
+tags: [engineering, dependencies]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Engineering Dependencies
 
 ## Needs from Upstream (Planning)
@@ -6,7 +14,7 @@
 - Affected files or modules — where changes are expected (Planning's best guess).
 - Linear issue ID — for branch naming and PR linking.
 
-Engineering cannot start without a spec. If no spec exists, create a minimal one and get Planning to confirm before writing code.
+Engineering cannot start without a spec. If no spec exists, create a minimal one and get [[departments/planning/README]] to confirm before writing code.
 
 ## Delivers Downstream (QA)
 - A branch pushed to origin with all changes committed.

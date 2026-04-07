@@ -1,3 +1,10 @@
+---
+type: company
+tags: [company, structure]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Company Brain
 
 The brain file system has three levels. Every agent loads all three levels into context before executing a task.

@@ -1,3 +1,11 @@
+---
+type: department
+subtype: dependencies
+tags: [qa, dependencies]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # QA Dependencies
 
 ## Needs from Upstream (Engineering)
@@ -6,7 +14,7 @@
 - Updated project brain if implementation decisions deviate from the original spec.
 - Linear issue in "In Review" status.
 
-QA should not begin review until Engineering has explicitly signaled readiness.
+QA should not begin review until [[departments/engineering/README]] has explicitly signaled readiness.
 
 ## Delivers Downstream (Merge / Done)
 - PR approval and merge (or rejection with specific feedback).
@@ -16,5 +24,5 @@ QA should not begin review until Engineering has explicitly signaled readiness.
 
 ## Shared Contracts
 - QA is not a rewrite gate — it verifies against the spec, not personal preference.
-- If the spec is wrong, QA escalates to Planning rather than rejecting Engineering's work.
-- QA does not merge to `main` without all tests passing unless Planning explicitly approves an exception.
+- If the spec is wrong, QA escalates to [[departments/planning/README]] rather than rejecting [[departments/engineering/README]]'s work.
+- QA does not merge to `main` without all tests passing unless [[departments/planning/README]] explicitly approves an exception.

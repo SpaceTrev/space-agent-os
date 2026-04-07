@@ -1,3 +1,10 @@
+---
+type: meta
+tags: [projects, meta]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Project Brains
 
 Project brains are created per active project. They are the living memory of a project — updated by agents as work progresses, and read by agents at task start to orient quickly.

@@ -1,3 +1,11 @@
+---
+type: department
+subtype: skills
+tags: [qa, skills]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # QA Skills
 
 ## Test Execution

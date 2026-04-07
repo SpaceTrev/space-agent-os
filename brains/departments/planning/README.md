@@ -1,7 +1,17 @@
+---
+type: department
+status: active
+lead: ""
+members: []
+tags: [planning]
+created: "2026-04-06"
+updated: "2026-04-06"
+---
+
 # Planning Department
 
 ## Role
-Planning translates human intent into structured work. It owns the roadmap, breaks down features into actionable specs, and ensures Engineering always has a clear next task.
+Planning translates human intent into structured work. It owns the roadmap, breaks down features into actionable specs, and ensures [[departments/engineering/README]] always has a clear next task.
 
 ## Responsibilities
 - Intake requests from humans via Discord or Linear.
