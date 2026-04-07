@@ -58,6 +58,13 @@ Thumbs.db
 supabase/.branches/
 supabase/.temp/
 
+# ── Obsidian ─────────────────────────────────────────────────────────────────
+brains/.obsidian/workspace.json
+brains/.obsidian/workspace-mobile.json
+brains/.obsidian/cache
+brains/.obsidian/plugins/
+brains/.trash/
+
 # ── Misc ──────────────────────────────────────────────────────────────────────
 *.pem
 .vercel
