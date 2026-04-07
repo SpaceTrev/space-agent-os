@@ -9,6 +9,13 @@
         "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}",
         "AGENT_OS_URL": "http://localhost:3000"
       }
+    },
+    "railway": {
+      "command": "npx",
+      "args": ["-y", "@railway/mcp-server"],
+      "env": {
+        "RAILWAY_API_TOKEN": "${RAILWAY_API_TOKEN}"
+      }
     }
   }
 }
