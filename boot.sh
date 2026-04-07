@@ -65,7 +65,7 @@ if [[ "$NO_DASHBOARD" == false ]]; then
   if port_in_use 3000; then
     ok "Port 3000 already in use — skipping dashboard start"
   else
-    (cd "$REPO_ROOT/apps/dashboard" && npm run dev >> "$LOGS_DIR/dashboard.log" 2>&1) &
+    (cd "$REPO_ROOT/apps/dashboard" && pnpm dev >> "$LOGS_DIR/dashboard.log" 2>&1) &
     ok "Dashboard started → logs: $LOGS_DIR/dashboard.log"
   fi
 fi
