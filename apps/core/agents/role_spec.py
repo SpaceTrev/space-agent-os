@@ -339,12 +339,45 @@ class BaseAgent:
 
     Optionally override:
       run()  — for agents that need custom multi-step logic
+
+    Brain integration:
+      If brain_context=True (default), the agent auto-hydrates a brain context
+      packet from brain/ vault before each LLM call, using the agent's department
+      and the task description for relevance selection.
+      Disable with brain_context=False or set BRAIN_ENABLED=false env var.
     """
 
     SPEC: RoleSpec  # must be set by each subclass
+    brain_context: bool = True  # subclasses can opt out
+
+    # Shared assembler — loaded once per process, reused across all agents
+    _brain_assembler: "Any | None" = None  # brain.assembler.BrainAssembler
+
+    @classmethod
+    def _get_assembler(cls) -> "Any | None":
+        """Lazy-load the BrainAssembler (import deferred to avoid circular deps)."""
+        brain_enabled = os.getenv("BRAIN_ENABLED", "true").lower() == "true"
+        if not brain_enabled:
+            return None
+        if cls._brain_assembler is None:
+            try:
+                # Import here to keep role_spec.py free of hard brain dependency
+                import sys
+                _core = Path(__file__).parent.parent
+                if str(_core) not in sys.path:
+                    sys.path.insert(0, str(_core))
+                from brain.assembler import BrainAssembler
+                cls._brain_assembler = BrainAssembler()
+                log.info("agent.brain_loaded", docs=len(cls._brain_assembler.loader.all_docs))
+            except Exception as exc:
+                log.warning("agent.brain_unavailable", error=str(exc))
+                cls._brain_assembler = False  # type: ignore[assignment]  # sentinel
+        return cls._brain_assembler if cls._brain_assembler else None
 
     async def run(self, task: str, context: str = "") -> AgentResult:
         """Execute task, return AgentResult.  Override for multi-step logic."""
+        import asyncio
+
         start = time.monotonic()
 
         backend, model_used = _resolve_model(self.SPEC.model_tier)
@@ -357,20 +390,50 @@ class BaseAgent:
             task_preview=task[:80],
         )
 
+        # ── Brain context hydration ────────────────────────────────────────
+        enriched_context = context
+        if self.brain_context:
+            assembler = self._get_assembler()
+            if assembler is not None:
+                try:
+                    brain_ctx = assembler.build(
+                        department=self.SPEC.department,
+                        task=task,
+                        extra_context=context,
+                    )
+                    enriched_context = brain_ctx
+                    log.debug(
+                        "agent.brain_context_injected",
+                        agent=self.SPEC.name,
+                        ctx_chars=len(brain_ctx),
+                    )
+                except Exception as exc:
+                    log.warning("agent.brain_context_error", agent=self.SPEC.name, error=str(exc))
+
         error: str | None = None
         output = ""
         try:
-            output = await call_llm(self.SPEC, task, context)
+            output = await call_llm(self.SPEC, task, enriched_context)
         except Exception as exc:
             error = str(exc)
             log.error("agent.error", agent=self.SPEC.name, error=error)
 
         elapsed = round(time.monotonic() - start, 3)
         log.info("agent.done", agent=self.SPEC.name, elapsed_s=elapsed, chars=len(output))
-        return AgentResult(
+
+        result = AgentResult(
             agent_name=self.SPEC.name,
             output=output,
             model_used=model_used,
             elapsed_s=elapsed,
             error=error,
         )
+
+        # ── Post-task hook: skill extraction + audit (fire-and-forget) ─────
+        try:
+            from brain.hooks import schedule_after_task
+            schedule_after_task(task, result)
+        except Exception:
+            pass  # hooks failure is never fatal
+
+        return result
