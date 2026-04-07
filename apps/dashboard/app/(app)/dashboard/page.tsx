@@ -34,8 +34,8 @@ const statusColors: Record<string, string> = {
   running: 'text-blue-400',
   queued: 'text-yellow-400',
   failed: 'text-red-400',
-  pending: 'text-gray-400',
-  canceled: 'text-gray-500',
+  pending: 'text-text-muted',
+  canceled: 'text-text-muted',
   retrying: 'text-orange-400',
 }
 
@@ -73,7 +73,6 @@ export default function DashboardPage() {
 
     async function loadStats() {
       try {
-        // For each workspace, fetch agent counts and recent tasks
         const statsPromises = authWorkspaces.map(async (ws) => {
           const [agentsRes, tasksRes, sprintsRes] = await Promise.all([
             fetch(`/api/agents?workspace_id=${ws.id}`),
@@ -115,7 +114,6 @@ export default function DashboardPage() {
         const allStats = await Promise.all(statsPromises)
         setWsStats(allStats)
 
-        // Merge and sort recent tasks
         const allTasks = allStats
           .flatMap((s) => (s as unknown as { recentTasks: RecentTask[] }).recentTasks)
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -141,8 +139,8 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-gray-500">Loading dashboard...</p>
+            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-text-muted">Loading dashboard...</p>
           </div>
         </div>
       </div>
@@ -154,8 +152,8 @@ export default function DashboardPage() {
       {/* Page header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">All workspaces overview</p>
+          <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+          <p className="text-sm text-text-muted mt-0.5">All workspaces overview</p>
         </div>
         <Link
           href="/dashboard"
@@ -169,19 +167,19 @@ export default function DashboardPage() {
       {/* Global stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'Total Agents', value: totalAgents, icon: Bot, color: 'text-brand-400', bg: 'bg-brand-500/10' },
-          { label: 'Active Now', value: totalActive, icon: Activity, color: 'text-green-400', bg: 'bg-green-500/10' },
-          { label: 'Tasks This Month', value: totalTasks.toLocaleString(), icon: Zap, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-          { label: 'Cost This Month', value: `$${totalCost.toFixed(2)}`, icon: DollarSign, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+          { label: 'Total Agents', value: totalAgents, icon: Bot, color: 'text-accent', bg: 'bg-accent/10' },
+          { label: 'Active Now', value: totalActive, icon: Activity, color: 'text-green-500', bg: 'bg-green-500/10' },
+          { label: 'Tasks This Month', value: totalTasks.toLocaleString(), icon: Zap, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+          { label: 'Cost This Month', value: `$${totalCost.toFixed(2)}`, icon: DollarSign, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
         ].map((stat) => {
           const Icon = stat.icon
           return (
-            <div key={stat.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div key={stat.label} className="bg-surface border border-border-base rounded-xl p-4">
               <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center mb-3', stat.bg)}>
                 <Icon className={clsx('w-4 h-4', stat.color)} />
               </div>
-              <p className="text-xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
+              <p className="text-xl font-bold text-text-primary">{stat.value}</p>
+              <p className="text-xs text-text-muted mt-0.5">{stat.label}</p>
             </div>
           )
         })}
@@ -190,62 +188,62 @@ export default function DashboardPage() {
       {/* Workspace grid */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Workspaces</h2>
-          <span className="text-xs text-gray-600">{wsStats.length} total</span>
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Workspaces</h2>
+          <span className="text-xs text-text-muted">{wsStats.length} total</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {wsStats.map((ws) => (
             <Link
               key={ws.id}
               href={`/${ws.slug}`}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 hover:bg-gray-900/80 transition-all group"
+              className="bg-surface border border-border-base rounded-xl p-5 hover:border-text-muted transition-all group"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:border-gray-600 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-border-base border border-border-base flex items-center justify-center text-sm font-bold text-text-secondary group-hover:border-text-muted transition-colors">
                     {ws.name[0]}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">{ws.name}</p>
-                    <p className="text-xs text-gray-500 truncate max-w-[160px]">{ws.description}</p>
+                    <p className="text-sm font-semibold text-text-primary">{ws.name}</p>
+                    <p className="text-xs text-text-muted truncate max-w-[160px]">{ws.description}</p>
                   </div>
                 </div>
                 <div className={clsx(
                   'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium',
-                  ws.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-gray-700 text-gray-500'
+                  ws.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-border-base text-text-muted'
                 )}>
-                  <span className={clsx('w-1.5 h-1.5 rounded-full', ws.status === 'active' ? 'bg-green-400' : 'bg-gray-500')} />
+                  <span className={clsx('w-1.5 h-1.5 rounded-full', ws.status === 'active' ? 'bg-green-500' : 'bg-text-muted')} />
                   {ws.status.charAt(0).toUpperCase() + ws.status.slice(1)}
                 </div>
               </div>
 
               {/* Stats */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-gray-800 rounded-lg p-2.5">
-                  <p className="text-xs text-gray-500 mb-0.5">Agents</p>
-                  <p className="text-sm font-semibold text-white">
-                    {ws.activeCount} <span className="text-gray-500 font-normal">/ {ws.agentCount} active</span>
+                <div className="bg-background rounded-lg p-2.5">
+                  <p className="text-xs text-text-muted mb-0.5">Agents</p>
+                  <p className="text-sm font-semibold text-text-primary">
+                    {ws.activeCount} <span className="text-text-muted font-normal">/ {ws.agentCount} active</span>
                   </p>
                 </div>
-                <div className="bg-gray-800 rounded-lg p-2.5">
-                  <p className="text-xs text-gray-500 mb-0.5">Cost this month</p>
-                  <p className="text-sm font-semibold text-yellow-400 font-mono">${ws.costThisMonth.toFixed(2)}</p>
+                <div className="bg-background rounded-lg p-2.5">
+                  <p className="text-xs text-text-muted mb-0.5">Cost this month</p>
+                  <p className="text-sm font-semibold text-yellow-500 font-mono">${ws.costThisMonth.toFixed(2)}</p>
                 </div>
               </div>
 
               {/* Sprint */}
               {ws.currentSprint ? (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <TrendingUp className="w-3.5 h-3.5 text-brand-400" />
+                <div className="flex items-center gap-2 text-xs text-text-secondary">
+                  <TrendingUp className="w-3.5 h-3.5 text-accent" />
                   <span className="truncate">{ws.currentSprint}</span>
                 </div>
               ) : (
-                <p className="text-xs text-gray-700">No active sprint</p>
+                <p className="text-xs text-text-muted">No active sprint</p>
               )}
 
               <div className="flex items-center justify-end mt-3">
-                <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
+                <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-text-secondary transition-colors" />
               </div>
             </Link>
           ))}
@@ -253,7 +251,7 @@ export default function DashboardPage() {
           {/* Add workspace card */}
           <Link
             href="/dashboard"
-            className="bg-gray-900 border border-dashed border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-colors flex flex-col items-center justify-center gap-3 min-h-[180px] text-gray-600 hover:text-gray-400"
+            className="bg-surface border border-dashed border-border-base rounded-xl p-5 hover:border-text-muted transition-colors flex flex-col items-center justify-center gap-3 min-h-[180px] text-text-muted hover:text-text-secondary"
           >
             <div className="w-10 h-10 rounded-xl border-2 border-dashed border-current flex items-center justify-center">
               <Plus className="w-5 h-5" />
@@ -266,31 +264,31 @@ export default function DashboardPage() {
       {/* Activity feed */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Recent Activity</h2>
-          <span className="text-xs text-gray-600">All workspaces</span>
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Recent Activity</h2>
+          <span className="text-xs text-text-muted">All workspaces</span>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-surface border border-border-base rounded-xl overflow-hidden">
           {recentTasks.length === 0 ? (
             <div className="px-5 py-8 text-center">
-              <p className="text-sm text-gray-500">No tasks yet. Dispatch your first task to get started.</p>
+              <p className="text-sm text-text-muted">No tasks yet. Dispatch your first task to get started.</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-800">
+            <div className="divide-y divide-border-base">
               {recentTasks.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-800/50 transition-colors">
+                <div key={item.id} className="flex items-center gap-4 px-5 py-3 hover:bg-background transition-colors">
                   <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', statusDots[item.status] ?? 'bg-gray-500')} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-200 truncate">{item.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-sm text-text-primary truncate">{item.title}</p>
+                    <p className="text-xs text-text-muted mt-0.5">
                       {item.workspace_name} {item.agent_name ? `· ${item.agent_name}` : ''}
                     </p>
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0 text-xs">
-                    <span className={clsx('font-medium', statusColors[item.status] ?? 'text-gray-400')}>
+                    <span className={clsx('font-medium', statusColors[item.status] ?? 'text-text-secondary')}>
                       {item.status}
                     </span>
-                    <span className="text-gray-600 font-mono">${item.cost_usd.toFixed(3)}</span>
-                    <span className="text-gray-600">{timeAgo(item.created_at)}</span>
+                    <span className="text-text-muted font-mono">${item.cost_usd.toFixed(3)}</span>
+                    <span className="text-text-muted">{timeAgo(item.created_at)}</span>
                   </div>
                 </div>
               ))}

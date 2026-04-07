@@ -30,6 +30,7 @@ You are **Space-Claw**, a proactive senior software engineer and personal AI ope
 
 This is a **Turborepo monorepo** unifying the dashboard frontend and Python agent backend.
 
+brains/         — Obsidian vault: persistent agent memory (company, projects, people, decisions)
 apps/dashboard  — Next.js app (Supabase, Stripe, Anthropic/OpenAI/Gemini SDKs)
 apps/core       — Python agent backend (orchestrator, heartbeat, worker, Ollama)
 packages/shared — Shared TypeScript types and API contracts
@@ -45,16 +46,16 @@ Shared TypeScript types. Key types: AgentStatus, TaskPriority, ModelTier, Heartb
 
 ## Model Tiering
 
-| Role         | Model                  | Provider        | Use Case                                         |
-|--------------|------------------------|-----------------|--------------------------------------------------|
-| Orchestrator | Llama 3.3 (8B)         | Ollama (local)  | Routing, heartbeat, triage                       |
-| Worker       | Qwen3 Coder (30B-MoE)  | Ollama (local)  | Code generation, local dev, logic                |
-| Architect    | Claude Opus 4.6        | Anthropic API   | Multi-file refactors, deep reasoning, architecture |
+| Role                  | Model                  | Provider        | Use Case                                              |
+|-----------------------|------------------------|-----------------|-------------------------------------------------------|
+| Primary               | Claude Sonnet 4.6      | OpenClaw        | All tasks — reasoning, code, planning, orchestration  |
+| Secondary             | Gemini 2.0 Flash       | Google API      | Parallel runs, very long context (>100k tokens)       |
+| Local (optional)      | Qwen3-Coder 30B        | Ollama          | Offline work, cost-sensitive batch, privacy-sensitive |
 
 **Routing rules:**
-- Default to Ollama (zero token cost) for all tasks.
-- Escalate to Architect tier only when: multi-file refactoring, novel architecture decisions, or explicit /architect invocation.
-- Heartbeat tasks (TASKS.md polling, Gmail/Slack/WhatsApp triage) always use the Orchestrator tier.
+- Default to Claude Max for all tasks.
+- Use Gemini for parallel runs or very long context.
+- Use Ollama only when explicitly needed (`OLLAMA_ENABLED=true` or `/local` invocation).
 
 ## Security Rules
 
@@ -62,6 +63,41 @@ Shared TypeScript types. Key types: AgentStatus, TaskPriority, ModelTier, Heartb
 2. **Explicit mounts only**: Host filesystem access is limited to explicitly declared volume mounts in docker-compose.yml.
 3. **No secrets in code**: API keys and credentials live in .env files, never committed to git.
 4. **Audit trail**: All tool invocations are logged to apps/core/logs/audit.jsonl.
+
+## Brain Vault (Obsidian)
+
+The `brains/` directory is an **Obsidian vault** — the persistent memory layer for all agents. Open it in Obsidian for graph view, or query it programmatically.
+
+### Structure
+- `brains/company/` — company-level context (mission, tech stack)
+- `brains/departments/` — department brains (engineering, marketing, planning, qa)
+- `brains/projects/` — project-scoped context and specs
+- `brains/people/` — team and contact profiles
+- `brains/decisions/` — ADRs and business decisions
+- `brains/daily/` — daily log notes (YYYY-MM-DD.md)
+- `brains/research/` — research notes, articles, deep-dives
+- `brains/inbox/` — unprocessed notes (triage into proper folders)
+- `brains/_templates/` — note templates for each type
+
+### Agent Rules
+1. **Every note has YAML frontmatter** with at minimum: `type`, `tags`, `created`, `updated`
+2. **Use `[[wikilinks]]`** to cross-reference people, projects, decisions
+3. **Read before write** — check if a note exists before creating
+4. **Bump `updated`** when modifying any note
+5. **Daily notes are append-only** — never overwrite
+
+### Vault Search (CLI)
+```bash
+python apps/core/tools/vault_search.py search "query"           # Full-text search
+python apps/core/tools/vault_search.py search --type project ""  # List by type
+python apps/core/tools/vault_search.py search --tag go-to-market ""  # Filter by tag
+python apps/core/tools/vault_search.py backlinks "people/trev"   # Find linking notes
+python apps/core/tools/vault_search.py read "people/trev"        # Read a note
+python apps/core/tools/vault_search.py tags                      # All tags
+python apps/core/tools/vault_search.py recent --days 7           # Recently modified
+```
+
+See `brains/VAULT.md` for full conventions and schema reference.
 
 ## Task Management
 

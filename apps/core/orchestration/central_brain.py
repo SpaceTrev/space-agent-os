@@ -21,15 +21,15 @@ from typing import Any
 
 import structlog
 
-from ..agents.backend_engineer import BackendEngineerAgent
-from ..agents.context_agent import ContextAgent
-from ..agents.domain_agent import DomainAgent
-from ..agents.frontend_engineer import FrontendEngineerAgent
-from ..agents.lead_architect import LeadArchitectAgent
-from ..agents.planner_agent import PlannerAgent
-from ..agents.pm_agent import PMAgent
-from ..agents.researcher_agent import ResearcherAgent
-from ..agents.reviewer_agent import ReviewerAgent
+from agents.backend_engineer import BackendEngineerAgent
+from agents.context_agent import ContextAgent
+from agents.domain_agent import DomainAgent
+from agents.frontend_engineer import FrontendEngineerAgent
+from agents.lead_architect import LeadArchitectAgent
+from agents.planner_agent import PlannerAgent
+from agents.pm_agent import PMAgent
+from agents.researcher_agent import ResearcherAgent
+from agents.reviewer_agent import ReviewerAgent
 from .swarm_coordinator import SwarmCoordinator
 from .team_orchestrator import TeamConfig, TeamOrchestrator
 
@@ -42,6 +42,7 @@ log = structlog.get_logger()
 
 
 class RouteTag(str, Enum):
+    CHAT = "chat"       # fast: single agent, direct response, no team pipeline
     PLAN = "plan"
     CODE = "code"
     RESEARCH = "research"
@@ -60,6 +61,7 @@ class BrainRequest:
     priority: str = "NORMAL"
     tags: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
+    history: list[dict[str, str]] = field(default_factory=list)  # conversation history
 
 
 @dataclass
@@ -78,7 +80,8 @@ _ROUTE_KEYWORDS: dict[RouteTag, list[str]] = {
     RouteTag.RESEARCH:  ["/research", "compare", "best library", "which is better", "investigate"],
     RouteTag.PLAN:      ["/plan", "/sprint", "break down", "decompose", "sprint plan"],
     RouteTag.SWARM:     ["/swarm", "best of", "parallel"],
-    RouteTag.CODE:      ["/code", "implement", "write a", "create a", "build", "fix"],
+    RouteTag.CODE:      ["/code", "implement", "write a", "create a", "build", "fix", "debug"],
+    # CHAT has no keywords — it's the default for anything that doesn't match above
 }
 
 
@@ -105,12 +108,24 @@ class CentralBrain:
             max_concurrency=3,
         ))
 
-        # Research swarm (3x same model, synthesised by architect)
-        self._research_swarm = SwarmCoordinator([
-            ResearcherAgent(), ResearcherAgent(), ResearcherAgent(),
-        ])
+        # Research swarm — lazy init on first use to avoid startup crashes
+        self._research_swarm: SwarmCoordinator | None = None
 
     # ── Public interface ──────────────────────────────────────────────────────
+
+    async def status(self) -> dict[str, Any]:
+        """Return system health for /status command and Mission Control."""
+        from agents.role_spec import get_backend_status
+        backend = get_backend_status()
+        return {
+            "🤖 Active Backend": backend["active_backend"],
+            "🧠 Active Model": backend["active_model"],
+            "🔑 Anthropic API": "✅ configured" if backend["anthropic_configured"] else "❌ not set",
+            "🌐 Gemini API": "✅ configured" if backend["gemini_configured"] else "❌ not set",
+            "💻 Ollama": "✅ enabled" if backend["ollama_enabled"] else "off (default)",
+            "⚠️ Warning": backend.get("warning", "—"),
+            "🏠 Agents": f"{len(self.__dict__)} loaded",
+        }
 
     async def handle(self, req: BrainRequest) -> BrainResponse:
         """Route a request and return the response."""
@@ -137,8 +152,30 @@ class CentralBrain:
 
     # ── Routing ───────────────────────────────────────────────────────────────
 
+    # Channel name → forced route (override keyword matching)
+    _CHANNEL_ROUTES: dict[str, RouteTag] = {
+        "dev":          RouteTag.CODE,
+        "builds":       RouteTag.CODE,
+        "engineering":  RouteTag.CODE,
+        "code":         RouteTag.CODE,
+        "planning":     RouteTag.PLAN,
+        "sprint":       RouteTag.PLAN,
+        "tasks":        RouteTag.PLAN,
+        "research":     RouteTag.RESEARCH,
+        "architect":    RouteTag.ARCHITECT,
+        "design":       RouteTag.ARCHITECT,
+        "swarm":        RouteTag.SWARM,
+    }
+
     def _route(self, req: BrainRequest) -> RouteTag:
-        """Classify the request into a route tag."""
+        """Classify the request — channel name takes priority over keywords."""
+        # Channel-based routing (no commands needed)
+        channel_name = str(req.metadata.get("channel_name", "")).lower().strip("#")
+        for pattern, tag in self._CHANNEL_ROUTES.items():
+            if pattern in channel_name:
+                return tag
+
+        # Keyword-based routing
         text = req.goal.lower()
         for tag in (
             RouteTag.ARCHITECT,
@@ -150,7 +187,8 @@ class CentralBrain:
         ):
             if any(kw in text for kw in _ROUTE_KEYWORDS[tag]):
                 return tag
-        return RouteTag.CODE  # default: send to engineering team
+
+        return RouteTag.CHAT  # default: fluid chat with memory
 
     # ── Dispatch ──────────────────────────────────────────────────────────────
 
@@ -162,6 +200,62 @@ class CentralBrain:
         """Execute the routed request and return (output, agent_roles)."""
         task = {"id": req.id, "description": req.goal, "priority": req.priority}
 
+        if route == RouteTag.CHAT:
+            # Fast path: direct LLM call with Space-Claw persona + conversation history
+            from agents.role_spec import _resolve_model, _call_openai_compat, _call_anthropic, _call_ollama, RoleSpec, ModelTier
+            from agents.role_spec import CLAUDE_MAX_PROXY_URL, CLAUDE_MAX_MODEL, PRIMARY_BACKEND, ANTHROPIC_API_KEY, OLLAMA_ENABLED, ORCHESTRATOR_MODEL
+
+            system = (
+                "You are Space-Claw — an autonomous AI operating system built by Trev Benavides and Pablo Strada. "
+                "You are sharp, direct, and technical. No filler. No sycophancy. "
+                "You have full context of the space-agent-os project and all prior conversations. "
+                "Answer concisely. For build tasks, confirm and act. For questions, be factual. "
+                "You run on Claude Max via a local proxy on Trev's MacBook."
+            )
+
+            # Build messages with history
+            messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+            if req.history:
+                messages.extend(req.history)
+            messages.append({"role": "user", "content": req.goal})
+
+            backend = PRIMARY_BACKEND.lower()
+            if backend == "claude_max":
+                import httpx
+                async with httpx.AsyncClient(base_url=CLAUDE_MAX_PROXY_URL, timeout=120.0) as client:
+                    resp = await client.post("/chat/completions", json={
+                        "model": CLAUDE_MAX_MODEL,
+                        "messages": messages,
+                        "max_tokens": 2048,
+                    })
+                    resp.raise_for_status()
+                    output = resp.json()["choices"][0]["message"]["content"].strip()
+            elif backend == "anthropic" and ANTHROPIC_API_KEY:
+                import anthropic
+                client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+                # Convert system message
+                chat_msgs = [m for m in messages if m["role"] != "system"]
+                r = await client.messages.create(
+                    model="claude-sonnet-4-6", max_tokens=2048,
+                    system=system, messages=chat_msgs,
+                )
+                output = r.content[0].text
+            else:
+                # Ollama fallback — no history support, just use context string
+                context = "\n".join(f"{m['role']}: {m['content']}" for m in (req.history or [])[-6:])
+                import httpx
+                async with httpx.AsyncClient(base_url="http://localhost:11434", timeout=120.0) as client:
+                    resp = await client.post("/api/generate", json={
+                        "model": ORCHESTRATOR_MODEL,
+                        "prompt": req.goal,
+                        "system": system + (f"\n\nRecent context:\n{context}" if context else ""),
+                        "stream": False,
+                    })
+                    resp.raise_for_status()
+                    output = resp.json().get("response", "").strip()
+
+            return output, ["space-claw"]
+
         if route == RouteTag.ARCHITECT:
             result = await self._lead_arch.run_task(task)
             return result, [self._lead_arch.ROLE]
@@ -171,6 +265,10 @@ class CentralBrain:
             return result, [self._reviewer.ROLE]
 
         if route == RouteTag.RESEARCH:
+            if self._research_swarm is None:
+                self._research_swarm = SwarmCoordinator([
+                    ResearcherAgent(), ResearcherAgent(), ResearcherAgent(),
+                ])
             result = await self._research_swarm.consensus(
                 req.goal, judge=self._lead_arch
             )
@@ -181,6 +279,10 @@ class CentralBrain:
             return result, [self._pm.ROLE]
 
         if route == RouteTag.SWARM:
+            if self._research_swarm is None:
+                self._research_swarm = SwarmCoordinator([
+                    ResearcherAgent(), ResearcherAgent(), ResearcherAgent(),
+                ])
             result = await self._research_swarm.best_of_n(req.goal)
             return result, ["Researcher x3 (best-of-N)"]
 

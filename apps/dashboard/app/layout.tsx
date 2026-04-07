@@ -44,6 +44,29 @@ export const viewport: Viewport = {
 }
 
 // ============================================================
+// Theme init script — runs before React hydration to prevent
+// flash of wrong theme. Reads localStorage or system preference.
+// ============================================================
+
+const themeScript = `
+(function() {
+  try {
+    var stored = localStorage.getItem('theme');
+    var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.classList.add(theme);
+    if (theme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  } catch (e) {
+    // localStorage not available — default to dark
+    document.documentElement.classList.add('dark');
+  }
+})();
+`
+
+// ============================================================
 // Root Layout Component
 // ============================================================
 
@@ -54,6 +77,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Anti-flash theme script — must run synchronously before paint */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-screen antialiased">
         <AuthProvider>
           {children}

@@ -1,21 +1,23 @@
-'''Space-Claw Heartbeat Engine -- Orchestrator Tier
+"""Space-Claw Heartbeat Engine
 
 Responsibilities:
-  - Poll TASKS.md every 30 minutes and surface URGENT/HIGH items
-  - Check incoming WhatsApp messages from OpenClaw gateway
-  - Push actionable tasks to the Worker asyncio.Queue
-  - Write last-heartbeat timestamp into TASKS.md footer
-  - Integration stubs for Gmail, WhatsApp, and Discord
+  - Publish URGENT/HIGH tasks from TASKS.md onto the EventBus (no polling loop)
+  - Listen for task events from channels (WhatsApp, Discord) and publish them
+  - Stamp the last-heartbeat footer in TASKS.md after each tick
+  - Notify Discord when urgent items are found
+
+Architecture change (2026-03-26):
+  OLD: heartbeat → asyncio.Queue → worker (30-min polling loop)
+  NEW: heartbeat → EventBus.publish(TaskEvent) → PipelineManager chains stages
 
 Environment vars:
-  OPENCLAW_GATEWAY_URL  URL for the OpenClaw gateway (default: http://localhost:18789)
-  OPENCLAW_TOKEN        Bearer token for OpenClaw API
-  HEARTBEAT_INTERVAL    polling interval in seconds (default 1800)
-  LOG_LEVEL             structlog level (default INFO)
+  OPENCLAW_GATEWAY_URL  OpenClaw gateway (default: http://localhost:18789)
+  OPENCLAW_TOKEN        Bearer token for gateway API
+  HEARTBEAT_INTERVAL    Seconds between ticks (default: 1800)
+  LOG_LEVEL             structlog level (default: INFO)
   DISCORD_BOT_TOKEN     Discord bot token
-  DISCORD_GUILD_ID      Discord guild/server ID
-  DISCORD_CHANNEL_ID    Discord channel ID to monitor
-'''
+  DISCORD_CHANNEL_ID    Discord channel to notify
+"""
 from __future__ import annotations
 
 import asyncio
@@ -23,6 +25,7 @@ import logging
 import os
 import re
 import signal
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -30,162 +33,126 @@ from typing import Any
 import httpx
 import structlog
 from agents.intent_router import IntentRouter
+from agents.automations.discord_notify import notify as discord_notify
 from agents.automations.whatsapp_notify import notify as whatsapp_notify
 
 structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(
-        logging.getLevelName(os.getenv('LOG_LEVEL', 'INFO'))
+        logging.getLevelName(os.getenv("LOG_LEVEL", "INFO"))
     ),
 )
 log = structlog.get_logger()
 
 REPO_ROOT = Path(__file__).parent.parent
-TASKS_FILE = REPO_ROOT / 'TASKS.md'
-POLL_INTERVAL_SECONDS: int = int(os.getenv('HEARTBEAT_INTERVAL', '1800'))
-_intent_router = IntentRouter()
-OPENCLAW_GATEWAY_URL: str = os.getenv('OPENCLAW_GATEWAY_URL', 'http://localhost:18789')
-OPENCLAW_TOKEN: str = os.getenv('OPENCLAW_TOKEN', '')
-DISCORD_BOT_TOKEN: str = os.getenv('DISCORD_BOT_TOKEN', '')
-DISCORD_GUILD_ID: str = os.getenv('DISCORD_GUILD_ID', '')
-DISCORD_CHANNEL_ID: str = os.getenv('DISCORD_CHANNEL_ID', '')
+TASKS_FILE = REPO_ROOT / "TASKS.md"
+POLL_INTERVAL_SECONDS: int = int(os.getenv("HEARTBEAT_INTERVAL", "1800"))
+OPENCLAW_GATEWAY_URL: str = os.getenv("OPENCLAW_GATEWAY_URL", "http://localhost:18789")
+OPENCLAW_TOKEN: str = os.getenv("OPENCLAW_TOKEN", "")
+DISCORD_CHANNEL_ID: str = os.getenv("DISCORD_CHANNEL_ID", "")
 
 PRIORITY_RE = re.compile(
-    r'^\s*-\s+\[(?P<priority>URGENT|HIGH|NORMAL|LOW)\]\s+(?P<description>.+)$'
+    r"^\s*-\s+\[(?P<priority>URGENT|HIGH|NORMAL|LOW)\]\s+(?P<description>.+)$"
 )
 
+_intent_router = IntentRouter()
+
+
+# ---------------------------------------------------------------------------
+# TASKS.md helpers
+# ---------------------------------------------------------------------------
 
 def parse_tasks(content: str) -> list[dict[str, str]]:
-    '''Parse TASKS.md and return task dicts with priority + description.'''
+    """Parse TASKS.md → list of {priority, description} dicts."""
     tasks: list[dict[str, str]] = []
     for line in content.splitlines():
         m = PRIORITY_RE.match(line)
         if m:
             tasks.append({
-                'priority': m.group('priority'),
-                'description': m.group('description').strip(),
+                "priority": m.group("priority"),
+                "description": m.group("description").strip(),
             })
     return tasks
 
 
 def update_heartbeat_timestamp(content: str, ts: str) -> str:
-    '''Upsert the *Last heartbeat* footer line in TASKS.md.'''
-    marker = '*Last heartbeat:'
-    new_line = f'*Last heartbeat: {ts}*'
+    """Upsert the *Last heartbeat* footer line in TASKS.md."""
+    marker = "*Last heartbeat:"
+    new_line = f"*Last heartbeat: {ts}*"
     lines = content.splitlines()
     for i, line in enumerate(lines):
         if line.strip().startswith(marker):
             lines[i] = new_line
-            return '\n'.join(lines) + '\n'
-    return content.rstrip() + f'\n\n---\n{new_line}\n'
+            return "\n".join(lines) + "\n"
+    return content.rstrip() + f"\n\n---\n{new_line}\n"
 
+
+# ---------------------------------------------------------------------------
+# Channel helpers
+# ---------------------------------------------------------------------------
 
 async def fetch_whatsapp_messages(
     client: httpx.AsyncClient,
 ) -> list[dict[str, Any]]:
-    '''Poll the OpenClaw gateway: GET /api/messages with Bearer token.'''
+    """Poll OpenClaw gateway for inbound messages."""
     if not OPENCLAW_TOKEN:
-        log.debug('whatsapp.skip', reason='OPENCLAW_TOKEN not set')
+        log.debug("whatsapp.skip", reason="OPENCLAW_TOKEN not set")
         return []
     try:
         resp = await client.get(
-            '/api/messages',
-            headers={'Authorization': f'Bearer {OPENCLAW_TOKEN}'},
+            "/api/messages",
+            headers={"Authorization": f"Bearer {OPENCLAW_TOKEN}"},
             timeout=5.0,
         )
         resp.raise_for_status()
-        return resp.json().get('messages', [])
+        return resp.json().get("messages", [])
     except httpx.ConnectError:
-        log.warning('whatsapp.unreachable', url=OPENCLAW_GATEWAY_URL)
+        log.warning("whatsapp.unreachable", url=OPENCLAW_GATEWAY_URL)
         return []
     except httpx.HTTPStatusError as exc:
-        log.error('whatsapp.http_error', status=exc.response.status_code)
+        log.error("whatsapp.http_error", status=exc.response.status_code)
         return []
 
 
-
-# ---------------------------------------------------------------------------
-# Channel stubs -- wired up when tokens are present
-# ---------------------------------------------------------------------------
-
 async def fetch_urgent_gmail(client: httpx.AsyncClient) -> list[dict[str, Any]]:
-    '''TODO: fetch unread URGENT-labelled Gmail via MCP gmail tool.
-
-    Placeholder -- returns empty list until Gmail MCP is connected.
-    '''
-    log.debug('gmail.stub', reason='not yet wired')
+    """TODO: fetch unread URGENT-labelled Gmail via MCP gmail tool."""
+    log.debug("gmail.stub", reason="not yet wired")
     return []
 
 
-async def dispatch_whatsapp_commands(
-    messages: list[dict[str, Any]],
-    queue: asyncio.Queue[dict[str, Any]],
-) -> None:
-    '''Parse incoming WhatsApp messages, route via IntentRouter, and reply.
-
-    Legacy !task prefix still queues directly; all other messages are
-    dispatched through the IntentRouter and the reply is sent back via
-    whatsapp_notify.
-    '''
-    for msg in messages:
-        body: str = msg.get('body', '')
-        if not body:
-            continue
-        if body.startswith('!task '):
-            description = body[len('!task '):].strip()
-            if description:
-                await queue.put({
-                    'id': msg.get('id', ''),
-                    'description': description,
-                    'priority': 'HIGH',
-                    'tags': ['whatsapp'],
-                })
-                log.info('whatsapp.task_queued', description=description)
-        else:
-            log.info('whatsapp.routing', body=body[:80])
-            try:
-                result = await _intent_router.dispatch(body)
-                await whatsapp_notify(result)
-            except Exception:
-                log.exception('whatsapp.dispatch_error', body=body[:80])
-
-
-async def notify_discord(message: str) -> None:
-    '''Post a message to the configured Discord channel via REST.
-
-    Uses DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_CHANNEL_ID env vars.
-    TODO: replace stub with full discord.py or httpx implementation.
-    '''
-    if not DISCORD_BOT_TOKEN or not DISCORD_CHANNEL_ID:
-        log.debug('discord.skip', reason='DISCORD_BOT_TOKEN or DISCORD_CHANNEL_ID not set')
-        return
-    log.debug('discord.stub', channel_id=DISCORD_CHANNEL_ID, message=message[:80])
-
-
 # ---------------------------------------------------------------------------
-# HeartbeatEngine
+# HeartbeatEngine — EventBus edition
 # ---------------------------------------------------------------------------
 
 class HeartbeatEngine:
-    '''Polls TASKS.md, checks channels, stamps footer, pushes urgent work.'''
+    """
+    Reads TASKS.md and incoming channel messages; publishes TaskEvents onto
+    the EventBus so PipelineManager can chain agents immediately.
 
-    def __init__(self, queue: asyncio.Queue[dict[str, Any]]) -> None:
-        self._queue = queue
+    No asyncio.Queue. No direct worker dispatch.
+    Every task enters the pipeline at the 'context' stage.
+    """
+
+    def __init__(self, bus: "Any | None" = None) -> None:
+        """
+        Args:
+            bus: EventBus instance. If None, runs in standalone mode
+                 (logs tasks but doesn't publish events — useful for testing).
+        """
+        self._bus = bus
         self._stop_event = asyncio.Event()
 
     def stop(self) -> None:
-        '''Signal the engine to stop after the current tick.'''
-        log.info('heartbeat.stopping')
+        log.info("heartbeat.stopping")
         self._stop_event.set()
 
     async def run(self) -> None:
-        '''Main loop: tick every POLL_INTERVAL_SECONDS until stopped.'''
-        log.info('heartbeat.started', interval_s=POLL_INTERVAL_SECONDS)
+        log.info("heartbeat.started", interval_s=POLL_INTERVAL_SECONDS)
         async with httpx.AsyncClient(base_url=OPENCLAW_GATEWAY_URL) as client:
             while not self._stop_event.is_set():
                 try:
                     await self._tick(client)
                 except Exception:
-                    log.exception('heartbeat.tick_error')
+                    log.exception("heartbeat.tick_error")
                 try:
                     await asyncio.wait_for(
                         self._stop_event.wait(),
@@ -193,61 +160,130 @@ class HeartbeatEngine:
                     )
                 except asyncio.TimeoutError:
                     pass
-        log.info('heartbeat.stopped')
+        log.info("heartbeat.stopped")
 
     async def _tick(self, client: httpx.AsyncClient) -> None:
-        '''Single heartbeat cycle.'''
-        ts = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-        log.info('heartbeat.tick', ts=ts)
+        """Single heartbeat cycle — read tasks, publish events, stamp footer."""
+        ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        log.info("heartbeat.tick", ts=ts)
 
-        # --- read TASKS.md ---
-        content = TASKS_FILE.read_text(encoding='utf-8')
+        # ── TASKS.md ──────────────────────────────────────────────────────────
+        content = TASKS_FILE.read_text(encoding="utf-8")
         tasks = parse_tasks(content)
 
-        urgent = [t for t in tasks if t['priority'] in ('URGENT', 'HIGH')]
+        urgent = [t for t in tasks if t["priority"] in ("URGENT", "HIGH")]
         if urgent:
             log.warning(
-                'heartbeat.urgent_tasks',
+                "heartbeat.urgent_tasks",
                 count=len(urgent),
-                tasks=[t['description'][:60] for t in urgent[:5]],
+                tasks=[t["description"][:60] for t in urgent[:5]],
             )
+            # Notify Discord
+            lines = "\n".join(f"• [{t['priority']}] {t['description'][:80]}" for t in urgent[:5])
+            await discord_notify(f"⚡ **{len(urgent)} urgent task(s) pending:**\n{lines}")
 
-        # --- poll WhatsApp ---
+        # Publish URGENT/HIGH onto EventBus for immediate pipeline processing
+        if self._bus is not None:
+            for task in urgent:
+                await self._publish_task(task)
+
+        # ── WhatsApp ──────────────────────────────────────────────────────────
         wa_messages = await fetch_whatsapp_messages(client)
         if wa_messages:
-            log.info('whatsapp.messages', count=len(wa_messages))
-            await dispatch_whatsapp_commands(wa_messages, self._queue)
+            log.info("whatsapp.messages", count=len(wa_messages))
+            await self._dispatch_whatsapp(wa_messages)
 
-        # --- Gmail stub ---
+        # ── Gmail stub ────────────────────────────────────────────────────────
         await fetch_urgent_gmail(client)
 
-        # --- stamp footer ---
+        # ── Stamp footer ──────────────────────────────────────────────────────
         updated = update_heartbeat_timestamp(content, ts)
-        TASKS_FILE.write_text(updated, encoding='utf-8')
-        log.debug('heartbeat.stamped', ts=ts)
+        TASKS_FILE.write_text(updated, encoding="utf-8")
+        log.debug("heartbeat.stamped", ts=ts)
+
+    async def _publish_task(self, task: dict[str, str]) -> None:
+        """Publish a TASKS.md entry onto the EventBus at the 'context' stage."""
+        from orchestration.events import TaskEvent
+        task_id = str(uuid.uuid4())[:8]
+        event = TaskEvent(
+            task_id=task_id,
+            agent_type="context",  # always enter pipeline at context stage
+            status="pending",
+            payload={
+                "description": task["description"],
+                "priority": task["priority"],
+                "source": "tasks_md",
+            },
+        )
+        log.info(
+            "heartbeat.publish",
+            task_id=task_id,
+            priority=task["priority"],
+            description=task["description"][:60],
+        )
+        await self._bus.publish(event)
+
+    async def _dispatch_whatsapp(self, messages: list[dict[str, Any]]) -> None:
+        """Route WhatsApp messages: !task prefix → pipeline, rest → IntentRouter."""
+        for msg in messages:
+            body: str = msg.get("body", "")
+            if not body:
+                continue
+
+            if body.startswith("!task "):
+                description = body[len("!task "):].strip()
+                if description and self._bus is not None:
+                    from orchestration.events import TaskEvent
+                    task_id = str(uuid.uuid4())[:8]
+                    await self._bus.publish(TaskEvent(
+                        task_id=task_id,
+                        agent_type="context",
+                        status="pending",
+                        payload={
+                            "description": description,
+                            "priority": "HIGH",
+                            "source": "whatsapp",
+                        },
+                    ))
+                    log.info("whatsapp.task_published", task_id=task_id, description=description)
+            else:
+                log.info("whatsapp.routing", body=body[:80])
+                try:
+                    result = await _intent_router.dispatch(body)
+                    await whatsapp_notify(result)
+                except Exception:
+                    log.exception("whatsapp.dispatch_error", body=body[:80])
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Entry point — wires EventBus + PipelineManager + HeartbeatEngine
 # ---------------------------------------------------------------------------
 
 async def main() -> None:
-    '''Bootstrap heartbeat engine with shared asyncio.Queue and signal handlers.'''
-    queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
-    engine = HeartbeatEngine(queue)
+    """
+    Bootstrap the full event-driven pipeline:
+      EventBus → PipelineManager (chains context→planner→...→qa→release)
+      HeartbeatEngine → publishes TaskEvents onto the bus
+    """
+    from orchestration.events import EventBus
+    from orchestration.pipeline import PipelineManager
+
+    bus = EventBus()
+    pipeline = PipelineManager(bus)  # noqa: F841 — subscribes on construction
+    engine = HeartbeatEngine(bus=bus)
 
     loop = asyncio.get_running_loop()
 
     def _handle_signal() -> None:
-        log.info('signal.received')
+        log.info("signal.received")
         engine.stop()
 
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, _handle_signal)
 
-    log.info('heartbeat.main', tasks_file=str(TASKS_FILE))
+    log.info("heartbeat.main", tasks_file=str(TASKS_FILE), mode="event_driven")
     await engine.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

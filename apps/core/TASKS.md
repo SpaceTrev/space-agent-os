@@ -4,25 +4,34 @@
 # Updated by: Heartbeat engine every 30 min
 
 ## URGENT
+- [URGENT] Wire discord_bot /ask -> CentralBrain.handle() @agent #discord #orchestration
+- [URGENT] Wire heartbeat.py dispatch -> CentralBrain.handle() @agent #orchestration
 
 ## HIGH
-- [HIGH] Wire Discord bot — heartbeat to listen for !task commands and route to pipeline @space-claw #channels
+- [HIGH] Wire Discord /ask command end-to-end smoke test @trev #discord
+  Bot invite + ANTHROPIC_API_KEY needed. Once set: test /ask, /status, /swarm via real Discord slash commands.
+- [HIGH] Add Supabase env vars to apps/dashboard/.env.local @trev #infra
+  NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY needed for dashboard DB. health_check reports not_configured.
+- [HIGH] Run uv add sqlite-vec in apps/core/ (unlocks ANN vector search in VectorStore) @agent #memory
 - [HIGH] Boot worker agent: `python -m agents.worker` and connect to event pipeline @space-claw #infra
-- [HIGH] Build agent monitoring view in apps/dashboard — show live task queue, agent status, system health @space-claw #dashboard
 
 ## NORMAL
-- [NORMAL] Run smoke tests: `python -m agents.orchestrator` and `python -m agents.worker`
-- [NORMAL] Implement notify_discord via REST (replace stub in heartbeat) @space-claw #channels
-- [NORMAL] Wire Gmail MCP into fetch_urgent_gmail stub @space-claw #channels
+- [NORMAL] Add gemma4:31b as BRAIN_MODEL tier in role_spec.py + config/models.yml @agent #models
+- [NORMAL] Write docs/ directory: WORKFLOWS.md, AGENT_ROSTER.md, ROLESPEC.md, DISCORD.md, ARCHITECTURE.md, DEVELOPMENT.md @agent #docs
+- [NORMAL] Implement SkillExtractor: read audit.jsonl, write distilled skills to apps/core/skills/ after each run @agent #skills
+- [NORMAL] Add all new env vars to apps/core/.env.example @agent #infra
+- [NORMAL] Implement dispatch_whatsapp_commands command parser (!task prefix) @trev #channels
+- [NORMAL] Wire Gmail MCP into fetch_urgent_gmail stub @trev #channels
 - [NORMAL] Build Context Agent — reads CLAUDE.md + TASKS.md, surfaces blockers, owns project memory @space-claw #agents
-- [NORMAL] Set up n8n for workflow automation glue (GitHub webhooks → agent triggers) @space-claw #infra
-- [NORMAL] Build consulting business first asset — client-facing one-pager for Mexico market @space-claw #business
 
 ## LOW
 - [LOW] Set up Gmail MCP credentials
 - [LOW] Set up Slack MCP credentials
 - [LOW] Add pytest smoke tests for heartbeat, worker, and MCP server tools
-- [LOW] Containerize: update Dockerfile + compose.yml for production deployment
+- [LOW] Configure Playwright timesheet automation
+- [LOW] Add Dockerfile / compose.yml for containerised deployment
+- [LOW] Design space-scribe -> brains/research/ ingestion pipeline @agent #content
 
 ---
-*Last updated: 2026-03-26 — legacy setup tasks done, forward-looking tasks loaded*
+*Last heartbeat: 2026-04-07T21:40:01Z*
+*Last updated: 2026-04-07 — merged task backlog, boot system in progress*

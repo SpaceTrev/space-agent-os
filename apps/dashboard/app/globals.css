@@ -2,18 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   CSS Custom Properties — Light: Solarized IDE / Dark: Current
+   ============================================================ */
+
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  /* Light mode — Solarized-inspired IDE aesthetic */
+  --color-background: #fdf6e3;   /* solarized base3 — warm cream */
+  --color-surface:    #eee8d5;   /* solarized base2 */
+  --color-border:     #d6cfbd;   /* slightly darker warm */
+  --color-text-primary:   #073642; /* solarized base02 — near-black with blue tint */
+  --color-text-secondary: #586e75; /* solarized base01 — muted */
+  --color-text-muted:     #93a1a1; /* solarized base1 */
+  --color-accent: #268bd2;        /* solarized blue */
+
+  /* Legacy vars — keep for compat */
+  --background: #fdf6e3;
+  --foreground: #073642;
 }
 
-:root.light {
-  --background: #f5f5f7;
-  --foreground: #1d1d1f;
+.dark {
+  /* Dark mode — current IDE aesthetic */
+  --color-background: #030712;   /* gray-950 */
+  --color-surface:    #111827;   /* gray-900 */
+  --color-border:     #1f2937;   /* gray-800 */
+  --color-text-primary:   #ffffff;
+  --color-text-secondary: #9ca3af; /* gray-400 */
+  --color-text-muted:     #4b5563; /* gray-600 */
+  --color-accent: #0ea5e9;         /* brand-500 sky blue */
+
+  /* Legacy vars */
+  --background: #030712;
+  --foreground: #ffffff;
 }
+
+/* ============================================================
+   Base styles
+   ============================================================ */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* ============================================================
+   Dark mode only — Terminal scanline texture
+   Subtle CRT-style grid overlay for the IDE vibe
+   ============================================================ */
+
+.dark body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
 }
