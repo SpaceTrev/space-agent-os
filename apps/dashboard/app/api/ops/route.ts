@@ -11,7 +11,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  'https://roof-christopher-dare-plain.trycloudflare.com'
 
 async function proxy(req: NextRequest, method: string): Promise<NextResponse> {
   const path = req.nextUrl.searchParams.get('path') ?? ''

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { clsx } from 'clsx'
 import {
   Terminal,
@@ -19,9 +19,48 @@ import {
   AlertCircle,
   Circle,
   ChevronRight,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Backend types ────────────────────────────────────────────────────────────
+
+interface ServiceHealth {
+  reachable?: boolean
+  configured?: boolean
+  models?: string[]
+  version?: string
+  status?: string
+}
+
+interface HealthData {
+  status: string
+  timestamp?: string
+  backend?: Record<string, string>
+  services?: {
+    ollama?: ServiceHealth
+    openclaw?: ServiceHealth
+    anthropic?: ServiceHealth
+    gemini?: ServiceHealth
+    [key: string]: ServiceHealth | undefined
+  }
+}
+
+interface AgentData {
+  name: string
+  role: string
+  tier: string
+  module?: string
+  status?: string
+}
+
+interface ModelsData {
+  ollama_reachable?: boolean
+  ollama_models?: string[]
+  models?: string[]
+}
+
+// ─── UI types ─────────────────────────────────────────────────────────────────
 
 type TaskStatus = 'running' | 'done' | 'error' | 'queued' | 'pending'
 
@@ -42,92 +81,6 @@ interface DiscordMessage {
   ts: string
   type: 'command' | 'message' | 'bot'
 }
-
-interface ModelStat {
-  name: string
-  tier: 'primary' | 'secondary' | 'local'
-  provider: string
-  requests: number
-  avg_latency_s: number
-  status: 'online' | 'offline' | 'degraded'
-}
-
-// ─── Mock data (TODO: wire to /api/ops/*) ─────────────────────────────────────
-
-const MOCK_TASKS: PipelineTask[] = [
-  {
-    id: 'hb-001',
-    description: 'Heartbeat tick — scanning TASKS.md for urgent items',
-    model: 'llama3.1:8b',
-    priority: 'NORMAL',
-    status: 'done',
-    elapsed_s: 0.3,
-    started_at: new Date(Date.now() - 120000).toISOString(),
-  },
-  {
-    id: 'smoke-001',
-    description: 'Worker smoke test: Print hello world in Python in one line',
-    model: 'qwen3-coder:30b',
-    priority: 'NORMAL',
-    status: 'done',
-    elapsed_s: 12.5,
-    started_at: new Date(Date.now() - 300000).toISOString(),
-  },
-  {
-    id: 'orch-001',
-    description: 'Orchestrator smoke test — system readiness check',
-    model: 'llama3.1:8b',
-    priority: 'NORMAL',
-    status: 'done',
-    elapsed_s: 3.1,
-    started_at: new Date(Date.now() - 600000).toISOString(),
-  },
-]
-
-const MOCK_DISCORD_MESSAGES: DiscordMessage[] = [
-  {
-    id: '1',
-    author: 'Space-Claw',
-    content: '🤖 **Space-Claw online.** Type `/ask` or mention me to start.',
-    ts: new Date(Date.now() - 900000).toISOString(),
-    type: 'bot',
-  },
-]
-
-const MOCK_MODELS: ModelStat[] = [
-  {
-    name: 'claude-sonnet-4-6',
-    tier: 'primary',
-    provider: 'OpenClaw',
-    requests: 0,
-    avg_latency_s: 0,
-    status: 'online',
-  },
-  {
-    name: 'gemini-2.0-flash',
-    tier: 'secondary',
-    provider: 'Google',
-    requests: 0,
-    avg_latency_s: 0,
-    status: 'online',
-  },
-  {
-    name: 'llama3.1:8b',
-    tier: 'local',
-    provider: 'Ollama',
-    requests: 2,
-    avg_latency_s: 1.8,
-    status: 'online',
-  },
-  {
-    name: 'qwen3-coder:30b',
-    tier: 'local',
-    provider: 'Ollama',
-    requests: 1,
-    avg_latency_s: 12.5,
-    status: 'online',
-  },
-]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -166,12 +119,6 @@ const priorityBadge: Record<string, string> = {
   LOW: 'text-text-muted bg-border-base',
 }
 
-const tierLabel: Record<string, string> = {
-  primary: 'text-accent',
-  secondary: 'text-purple-500',
-  local: 'text-green-500',
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatusPill({ online, label }: { online: boolean; label: string }) {
@@ -187,6 +134,35 @@ function StatusPill({ online, label }: { online: boolean; label: string }) {
         online ? 'bg-green-500 animate-pulse' : 'bg-text-muted'
       )} />
       {label}
+    </div>
+  )
+}
+
+function LiveBadge() {
+  return (
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold border text-red-400 bg-red-500/10 border-red-500/30">
+      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+      LIVE
+    </div>
+  )
+}
+
+function ServiceRow({ name, svc }: { name: string; svc: ServiceHealth }) {
+  const reachable = svc.reachable ?? svc.configured ?? false
+  return (
+    <div className="flex items-center justify-between px-4 py-2 border-b border-border-base last:border-0">
+      <div className="flex items-center gap-2">
+        {reachable
+          ? <Wifi className="w-3 h-3 text-green-500" />
+          : <WifiOff className="w-3 h-3 text-text-muted" />}
+        <span className="text-[11px] font-mono text-text-primary capitalize">{name}</span>
+      </div>
+      <span className={clsx(
+        'text-[10px] font-mono font-medium',
+        reachable ? 'text-green-500' : 'text-text-muted'
+      )}>
+        {reachable ? 'reachable' : 'offline'}
+      </span>
     </div>
   )
 }
@@ -235,12 +211,28 @@ function DispatchModal({ onClose, onSend }: { onClose: () => void; onSend: (task
 
 export default function MissionControlPage() {
   const [now, setNow] = useState(new Date())
-  const [tasks, setTasks] = useState<PipelineTask[]>(MOCK_TASKS)
-  const [discordMessages] = useState<DiscordMessage[]>(MOCK_DISCORD_MESSAGES)
+  const [tasks, setTasks] = useState<PipelineTask[]>([])
+  const [discordMessages] = useState<DiscordMessage[]>([
+    {
+      id: '1',
+      author: 'Space-Claw',
+      content: '🤖 **Space-Claw online.** Type `/ask` or mention me to start.',
+      ts: new Date(Date.now() - 900000).toISOString(),
+      type: 'bot',
+    },
+  ])
   const [showDispatch, setShowDispatch] = useState(false)
-  const [lastHeartbeat, setLastHeartbeat] = useState(new Date(Date.now() - 120000))
+  const [lastHeartbeat, setLastHeartbeat] = useState<Date | null>(null)
   const [botConnected] = useState(false)
+
+  // Backend data state
+  const [health, setHealth] = useState<HealthData | null>(null)
+  const [agents, setAgents] = useState<AgentData[]>([])
+  const [modelsData, setModelsData] = useState<ModelsData | null>(null)
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [lastFetched, setLastFetched] = useState<Date | null>(null)
+
   const feedRef = useRef<HTMLDivElement>(null)
 
   // Live clock
@@ -254,21 +246,73 @@ export default function MissionControlPage() {
     if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight
   }, [tasks])
 
-  // Poll Python backend health every 10s
-  useEffect(() => {
-    async function checkBackend() {
-      try {
-        const res = await fetch('/api/ops?path=health', { cache: 'no-store' })
-        setBackendOnline(res.ok)
-        if (res.ok) setLastHeartbeat(new Date())
-      } catch {
+  // Fetch all backend data
+  const fetchAll = useCallback(async () => {
+    // Fetch health
+    try {
+      const res = await fetch('/api/ops?path=health', { cache: 'no-store' })
+      if (res.ok) {
+        const data: HealthData = await res.json()
+        setHealth(data)
+        setBackendOnline(true)
+        setLastHeartbeat(new Date())
+        setFetchError(null)
+      } else {
         setBackendOnline(false)
+        setFetchError(`HTTP ${res.status}`)
       }
+    } catch (e) {
+      setBackendOnline(false)
+      setFetchError(e instanceof Error ? e.message : 'unreachable')
     }
-    checkBackend()
-    const t = setInterval(checkBackend, 10_000)
-    return () => clearInterval(t)
+
+    // Fetch agents
+    try {
+      const res = await fetch('/api/ops?path=agents', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        // Handle {agents: [...]} or bare array
+        const list: AgentData[] = Array.isArray(data) ? data : (data.agents ?? [])
+        setAgents(list)
+      }
+    } catch {
+      // agents remain empty
+    }
+
+    // Fetch models
+    try {
+      const res = await fetch('/api/ops?path=models', { cache: 'no-store' })
+      if (res.ok) {
+        const data: ModelsData = await res.json()
+        setModelsData(data)
+      }
+    } catch {
+      // models remain null
+    }
+
+    setLastFetched(new Date())
   }, [])
+
+  useEffect(() => {
+    fetchAll()
+    const t = setInterval(fetchAll, 10_000)
+    return () => clearInterval(t)
+  }, [fetchAll])
+
+  // Build agent pipeline tasks from real agents data
+  useEffect(() => {
+    if (agents.length === 0) return
+    const agentTasks: PipelineTask[] = agents.map((a, i) => ({
+      id: a.module ?? `agent-${i}`,
+      description: `${a.role} — ${a.name}`,
+      model: a.tier === 'local' ? 'ollama' : a.tier === 'primary' ? 'claude-sonnet-4-6' : 'gemini-2.0-flash',
+      priority: 'NORMAL',
+      status: (a.status === 'running' ? 'running' : a.status === 'error' ? 'error' : 'done') as TaskStatus,
+      elapsed_s: null,
+      started_at: new Date(Date.now() - (i + 1) * 60000).toISOString(),
+    }))
+    setTasks(agentTasks)
+  }, [agents])
 
   async function handleDispatch(description: string) {
     const taskId = `task-${Date.now()}`
@@ -303,7 +347,18 @@ export default function MissionControlPage() {
     }
   }
 
-  const totalRequests = MOCK_MODELS.reduce((s, m) => s + m.requests, 0)
+  // Derive service statuses from health
+  const services = health?.services ?? {}
+  const ollamaOnline = services.ollama?.reachable ?? false
+  const openclawOnline = services.openclaw?.reachable ?? false
+  const anthropicOnline = services.anthropic?.configured ?? services.anthropic?.reachable ?? false
+  const geminiOnline = services.gemini?.configured ?? services.gemini?.reachable ?? false
+
+  // Ollama models — prefer /models endpoint, fall back to /health services.ollama.models
+  const ollamaModels: string[] = modelsData?.ollama_models
+    ?? modelsData?.models
+    ?? services.ollama?.models
+    ?? []
 
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
@@ -317,24 +372,41 @@ export default function MissionControlPage() {
 
         <div className="h-4 w-px bg-border-base" />
 
+        <LiveBadge />
+
+        <div className="h-4 w-px bg-border-base" />
+
         {/* Heartbeat */}
         <div className="flex items-center gap-2 text-[11px] font-mono">
           <Activity className="w-3.5 h-3.5 text-accent animate-pulse" />
           <span className="text-text-secondary">HB</span>
-          <span className="text-accent">{timeAgo(lastHeartbeat.toISOString())}</span>
+          <span className="text-accent">{lastHeartbeat ? timeAgo(lastHeartbeat.toISOString()) : '—'}</span>
         </div>
 
         <div className="h-4 w-px bg-border-base" />
 
-        {/* Model pills */}
+        {/* Real service pills */}
         <div className="flex items-center gap-2">
-          <StatusPill online={backendOnline === true} label="API" />
-          <StatusPill online label="Claude Sonnet" />
-          <StatusPill online label="Gemini Flash" />
-          <StatusPill online label="Ollama" />
+          <StatusPill online={backendOnline === true} label="Backend" />
+          <StatusPill online={openclawOnline} label="OpenClaw" />
+          <StatusPill online={anthropicOnline} label="Anthropic" />
+          <StatusPill online={geminiOnline} label="Gemini" />
+          <StatusPill online={ollamaOnline} label="Ollama" />
         </div>
 
         <div className="flex-1" />
+
+        {/* Fetch error */}
+        {fetchError && (
+          <span className="text-[10px] font-mono text-red-400 truncate max-w-[200px]">{fetchError}</span>
+        )}
+
+        {/* Last fetched */}
+        {lastFetched && (
+          <span className="text-[10px] font-mono text-text-muted">↻ {timeAgo(lastFetched.toISOString())}</span>
+        )}
+
+        <div className="h-4 w-px bg-border-base" />
 
         {/* Live clock */}
         <div className="flex items-center gap-1.5 text-[11px] font-mono text-text-muted">
@@ -353,7 +425,10 @@ export default function MissionControlPage() {
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-accent" />
               <span className="text-sm font-semibold text-text-primary">Agent Pipeline</span>
-              <span className="text-xs text-text-muted font-mono ml-1">{tasks.length} tasks</span>
+              <span className="text-xs text-text-muted font-mono ml-1">{agents.length > 0 ? `${agents.length} agents` : `${tasks.length} tasks`}</span>
+              {backendOnline === true && (
+                <span className="text-[10px] font-mono text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">live</span>
+              )}
             </div>
             <button
               onClick={() => setShowDispatch(true)}
@@ -364,12 +439,40 @@ export default function MissionControlPage() {
             </button>
           </div>
 
-          {/* Task feed */}
+          {/* Backend info strip */}
+          {health?.backend && (
+            <div className="flex-shrink-0 flex items-center gap-4 px-5 py-2 bg-green-500/5 border-b border-green-500/10 overflow-x-auto">
+              {Object.entries(health.backend).map(([k, v]) => (
+                <span key={k} className="text-[10px] font-mono text-text-muted whitespace-nowrap">
+                  <span className="text-green-500/70">{k}:</span> {v}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Task/agent feed */}
           <div ref={feedRef} className="flex-1 overflow-y-auto">
-            {tasks.length === 0 ? (
+            {backendOnline === null ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-text-muted">
                 <RefreshCw className="w-6 h-6 animate-spin opacity-30" />
-                <p className="text-sm">Waiting for tasks...</p>
+                <p className="text-sm">Connecting to backend...</p>
+              </div>
+            ) : backendOnline === false ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-text-muted">
+                <WifiOff className="w-6 h-6 opacity-30" />
+                <p className="text-sm">Backend offline</p>
+                {fetchError && <p className="text-xs font-mono text-red-400">{fetchError}</p>}
+                <button
+                  onClick={fetchAll}
+                  className="text-xs text-accent hover:text-accent/80 flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" /> Retry
+                </button>
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-text-muted">
+                <RefreshCw className="w-6 h-6 animate-spin opacity-30" />
+                <p className="text-sm">Loading agents...</p>
               </div>
             ) : (
               <div className="divide-y divide-border-base">
@@ -406,7 +509,38 @@ export default function MissionControlPage() {
         {/* ── Right column ───────────────────────────────────────────────── */}
         <div className="col-span-1 flex flex-col overflow-hidden">
 
-          {/* Discord Activity (top half) */}
+          {/* Service Health (top quarter) */}
+          <div className="flex-shrink-0 border-b border-border-base">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border-base">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-green-400" />
+                <span className="text-sm font-semibold text-text-primary">Services</span>
+              </div>
+              {health?.status && (
+                <span className={clsx(
+                  'text-[10px] font-mono font-medium px-2 py-0.5 rounded',
+                  health.status === 'ok' || health.status === 'healthy'
+                    ? 'text-green-500 bg-green-500/10'
+                    : 'text-yellow-500 bg-yellow-500/10'
+                )}>
+                  {health.status}
+                </span>
+              )}
+            </div>
+            <div className="max-h-40 overflow-y-auto">
+              {Object.keys(services).length === 0 ? (
+                <div className="px-4 py-3 text-[11px] text-text-muted font-mono">
+                  {backendOnline === null ? 'Connecting...' : 'No service data'}
+                </div>
+              ) : (
+                Object.entries(services).map(([name, svc]) =>
+                  svc ? <ServiceRow key={name} name={name} svc={svc} /> : null
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Discord Activity (middle) */}
           <div className="flex-1 flex flex-col border-b border-border-base overflow-hidden">
             <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-base">
               <div className="flex items-center gap-2">
@@ -424,12 +558,9 @@ export default function MissionControlPage() {
               </div>
             </div>
 
-            {/* Bot invite CTA if not connected */}
             {!botConnected && (
               <div className="px-4 py-3 bg-yellow-500/5 border-b border-yellow-500/10">
-                <p className="text-[11px] text-yellow-500/80 leading-snug">
-                  Bot not in server yet. Add it:
-                </p>
+                <p className="text-[11px] text-yellow-500/80 leading-snug">Bot not in server yet.</p>
                 <a
                   href="https://discord.com/oauth2/authorize?client_id=1484792458981412894&scope=bot+applications.commands&permissions=277025770560"
                   target="_blank"
@@ -442,78 +573,78 @@ export default function MissionControlPage() {
               </div>
             )}
 
-            {/* Channel info */}
-            <div className="px-4 py-2 border-b border-border-base">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-text-muted font-mono">#space-claw</span>
-                <span className="text-text-muted font-mono">id: 1484793801531719803</span>
-              </div>
-            </div>
-
-            {/* Commands ref */}
             <div className="px-4 py-2 border-b border-border-base flex flex-wrap gap-1.5">
               {['/ask', '/status', '/tasks', '/swarm'].map((cmd) => (
                 <span key={cmd} className="text-[10px] font-mono px-1.5 py-0.5 bg-background text-text-secondary rounded border border-border-base">{cmd}</span>
               ))}
             </div>
 
-            {/* Message feed */}
             <div className="flex-1 overflow-y-auto">
-              {discordMessages.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-xs text-text-muted">No messages yet</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-border-base">
-                  {discordMessages.map((msg) => (
-                    <div key={msg.id} className="px-4 py-2.5 hover:bg-surface">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className={clsx(
-                          'text-[11px] font-semibold',
-                          msg.type === 'bot' ? 'text-accent' : 'text-text-primary'
-                        )}>
-                          {msg.author}
-                        </span>
-                        <span className="text-[10px] text-text-muted font-mono">{timeAgo(msg.ts)}</span>
-                      </div>
-                      <p className="text-[11px] text-text-secondary leading-snug line-clamp-2">{msg.content}</p>
+              <div className="divide-y divide-border-base">
+                {discordMessages.map((msg) => (
+                  <div key={msg.id} className="px-4 py-2.5 hover:bg-surface">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className={clsx(
+                        'text-[11px] font-semibold',
+                        msg.type === 'bot' ? 'text-accent' : 'text-text-primary'
+                      )}>
+                        {msg.author}
+                      </span>
+                      <span className="text-[10px] text-text-muted font-mono">{timeAgo(msg.ts)}</span>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <p className="text-[11px] text-text-secondary leading-snug line-clamp-2">{msg.content}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Model Usage (bottom half) */}
+          {/* Ollama Models (bottom) */}
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-base">
               <div className="flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-purple-400" />
-                <span className="text-sm font-semibold text-text-primary">Models</span>
+                <span className="text-sm font-semibold text-text-primary">Ollama Models</span>
               </div>
-              <span className="text-[11px] font-mono text-text-muted">{totalRequests} req</span>
+              <div className="flex items-center gap-2">
+                <span className={clsx(
+                  'text-[10px] font-mono',
+                  ollamaOnline ? 'text-green-500' : 'text-text-muted'
+                )}>
+                  {ollamaOnline ? `${ollamaModels.length} installed` : 'offline'}
+                </span>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto divide-y divide-border-base">
-              {MOCK_MODELS.map((model) => (
-                <div key={model.name} className="px-4 py-2.5 hover:bg-surface">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-mono text-text-primary truncate max-w-[140px]">{model.name}</span>
-                    <span className={clsx('text-[10px] font-medium', tierLabel[model.tier])}>
-                      {model.tier}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] text-text-muted font-mono">
-                    <span>{model.provider}</span>
-                    <span>{model.requests}r · {model.avg_latency_s > 0 ? `${model.avg_latency_s}s avg` : '—'}</span>
-                    <span className={clsx(
-                      model.status === 'online' ? 'text-green-500' : 'text-red-500'
-                    )}>
-                      {model.status}
-                    </span>
-                  </div>
+              {ollamaModels.length === 0 ? (
+                <div className="px-4 py-3 text-[11px] text-text-muted font-mono">
+                  {backendOnline === null ? 'Loading...' : ollamaOnline ? 'No models found' : 'Ollama unreachable'}
                 </div>
-              ))}
+              ) : (
+                ollamaModels.map((model) => {
+                  const isLarge = /30b|31b|32b|70b/i.test(model)
+                  const isCoder = /coder/i.test(model)
+                  const isReasoning = /r1|thinking/i.test(model)
+                  return (
+                    <div key={model} className="px-4 py-2.5 hover:bg-surface flex items-center justify-between">
+                      <span className="text-[11px] font-mono text-text-primary truncate max-w-[160px]">{model}</span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {isLarge && (
+                          <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-purple-500/10 text-purple-400">30B+</span>
+                        )}
+                        {isCoder && (
+                          <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-accent/10 text-accent">code</span>
+                        )}
+                        {isReasoning && (
+                          <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-400">think</span>
+                        )}
+                        <span className="text-[9px] font-mono text-green-500">●</span>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
         </div>
@@ -532,7 +663,6 @@ export default function MissionControlPage() {
           <button
             key={label}
             onClick={() => {
-              // TODO: POST to /api/ops/[action]
               console.log('action:', label)
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-background hover:bg-border-base border border-border-base hover:border-text-muted text-xs text-text-secondary hover:text-text-primary rounded-lg transition-all font-mono"
@@ -541,6 +671,13 @@ export default function MissionControlPage() {
             {label}
           </button>
         ))}
+
+        <div className="flex-1" />
+
+        {/* Backend URL indicator */}
+        <span className="text-[10px] font-mono text-text-muted truncate max-w-[300px]">
+          api: {process.env.NEXT_PUBLIC_API_URL ?? 'localhost:8000'}
+        </span>
       </div>
 
       {/* ── Dispatch modal ─────────────────────────────────────────────────── */}
