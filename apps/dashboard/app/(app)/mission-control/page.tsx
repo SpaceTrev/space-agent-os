@@ -238,8 +238,9 @@ export default function MissionControlPage() {
   const [tasks, setTasks] = useState<PipelineTask[]>(MOCK_TASKS)
   const [discordMessages] = useState<DiscordMessage[]>(MOCK_DISCORD_MESSAGES)
   const [showDispatch, setShowDispatch] = useState(false)
-  const [lastHeartbeat] = useState(new Date(Date.now() - 120000))
-  const [botConnected] = useState(false) // TODO: wire to /api/ops/discord-status
+  const [lastHeartbeat, setLastHeartbeat] = useState(new Date(Date.now() - 120000))
+  const [botConnected] = useState(false)
+  const [backendOnline, setBackendOnline] = useState<boolean | null>(null)
   const feedRef = useRef<HTMLDivElement>(null)
 
   // Live clock
@@ -253,18 +254,53 @@ export default function MissionControlPage() {
     if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight
   }, [tasks])
 
-  function handleDispatch(description: string) {
-    const newTask: PipelineTask = {
-      id: `task-${Date.now()}`,
+  // Poll Python backend health every 10s
+  useEffect(() => {
+    async function checkBackend() {
+      try {
+        const res = await fetch('/api/ops?path=health', { cache: 'no-store' })
+        setBackendOnline(res.ok)
+        if (res.ok) setLastHeartbeat(new Date())
+      } catch {
+        setBackendOnline(false)
+      }
+    }
+    checkBackend()
+    const t = setInterval(checkBackend, 10_000)
+    return () => clearInterval(t)
+  }, [])
+
+  async function handleDispatch(description: string) {
+    const taskId = `task-${Date.now()}`
+    setTasks((prev) => [{
+      id: taskId,
       description,
-      model: 'claude-sonnet-4-6',
+      model: 'space-claw',
       priority: 'NORMAL',
-      status: 'queued',
+      status: 'running',
       elapsed_s: null,
       started_at: new Date().toISOString(),
+    }, ...prev])
+
+    try {
+      const res = await fetch('/api/ops?path=dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal: description, channel: 'mission-control' }),
+      })
+      const data = await res.json()
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? { ...t, status: (data.error ? 'error' : 'done') as TaskStatus, elapsed_s: data.elapsed_s ?? null }
+            : t
+        )
+      )
+    } catch {
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: 'error' as TaskStatus } : t))
+      )
     }
-    setTasks((prev) => [newTask, ...prev])
-    // TODO: POST to /api/ops/dispatch
   }
 
   const totalRequests = MOCK_MODELS.reduce((s, m) => s + m.requests, 0)
@@ -292,6 +328,7 @@ export default function MissionControlPage() {
 
         {/* Model pills */}
         <div className="flex items-center gap-2">
+          <StatusPill online={backendOnline === true} label="API" />
           <StatusPill online label="Claude Sonnet" />
           <StatusPill online label="Gemini Flash" />
           <StatusPill online label="Ollama" />

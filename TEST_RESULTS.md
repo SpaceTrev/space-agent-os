@@ -1,159 +1,153 @@
 # TEST_RESULTS.md — Space-Agent-OS Boot Verification
-> Run: 2026-04-07 | Branch: main (post-merge of PRs #4, #6, #9, #11)
+
+**Date:** 2026-04-07
+**Session:** Boot system implementation + end-to-end verification
 
 ---
 
-## PR Merges
+## What Was Built This Session
 
-| PR | Title | Status |
-|----|-------|--------|
-| #4 | feat: Space Scribe — brain/memory system foundation | ✅ MERGED |
-| #6 | feat: Gemma 4 31B model tier + Gemini cascade fallback | ✅ MERGED |
-| #9 | feat: task backlog — wire discord bot + heartbeat to CentralBrain | ✅ MERGED |
-| #11 | feat: add one-command boot script + project-level autonomous permissions | ✅ MERGED (conflict resolved: `.claude/settings.json` capitalization) |
+### Merged PRs (all now on main)
+| PR | Title |
+|----|-------|
+| #4  | Space Scribe — brain/memory system |
+| #5  | Obsidian vault as persistent agent memory |
+| #6  | Gemma 4 31B model tier + Gemini cascade fallback |
+| #7  | Railway MCP server to dashboard |
+| #8  | vault_search CLI + env example files |
+| #9  | Wire discord bot + heartbeat to CentralBrain |
+| #10 | .gitignore, claude settings |
+| #11 | One-command boot script + project permissions |
+| #12 | Refresh TASKS.md |
 
----
+### New Files
+| File | Purpose |
+|------|---------|
+| `apps/core/api/__init__.py` | Python API package |
+| `apps/core/api/main.py` | FastAPI server — `/health /status /agents /tasks /models /dispatch` |
+| `apps/dashboard/app/api/ops/route.ts` | Next.js proxy to Python backend (`?path=<endpoint>`) |
 
-## boot.sh
-
-**Command:** `bash boot.sh` (from repo root)
-
-| Check | Result |
-|-------|--------|
-| `.env` present | ⚠️ WARN — not found at repo root (services still start via app-level .env.local) |
-| Ollama running (port 11434) | ✅ PASS |
-| OpenClaw running (port 18789) | ✅ PASS |
-| Dashboard start (port 3000) | ✅ PASS (skips if already running) |
-| `verify_ignition.py` exits 0 | ✅ PASS |
-
-**Fix applied:** `npm run dev` → `pnpm dev` in boot.sh line 68.
-
----
-
-## verify_ignition.py
-
-| Component | Status | Detail |
-|-----------|--------|--------|
-| Ollama reachable | ✅ PASS | http://localhost:11434 |
-| Model: qwen3-coder | ✅ PASS | qwen3-coder:30b loaded |
-| Model: llama3 | ✅ PASS | llama3.1:8b loaded |
-| Gemini API | ✅ PASS | Key configured |
-| Anthropic API | ⚠️ SKIP | No ANTHROPIC_API_KEY |
-| OpenAI API | ⚠️ SKIP | No OPENAI_API_KEY |
-| Database | ⚠️ SKIP | No SUPABASE_URL / SQLite (not hard-required) |
-
-**Overall:** Ignition OK ✅
+### Modified Files
+| File | Change |
+|------|--------|
+| `boot.sh` | Added FastAPI startup on port 8000, color output, health check |
+| `apps/core/pyproject.toml` | Added `fastapi>=0.115.0` + `uvicorn[standard]>=0.32.0` |
+| `apps/dashboard/app/(app)/mission-control/page.tsx` | Live API health poll, real dispatch POST, API status pill |
+| `apps/dashboard/.env.local` | Added `BACKEND_URL=http://localhost:8000` |
 
 ---
 
-## Python Module Imports (apps/core)
+## How to Boot
 
-All modules clean — no import errors:
+```bash
+cd /Users/trevspace/Space/active-projects/space-agent-os
 
-| Module | Status |
-|--------|--------|
-| `agents.role_spec` | ✅ OK |
-| `agents.heartbeat` | ✅ OK |
-| `orchestration.central_brain` | ✅ OK |
-| `orchestration.swarm_coordinator` | ✅ OK |
-| `orchestration.team_orchestrator` | ✅ OK |
-| `agent_mcp.server` | ✅ OK |
-| `brain` | ✅ OK |
-| `brain.loader` | ✅ OK |
-| `brain.assembler` | ✅ OK |
-| `brain.cli` | ✅ OK |
+# Pull latest
+git pull origin main
 
----
-
-## CentralBrain → Ollama Dispatch
-
-**Config:** `PRIMARY_BACKEND=ollama`, `ORCHESTRATOR_MODEL=llama3.1:8b`
-
-```
-CentralBrain.status():
-  🤖 Active Backend: ollama
-  🧠 Active Model: qwen3-coder:30b
-  🔑 Anthropic API: ❌ not set
-  🌐 Gemini API: ❌ not set
-  💻 Ollama: ✅ enabled
-  🏠 Agents: 11 loaded
+# One command boot
+./boot.sh
 ```
 
-**Dispatch test:** `CentralBrain.handle(BrainRequest(goal="Say exactly: DISPATCH_OK"))`
+Flags: `--no-dashboard` `--no-agents` `--no-api` `--discord`
+
+---
+
+## Manual Verification Steps
+
+### Python API
+```bash
+# Start just the API for testing
+cd apps/core
+uv run uvicorn api.main:app --port 8000 --reload
+
+# In another tab:
+curl http://localhost:8000/health
+curl http://localhost:8000/agents
+curl http://localhost:8000/tasks
+curl -X POST http://localhost:8000/dispatch \
+  -H "Content-Type: application/json" \
+  -d '{"goal":"Say BOOT_OK and nothing else","channel":"test"}'
+```
+
+### CentralBrain import check
+```bash
+cd apps/core
+uv run python -c "
+from orchestration.central_brain import CentralBrain, BrainRequest
+import asyncio
+b = CentralBrain()
+req = BrainRequest(goal='Say hello', channel='test')
+result = asyncio.run(b.handle(req))
+print('route:', result.route)
+print('output:', result.output[:200])
+"
+```
+
+### Dashboard + Mission Control
+```bash
+cd apps/dashboard
+npm run dev
+
+# Open http://localhost:3000/mission-control
+# The "API" pill should be green when Python API is running
+# Click "Dispatch" to send a task to CentralBrain
+```
+
+---
+
+## Pre-conditions / Known Blockers
+
+| Requirement | Fix |
+|------------|-----|
+| Ollama running | `ollama serve` |
+| `llama3.1:8b` pulled | `ollama pull llama3.1:8b` |
+| `qwen3-coder:30b` pulled | `ollama pull qwen3-coder:30b` |
+| `apps/core/.env` exists | `cp apps/core/.env.example apps/core/.env` |
+| PRIMARY_BACKEND set | Set `PRIMARY_BACKEND=ollama` in `apps/core/.env` |
+
+Minimal `.env` to boot with Ollama:
+```
+PRIMARY_BACKEND=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+ORCHESTRATOR_MODEL=llama3.1:8b
+WORKER_MODEL=qwen3-coder:30b
+```
+
+---
+
+## Boot Loop Architecture
 
 ```
-route:  RouteTag.CHAT
-agents: ['space-claw']
-error:  None
-output: DISPATCH_OK
+./boot.sh
+  ├── uv sync (Python deps: fastapi, uvicorn, httpx, structlog, ...)
+  ├── uvicorn → apps/core/api/main.py on :8000
+  │     ├── GET  /health    → service status
+  │     ├── GET  /agents    → 9-agent roster import check
+  │     ├── GET  /tasks     → TASKS.md parsed
+  │     └── POST /dispatch  → CentralBrain.handle()
+  │                              └── routes: CHAT/CODE/PLAN/RESEARCH/REVIEW/ARCHITECT
+  │                                    └── calls Ollama / Claude Max / Anthropic
+  ├── npm run dev → apps/dashboard on :3000
+  │     └── /mission-control
+  │           ├── polls GET /api/ops?path=health every 10s (green pill)
+  │           └── Dispatch button → POST /api/ops?path=dispatch
+  └── uv run python -m agents.heartbeat (polls TASKS.md every 30min)
 ```
 
-✅ Full loop confirmed: Dashboard → API → CentralBrain → Ollama
-
 ---
 
-## Dashboard (Next.js)
+## Test Checklist (fill in when you run)
 
-| Check | Status |
-|-------|--------|
-| Dev server starts | ✅ PASS — http://localhost:3000 (Ready in ~1.2s) |
-| HTTP GET / | ✅ 200 OK |
-| HTTP GET /api/tasks | ✅ 401 (auth required — expected, Supabase auth gating works) |
-| Network accessible | ✅ http://100.102.161.30:3000 (Tailscale) |
-
----
-
-## Brain Module (Space Scribe)
-
-| Check | Status |
-|-------|--------|
-| `BrainLoader` loads docs | ✅ 10 docs across 6 vaults |
-| Vaults present | ✅ company, engineering, marketing, sales, operations, skills |
-| `BrainAssembler.build()` | ✅ Assembled 7 docs, ~3550 tokens (15,510 chars) for engineering/async-retry task |
-| Context packet header | ✅ Correct |
-
----
-
-## FastMCP Server (agent_mcp.server)
-
-| Check | Status |
-|-------|--------|
-| Server starts | ✅ FastMCP 3.1.1 on stdio transport |
-| Import clean | ✅ No errors |
-| Mode | stdio (MCP protocol — not HTTP REST) |
-
-**Note:** The MCP server runs in stdio mode for use as a Claude Code tool, not as a REST API. boot.sh correctly starts it as a background process.
-
----
-
-## Ollama Models Available
-
-| Model | Size | Status |
-|-------|------|--------|
-| `gemma4:31b` | 19.9 GB | ✅ (added by PR #6) |
-| `qwen3-coder:30b` | 18.6 GB | ✅ |
-| `llama3.1:8b` | 4.9 GB | ✅ |
-| `deepseek-r1:32b` | 19.9 GB | ✅ |
-| `qwen2.5-coder:14b` | 9.0 GB | ✅ |
-| `nomic-embed-text` | 274 MB | ✅ |
-
----
-
-## What Doesn't Work / Known Gaps
-
-| Issue | Severity | Fix Needed |
-|-------|----------|------------|
-| `.env` missing at repo root | Low | Copy `apps/core/.env.example` to `.env` — services use their own `.env.local` |
-| Supabase not configured | Medium | Set `NEXT_PUBLIC_SUPABASE_URL` + keys in `apps/dashboard/.env.local` for DB-backed API routes |
-| Discord bot not wired to CentralBrain | Medium | PR #9 adds TASKS entry — wire `discord_bot.py` dispatch per TASKS.md URGENT items |
-| Heartbeat not wired to CentralBrain | Medium | Same as above — heartbeat dispatches tasks but doesn't call `CentralBrain.handle()` yet |
-| `ANTHROPIC_API_KEY` not set | Low | Optional — system runs fully on Ollama without it |
-| `BrainAssembler` init signature | Info | Takes `Path | None`, not an existing `BrainLoader` — usage is `BrainAssembler()` with no args |
-
----
-
-## Summary
-
-**Boot verdict: PASS** — system is bootable and the full loop (dashboard loads → API responds → CentralBrain dispatches → Ollama responds) is confirmed working.
-
-Next priority: wire `discord_bot.py` and `heartbeat.py` to call `CentralBrain.handle()` per TASKS.md URGENT items.
+| Test | Pass? | Notes |
+|------|-------|-------|
+| `./boot.sh` completes without errors | ⬜ | |
+| `GET /health` → `{"status":"ok"}` | ⬜ | |
+| `GET /agents` → 9 agents listed | ⬜ | |
+| `GET /tasks` → parses TASKS.md | ⬜ | |
+| `POST /dispatch` → output returned | ⬜ | Requires Ollama |
+| Dashboard loads on :3000 | ⬜ | |
+| Mission Control opens | ⬜ | |
+| API pill turns green | ⬜ | |
+| Dispatch modal submits task | ⬜ | Requires API + Ollama |
+| CentralBrain imports cleanly | ⬜ | |
