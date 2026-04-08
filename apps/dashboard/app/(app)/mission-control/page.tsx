@@ -1,16 +1,13 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { clsx } from 'clsx'
 import {
   Terminal,
   Activity,
   Bot,
   Zap,
-  Radio,
-  GitBranch,
   Clock,
-  MessageSquare,
   Cpu,
   Send,
   RefreshCw,
@@ -18,7 +15,10 @@ import {
   XCircle,
   AlertCircle,
   Circle,
-  ChevronRight,
+  Server,
+  Layers,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -35,99 +35,26 @@ interface PipelineTask {
   started_at: string
 }
 
-interface DiscordMessage {
-  id: string
-  author: string
-  content: string
-  ts: string
-  type: 'command' | 'message' | 'bot'
-}
-
-interface ModelStat {
+interface AgentEntry {
   name: string
-  tier: 'primary' | 'secondary' | 'local'
-  provider: string
-  requests: number
-  avg_latency_s: number
-  status: 'online' | 'offline' | 'degraded'
+  role: string
+  tier: string
+  status: string
 }
 
-// ─── Mock data (TODO: wire to /api/ops/*) ─────────────────────────────────────
+interface HealthServices {
+  ollama: { reachable: boolean; url: string; models: string[] }
+  openclaw: { reachable: boolean; url: string; enabled: boolean }
+  anthropic: { configured: boolean }
+  gemini: { configured: boolean }
+}
 
-const MOCK_TASKS: PipelineTask[] = [
-  {
-    id: 'hb-001',
-    description: 'Heartbeat tick — scanning TASKS.md for urgent items',
-    model: 'llama3.1:8b',
-    priority: 'NORMAL',
-    status: 'done',
-    elapsed_s: 0.3,
-    started_at: new Date(Date.now() - 120000).toISOString(),
-  },
-  {
-    id: 'smoke-001',
-    description: 'Worker smoke test: Print hello world in Python in one line',
-    model: 'qwen3-coder:30b',
-    priority: 'NORMAL',
-    status: 'done',
-    elapsed_s: 12.5,
-    started_at: new Date(Date.now() - 300000).toISOString(),
-  },
-  {
-    id: 'orch-001',
-    description: 'Orchestrator smoke test — system readiness check',
-    model: 'llama3.1:8b',
-    priority: 'NORMAL',
-    status: 'done',
-    elapsed_s: 3.1,
-    started_at: new Date(Date.now() - 600000).toISOString(),
-  },
-]
-
-const MOCK_DISCORD_MESSAGES: DiscordMessage[] = [
-  {
-    id: '1',
-    author: 'Space-Claw',
-    content: '🤖 **Space-Claw online.** Type `/ask` or mention me to start.',
-    ts: new Date(Date.now() - 900000).toISOString(),
-    type: 'bot',
-  },
-]
-
-const MOCK_MODELS: ModelStat[] = [
-  {
-    name: 'claude-sonnet-4-6',
-    tier: 'primary',
-    provider: 'OpenClaw',
-    requests: 0,
-    avg_latency_s: 0,
-    status: 'online',
-  },
-  {
-    name: 'gemini-2.0-flash',
-    tier: 'secondary',
-    provider: 'Google',
-    requests: 0,
-    avg_latency_s: 0,
-    status: 'online',
-  },
-  {
-    name: 'llama3.1:8b',
-    tier: 'local',
-    provider: 'Ollama',
-    requests: 2,
-    avg_latency_s: 1.8,
-    status: 'online',
-  },
-  {
-    name: 'qwen3-coder:30b',
-    tier: 'local',
-    provider: 'Ollama',
-    requests: 1,
-    avg_latency_s: 12.5,
-    status: 'online',
-  },
-]
+interface HealthData {
+  status: string
+  timestamp: number
+  services: HealthServices
+  backend: string
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -166,10 +93,10 @@ const priorityBadge: Record<string, string> = {
   LOW: 'text-text-muted bg-border-base',
 }
 
-const tierLabel: Record<string, string> = {
-  primary: 'text-accent',
-  secondary: 'text-purple-500',
-  local: 'text-green-500',
+const tierColor: Record<string, string> = {
+  orchestrator: 'text-accent',
+  architect: 'text-purple-400',
+  worker: 'text-green-500',
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -187,6 +114,23 @@ function StatusPill({ online, label }: { online: boolean; label: string }) {
         online ? 'bg-green-500 animate-pulse' : 'bg-text-muted'
       )} />
       {label}
+    </div>
+  )
+}
+
+function LiveBadge({ live }: { live: boolean }) {
+  return (
+    <div className={clsx(
+      'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold border uppercase tracking-widest',
+      live
+        ? 'text-red-400 bg-red-500/10 border-red-500/30'
+        : 'text-text-muted bg-surface border-border-base'
+    )}>
+      <span className={clsx(
+        'w-1.5 h-1.5 rounded-full',
+        live ? 'bg-red-400 animate-pulse' : 'bg-text-muted'
+      )} />
+      {live ? 'LIVE' : 'OFFLINE'}
     </div>
   )
 }
@@ -235,12 +179,14 @@ function DispatchModal({ onClose, onSend }: { onClose: () => void; onSend: (task
 
 export default function MissionControlPage() {
   const [now, setNow] = useState(new Date())
-  const [tasks, setTasks] = useState<PipelineTask[]>(MOCK_TASKS)
-  const [discordMessages] = useState<DiscordMessage[]>(MOCK_DISCORD_MESSAGES)
+  const [tasks, setTasks] = useState<PipelineTask[]>([])
+  const [agents, setAgents] = useState<AgentEntry[]>([])
+  const [health, setHealth] = useState<HealthData | null>(null)
+  const [ollamaModels, setOllamaModels] = useState<string[]>([])
+  const [isLive, setIsLive] = useState(false)
+  const [lastFetch, setLastFetch] = useState<Date | null>(null)
   const [showDispatch, setShowDispatch] = useState(false)
-  const [lastHeartbeat, setLastHeartbeat] = useState(new Date(Date.now() - 120000))
-  const [botConnected] = useState(false)
-  const [backendOnline, setBackendOnline] = useState<boolean | null>(null)
+  const [loading, setLoading] = useState(true)
   const feedRef = useRef<HTMLDivElement>(null)
 
   // Live clock
@@ -254,21 +200,59 @@ export default function MissionControlPage() {
     if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight
   }, [tasks])
 
-  // Poll Python backend health every 10s
-  useEffect(() => {
-    async function checkBackend() {
-      try {
-        const res = await fetch('/api/ops?path=health', { cache: 'no-store' })
-        setBackendOnline(res.ok)
-        if (res.ok) setLastHeartbeat(new Date())
-      } catch {
-        setBackendOnline(false)
+  const fetchAll = useCallback(async () => {
+    try {
+      const [healthRes, agentsRes, tasksRes] = await Promise.allSettled([
+        fetch('/api/ops?path=health', { cache: 'no-store' }),
+        fetch('/api/ops?path=agents', { cache: 'no-store' }),
+        fetch('/api/ops?path=tasks', { cache: 'no-store' }),
+      ])
+
+      // Health
+      if (healthRes.status === 'fulfilled' && healthRes.value.ok) {
+        const h: HealthData = await healthRes.value.json()
+        setHealth(h)
+        setIsLive(h.status === 'ok')
+        setLastFetch(new Date())
+        setOllamaModels(h.services.ollama.models ?? [])
+      } else {
+        setIsLive(false)
       }
+
+      // Agents
+      if (agentsRes.status === 'fulfilled' && agentsRes.value.ok) {
+        const a = await agentsRes.value.json()
+        setAgents(a.agents ?? [])
+      }
+
+      // Tasks (from TASKS.md)
+      if (tasksRes.status === 'fulfilled' && tasksRes.value.ok) {
+        const t = await tasksRes.value.json()
+        const realTasks: PipelineTask[] = (t.tasks ?? []).map((task: {
+          id: string; priority: string; description: string; status: string
+        }) => ({
+          id: task.id,
+          description: task.description,
+          model: 'space-claw',
+          priority: task.priority as PipelineTask['priority'],
+          status: 'queued' as TaskStatus,
+          elapsed_s: null,
+          started_at: new Date().toISOString(),
+        }))
+        setTasks(realTasks)
+      }
+    } catch {
+      setIsLive(false)
+    } finally {
+      setLoading(false)
     }
-    checkBackend()
-    const t = setInterval(checkBackend, 10_000)
-    return () => clearInterval(t)
   }, [])
+
+  useEffect(() => {
+    fetchAll()
+    const t = setInterval(fetchAll, 10_000)
+    return () => clearInterval(t)
+  }, [fetchAll])
 
   async function handleDispatch(description: string) {
     const taskId = `task-${Date.now()}`
@@ -303,7 +287,28 @@ export default function MissionControlPage() {
     }
   }
 
-  const totalRequests = MOCK_MODELS.reduce((s, m) => s + m.requests, 0)
+  const ollamaOnline = health?.services.ollama.reachable ?? false
+  const anthropicOk = health?.services.anthropic.configured ?? false
+  const geminiOk = health?.services.gemini.configured ?? false
+
+  // Build combined model list: API models + real Ollama models
+  const apiModels = [
+    { name: 'claude-sonnet-4-6', tier: 'primary', provider: 'Anthropic', online: anthropicOk },
+    { name: 'gemini-2.0-flash', tier: 'secondary', provider: 'Google', online: geminiOk },
+  ]
+  const localModels = ollamaModels.map((m) => ({
+    name: m,
+    tier: 'local',
+    provider: 'Ollama',
+    online: ollamaOnline,
+  }))
+  const allModels = [...apiModels, ...localModels]
+
+  const tierLabel: Record<string, string> = {
+    primary: 'text-accent',
+    secondary: 'text-purple-500',
+    local: 'text-green-500',
+  }
 
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
@@ -317,30 +322,54 @@ export default function MissionControlPage() {
 
         <div className="h-4 w-px bg-border-base" />
 
-        {/* Heartbeat */}
-        <div className="flex items-center gap-2 text-[11px] font-mono">
-          <Activity className="w-3.5 h-3.5 text-accent animate-pulse" />
-          <span className="text-text-secondary">HB</span>
-          <span className="text-accent">{timeAgo(lastHeartbeat.toISOString())}</span>
-        </div>
+        <LiveBadge live={isLive} />
 
         <div className="h-4 w-px bg-border-base" />
 
-        {/* Model pills */}
+        {/* Last fetch */}
+        {lastFetch && (
+          <div className="flex items-center gap-1.5 text-[11px] font-mono">
+            <Activity className="w-3.5 h-3.5 text-accent animate-pulse" />
+            <span className="text-text-secondary">synced</span>
+            <span className="text-accent">{timeAgo(lastFetch.toISOString())}</span>
+          </div>
+        )}
+
+        <div className="h-4 w-px bg-border-base" />
+
+        {/* Service status pills */}
         <div className="flex items-center gap-2">
-          <StatusPill online={backendOnline === true} label="API" />
-          <StatusPill online label="Claude Sonnet" />
-          <StatusPill online label="Gemini Flash" />
-          <StatusPill online label="Ollama" />
+          <StatusPill online={isLive} label="API" />
+          <StatusPill online={anthropicOk} label="Anthropic" />
+          <StatusPill online={geminiOk} label="Gemini" />
+          <StatusPill online={ollamaOnline} label={`Ollama${ollamaModels.length > 0 ? ` (${ollamaModels.length})` : ''}`} />
         </div>
 
         <div className="flex-1" />
+
+        {/* Backend mode */}
+        {health && (
+          <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
+            backend: {health.backend}
+          </span>
+        )}
+
+        <div className="h-4 w-px bg-border-base" />
 
         {/* Live clock */}
         <div className="flex items-center gap-1.5 text-[11px] font-mono text-text-muted">
           <Clock className="w-3 h-3" />
           {formatTime(now)}
         </div>
+
+        {/* Refresh */}
+        <button
+          onClick={fetchAll}
+          className="p-1.5 hover:bg-border-base rounded transition-colors text-text-muted hover:text-text-primary"
+          title="Refresh"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* ── Main grid ────────────────────────────────────────────────────── */}
@@ -352,8 +381,10 @@ export default function MissionControlPage() {
           <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-border-base">
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold text-text-primary">Agent Pipeline</span>
-              <span className="text-xs text-text-muted font-mono ml-1">{tasks.length} tasks</span>
+              <span className="text-sm font-semibold text-text-primary">Task Queue</span>
+              <span className="text-xs text-text-muted font-mono ml-1">
+                {tasks.length} task{tasks.length !== 1 ? 's' : ''} · from TASKS.md
+              </span>
             </div>
             <button
               onClick={() => setShowDispatch(true)}
@@ -366,10 +397,15 @@ export default function MissionControlPage() {
 
           {/* Task feed */}
           <div ref={feedRef} className="flex-1 overflow-y-auto">
-            {tasks.length === 0 ? (
+            {loading ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-text-muted">
                 <RefreshCw className="w-6 h-6 animate-spin opacity-30" />
-                <p className="text-sm">Waiting for tasks...</p>
+                <p className="text-sm font-mono">Connecting to backend…</p>
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-text-muted">
+                <CheckCircle className="w-6 h-6 opacity-30" />
+                <p className="text-sm font-mono">Queue empty — no tasks in TASKS.md</p>
               </div>
             ) : (
               <div className="divide-y divide-border-base">
@@ -380,7 +416,7 @@ export default function MissionControlPage() {
                   >
                     <div className="mt-0.5 flex-shrink-0">{statusIcon(task.status)}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-text-primary truncate leading-snug">{task.description}</p>
+                      <p className="text-sm text-text-primary leading-snug">{task.description}</p>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-[10px] font-mono text-text-muted">{task.id}</span>
                         <span className="text-[10px] font-mono text-accent/80">{task.model}</span>
@@ -406,96 +442,60 @@ export default function MissionControlPage() {
         {/* ── Right column ───────────────────────────────────────────────── */}
         <div className="col-span-1 flex flex-col overflow-hidden">
 
-          {/* Discord Activity (top half) */}
+          {/* Agent Registry (top half) */}
           <div className="flex-1 flex flex-col border-b border-border-base overflow-hidden">
             <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-base">
               <div className="flex items-center gap-2">
-                <Radio className="w-4 h-4 text-indigo-400" />
-                <span className="text-sm font-semibold text-text-primary">Discord</span>
+                <Bot className="w-4 h-4 text-accent" />
+                <span className="text-sm font-semibold text-text-primary">Agent Registry</span>
               </div>
-              <div className={clsx(
-                'flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-full border',
-                botConnected
-                  ? 'text-green-500 bg-green-500/10 border-green-500/20'
-                  : 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20'
-              )}>
-                <span className={clsx('w-1.5 h-1.5 rounded-full', botConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500')} />
-                {botConnected ? 'ONLINE' : 'INVITE BOT'}
-              </div>
+              <span className="text-[11px] font-mono text-text-muted">{agents.length} agents</span>
             </div>
 
-            {/* Bot invite CTA if not connected */}
-            {!botConnected && (
-              <div className="px-4 py-3 bg-yellow-500/5 border-b border-yellow-500/10">
-                <p className="text-[11px] text-yellow-500/80 leading-snug">
-                  Bot not in server yet. Add it:
-                </p>
-                <a
-                  href="https://discord.com/oauth2/authorize?client_id=1484792458981412894&scope=bot+applications.commands&permissions=277025770560"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] text-accent hover:text-accent/80 mt-1 font-mono underline underline-offset-2"
-                >
-                  discord.com/oauth2/authorize
-                  <ChevronRight className="w-3 h-3" />
-                </a>
-              </div>
-            )}
-
-            {/* Channel info */}
-            <div className="px-4 py-2 border-b border-border-base">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-text-muted font-mono">#space-claw</span>
-                <span className="text-text-muted font-mono">id: 1484793801531719803</span>
-              </div>
-            </div>
-
-            {/* Commands ref */}
-            <div className="px-4 py-2 border-b border-border-base flex flex-wrap gap-1.5">
-              {['/ask', '/status', '/tasks', '/swarm'].map((cmd) => (
-                <span key={cmd} className="text-[10px] font-mono px-1.5 py-0.5 bg-background text-text-secondary rounded border border-border-base">{cmd}</span>
-              ))}
-            </div>
-
-            {/* Message feed */}
-            <div className="flex-1 overflow-y-auto">
-              {discordMessages.length === 0 ? (
+            <div className="flex-1 overflow-y-auto divide-y divide-border-base">
+              {agents.length === 0 && !loading ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-xs text-text-muted">No messages yet</p>
+                  <p className="text-xs text-text-muted font-mono">
+                    {isLive ? 'No agents registered' : 'Backend offline'}
+                  </p>
                 </div>
               ) : (
-                <div className="divide-y divide-border-base">
-                  {discordMessages.map((msg) => (
-                    <div key={msg.id} className="px-4 py-2.5 hover:bg-surface">
+                agents.map((agent) => {
+                  const ok = agent.status === 'ok'
+                  return (
+                    <div key={agent.name} className="px-4 py-2.5 hover:bg-surface">
                       <div className="flex items-center justify-between mb-0.5">
-                        <span className={clsx(
-                          'text-[11px] font-semibold',
-                          msg.type === 'bot' ? 'text-accent' : 'text-text-primary'
-                        )}>
-                          {msg.author}
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0', ok ? 'bg-green-500' : 'bg-red-500')} />
+                          <span className="text-[11px] font-mono text-text-primary truncate">{agent.name}</span>
+                        </div>
+                        <span className={clsx('text-[10px] font-medium', tierColor[agent.tier] ?? 'text-text-muted')}>
+                          {agent.tier}
                         </span>
-                        <span className="text-[10px] text-text-muted font-mono">{timeAgo(msg.ts)}</span>
                       </div>
-                      <p className="text-[11px] text-text-secondary leading-snug line-clamp-2">{msg.content}</p>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-text-muted pl-3">
+                        <span>{agent.role}</span>
+                        <span className={ok ? 'text-green-500' : 'text-red-500'}>{ok ? 'ok' : 'err'}</span>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  )
+                })
               )}
             </div>
           </div>
 
-          {/* Model Usage (bottom half) */}
+          {/* Models (bottom half) */}
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-base">
               <div className="flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-purple-400" />
                 <span className="text-sm font-semibold text-text-primary">Models</span>
               </div>
-              <span className="text-[11px] font-mono text-text-muted">{totalRequests} req</span>
+              <span className="text-[11px] font-mono text-text-muted">{allModels.length} available</span>
             </div>
 
             <div className="flex-1 overflow-y-auto divide-y divide-border-base">
-              {MOCK_MODELS.map((model) => (
+              {allModels.map((model) => (
                 <div key={model.name} className="px-4 py-2.5 hover:bg-surface">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[11px] font-mono text-text-primary truncate max-w-[140px]">{model.name}</span>
@@ -505,43 +505,66 @@ export default function MissionControlPage() {
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-text-muted font-mono">
                     <span>{model.provider}</span>
-                    <span>{model.requests}r · {model.avg_latency_s > 0 ? `${model.avg_latency_s}s avg` : '—'}</span>
-                    <span className={clsx(
-                      model.status === 'online' ? 'text-green-500' : 'text-red-500'
-                    )}>
-                      {model.status}
+                    <span className={model.online ? 'text-green-500' : 'text-red-500'}>
+                      {model.online ? 'online' : 'offline'}
                     </span>
                   </div>
                 </div>
               ))}
+
+              {allModels.length === 0 && (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-xs text-text-muted font-mono">
+                    {loading ? 'Loading…' : 'No models detected'}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Quick Actions strip ───────────────────────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-6 py-3 bg-surface border-t border-border-base">
-        <span className="text-[11px] font-mono text-text-muted mr-1 uppercase tracking-wider">Quick actions</span>
-        {[
-          { label: 'Start Heartbeat', icon: Activity, color: 'text-accent' },
-          { label: 'Orchestrator Smoke', icon: Bot, color: 'text-green-500' },
-          { label: 'View TASKS.md', icon: GitBranch, color: 'text-yellow-500' },
-          { label: 'Git Status', icon: GitBranch, color: 'text-purple-400' },
-          { label: 'Discord Status', icon: MessageSquare, color: 'text-indigo-400' },
-        ].map(({ label, icon: Icon, color }) => (
-          <button
-            key={label}
-            onClick={() => {
-              // TODO: POST to /api/ops/[action]
-              console.log('action:', label)
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-background hover:bg-border-base border border-border-base hover:border-text-muted text-xs text-text-secondary hover:text-text-primary rounded-lg transition-all font-mono"
-          >
-            <Icon className={clsx('w-3 h-3', color)} />
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* ── Service details strip ──────────────────────────────────────────── */}
+      {health && (
+        <div className="flex-shrink-0 flex items-center gap-4 px-6 py-2.5 bg-surface border-t border-border-base text-[10px] font-mono text-text-muted">
+          <div className="flex items-center gap-1.5">
+            <Server className="w-3 h-3" />
+            <span className="text-text-secondary">Ollama:</span>
+            <span className={ollamaOnline ? 'text-green-500' : 'text-red-500'}>{health.services.ollama.url}</span>
+          </div>
+          <div className="h-3 w-px bg-border-base" />
+          <div className="flex items-center gap-1.5">
+            <Layers className="w-3 h-3" />
+            <span className="text-text-secondary">Backend:</span>
+            <span className="text-accent">{health.backend}</span>
+          </div>
+          {health.services.openclaw.enabled && (
+            <>
+              <div className="h-3 w-px bg-border-base" />
+              <div className="flex items-center gap-1.5">
+                <span className="text-text-secondary">OpenClaw:</span>
+                <span className={health.services.openclaw.reachable ? 'text-green-500' : 'text-yellow-500'}>
+                  {health.services.openclaw.reachable ? 'reachable' : 'unreachable'}
+                </span>
+                <span className="text-text-muted/50">{health.services.openclaw.url}</span>
+              </div>
+            </>
+          )}
+          <div className="flex-1" />
+          <div className="flex items-center gap-1.5">
+            {isLive ? (
+              <Wifi className="w-3 h-3 text-green-500" />
+            ) : (
+              <WifiOff className="w-3 h-3 text-red-500" />
+            )}
+            <span>
+              {isLive
+                ? `synced ${lastFetch ? timeAgo(lastFetch.toISOString()) : ''}`
+                : 'backend unreachable'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── Dispatch modal ─────────────────────────────────────────────────── */}
       {showDispatch && (
