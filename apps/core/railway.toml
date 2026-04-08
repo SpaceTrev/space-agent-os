@@ -1,0 +1,13 @@
+# Railway service config for the Space-Claw FastAPI backend.
+# In Railway → Service Settings → Source → set "Root Directory" to: apps/core
+# Railway will then resolve all paths below relative to apps/core/.
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 3

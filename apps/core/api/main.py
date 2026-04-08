@@ -46,6 +46,17 @@ log = structlog.get_logger()
 TASKS_FILE = CORE_ROOT / "TASKS.md"
 OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
+# ── Timescale (TODO) ──────────────────────────────────────────────────────────
+# TIMESCALE_URL / DATABASE_URL can be set to a Timescale Cloud connection string.
+# Once set, the API will persist agent runs, task history, and metrics to
+# Timescale's hypertables instead of ephemeral in-memory state.
+# Wiring not implemented yet — tracked in TASKS.md as [HIGH] Timescale integration.
+_TIMESCALE_URL: str | None = os.getenv("TIMESCALE_URL") or os.getenv("DATABASE_URL")
+if _TIMESCALE_URL:
+    log.info("timescale.configured", url=_TIMESCALE_URL[:40] + "…")
+else:
+    log.info("timescale.not_configured", hint="Set TIMESCALE_URL or DATABASE_URL to enable persistence")
+
 # ── App ───────────────────────────────────────────────────────────────────────
 
 @asynccontextmanager
@@ -62,10 +73,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ALLOWED_ORIGINS: comma-separated list of allowed origins.
+# In Railway, set this to your Vercel domain, e.g.:
+#   https://space-agent-os-dashboard.vercel.app,https://space-agent-os-dashboard-*.vercel.app
+# Defaults to wildcard for local dev — credentials are disabled in wildcard mode.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+_origins: list[str] = (
+    [o.strip() for o in _raw_origins.split(",") if o.strip()]
+    if _raw_origins
+    else ["http://localhost:3000", "http://localhost:3001"]
+)
+_wildcard = not _raw_origins  # allow * only when env var is unset (local dev)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "*"],
-    allow_credentials=True,
+    allow_origins=["*"] if _wildcard else _origins,
+    allow_credentials=not _wildcard,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -243,10 +266,12 @@ async def dispatch(req: DispatchRequest) -> DispatchResponse:
 
 if __name__ == "__main__":
     import uvicorn
+    # Railway injects $PORT; fall back to API_PORT then 8000 for local runs.
+    port = int(os.getenv("PORT") or os.getenv("API_PORT") or "8000")
     uvicorn.run(
         "api.main:app",
         host="0.0.0.0",
-        port=int(os.getenv("API_PORT", "8000")),
+        port=port,
         reload=os.getenv("API_RELOAD", "false").lower() == "true",
         log_level=os.getenv("LOG_LEVEL", "info").lower(),
     )
