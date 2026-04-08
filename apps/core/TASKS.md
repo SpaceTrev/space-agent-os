@@ -8,6 +8,12 @@
 - [URGENT] Wire heartbeat.py dispatch -> CentralBrain.handle() @agent #orchestration
 
 ## HIGH
+- [HIGH] Wire Timescale DB into FastAPI backend for persistent storage @agent #infra #database
+  Set TIMESCALE_URL (or DATABASE_URL) env var in Railway. Use asyncpg to write agent runs, task history,
+  and token usage metrics to Timescale hypertables. The dep (asyncpg) is already in pyproject.toml.
+  Schema: agent_runs(id, goal, route, agents_used, elapsed_s, error, created_at),
+          task_history(id, priority, description, status, source, created_at),
+          model_usage(model, provider, tokens_in, tokens_out, latency_s, created_at).
 - [HIGH] Wire Discord /ask command end-to-end smoke test @trev #discord
   Bot invite + ANTHROPIC_API_KEY needed. Once set: test /ask, /status, /swarm via real Discord slash commands.
 - [HIGH] Add Supabase env vars to apps/dashboard/.env.local @trev #infra
