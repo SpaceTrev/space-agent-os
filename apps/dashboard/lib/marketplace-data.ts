@@ -1,272 +1,447 @@
-// apps/dashboard/lib/marketplace-data.ts
+// ============================================================
+// Automation Marketplace — Seed Data
+// ============================================================
 
-import { MarketplaceItem } from './marketplace-types';
+import type { MarketplaceItem, AgentTemplate } from './marketplace-types'
 
-export const marketplaceItems: MarketplaceItem[] = [
-  // ── Agent Templates (4) ──────────────────────────────────
+export const MARKETPLACE_ITEMS: (MarketplaceItem | AgentTemplate)[] = [
+  // ── Agent Templates ────────────────────────────────────────
   {
     id: 'agent-marketing-manager',
-    name: 'Marketing Manager Agent',
+    name: 'Marketing Manager',
     description:
-      'Autonomous marketing team that plans campaigns, generates copy, schedules posts, and reports performance across channels.',
+      'Full-stack marketing agent that manages social channels, writes content, runs campaigns, and reports on performance.',
     longDescription:
-      'A full-stack marketing agent team that handles campaign planning, copywriting, A/B test design, social media scheduling, email drip sequences, and weekly performance reporting. Connects to Meta Ads, Google Ads, Mailchimp, and your CMS. Includes a strategist agent, a copywriter agent, and an analytics agent working in concert.',
+      'The Marketing Manager agent is a senior-level AI that owns your entire content and campaign pipeline. It drafts social posts, schedules them across platforms, monitors engagement metrics, identifies top-performing content patterns, and generates weekly performance reports. Preconfigured with brand voice guidelines and campaign calendar awareness.',
     category: 'agent-template',
-    tags: ['marketing', 'campaigns', 'social-media', 'email', 'analytics'],
-    author: 'SpaceAgent Labs',
-    version: '2.1.0',
+    persona:
+      'You are a senior marketing manager with 10+ years of experience in B2B SaaS. You are data-driven, creative, and obsessed with conversion metrics. You write in a professional but approachable tone.',
+    includedSkills: [
+      'social-content-generator',
+      'campaign-planner',
+      'performance-reporter',
+      'seo-keyword-researcher',
+    ],
+    includedTools: ['gmail', 'google-analytics', 'buffer', 'canva', 'notion'],
+    brainContext: ['marketing/brand-guidelines', 'marketing/campaign-calendar', 'marketing/competitor-research'],
+    tier: 'primary',
+    tags: ['marketing', 'social-media', 'content', 'campaigns', 'analytics'],
+    author: 'Space Agent OS',
+    version: '1.2.0',
     rating: 4.8,
-    installCount: 3420,
-    pricing: { type: 'paid', amount: 29, currency: 'USD', interval: 'monthly' },
+    installCount: 2341,
+    pricing: { model: 'free' },
     icon: '📣',
-    tier: 'pro',
-  },
-  {
-    id: 'agent-customer-support',
-    name: 'Customer Support Agent (ES/EN)',
-    description:
-      'Bilingual support agent that triages tickets, resolves FAQs, escalates edge cases, and maintains a knowledge base.',
-    longDescription:
-      'Handles inbound support across email, chat, and WhatsApp in both Spanish and English. Automatically classifies ticket urgency, resolves common questions from your knowledge base, drafts responses for human review on complex issues, and tracks CSAT. Integrates with Zendesk, Freshdesk, or Intercom.',
-    category: 'agent-template',
-    tags: ['support', 'bilingual', 'spanish', 'english', 'tickets', 'zendesk'],
-    author: 'SpaceAgent Labs',
-    version: '1.8.0',
-    rating: 4.6,
-    installCount: 2850,
-    pricing: { type: 'paid', amount: 19, currency: 'USD', interval: 'monthly' },
-    icon: '🎧',
-    tier: 'starter',
-  },
-  {
-    id: 'agent-bookkeeper',
-    name: 'Bookkeeper Agent (SAT/CFDI)',
-    description:
-      'Automated bookkeeping for Mexican businesses — reconciles invoices, generates CFDI XMLs, and prepares SAT filings.',
-    longDescription:
-      'Purpose-built for Mexican tax compliance. Ingests bank statements and invoices, reconciles transactions, generates CFDI 4.0 XML files, calculates ISR/IVA, and prepares monthly SAT declarations. Supports both Persona Física and Persona Moral regimes. Connects to CONTPAQi, Aspel, and major Mexican banks.',
-    category: 'agent-template',
-    tags: ['bookkeeping', 'sat', 'cfdi', 'mexico', 'tax', 'invoicing'],
-    author: 'FinTech MX',
-    version: '3.0.1',
-    rating: 4.9,
-    installCount: 1780,
-    pricing: { type: 'paid', amount: 39, currency: 'USD', interval: 'monthly' },
-    icon: '📊',
-    tier: 'pro',
-  },
-  {
-    id: 'agent-sales-dev',
-    name: 'Sales Development Agent',
-    description:
-      'Prospect researcher and outbound sequencer that finds leads, enriches contacts, and runs personalized email cadences.',
-    longDescription:
-      'Combines lead sourcing from Apollo/LinkedIn, contact enrichment, ICP scoring, and multi-step email outreach. The agent researches each prospect, crafts personalized openers, handles replies, and books meetings on your calendar. Includes objection handling playbooks and CRM logging.',
-    category: 'agent-template',
-    tags: ['sales', 'outbound', 'prospecting', 'email', 'crm', 'leads'],
-    author: 'SpaceAgent Labs',
-    version: '2.4.0',
-    rating: 4.7,
-    installCount: 4100,
-    pricing: { type: 'paid', amount: 24, currency: 'USD', interval: 'monthly' },
-    icon: '🚀',
-    tier: 'starter',
-  },
+    includedComponents: [
+      'Social content generator skill',
+      'Campaign planner skill',
+      'Performance reporter skill',
+      'SEO keyword researcher skill',
+      'Gmail, Google Analytics, Buffer, Canva integrations',
+      'Brand guidelines brain context',
+    ],
+    requirements: ['Anthropic API key', 'Google Analytics access', 'Buffer account'],
+  } satisfies AgentTemplate,
 
-  // ── Skills (3) ───────────────────────────────────────────
   {
-    id: 'skill-social-content',
+    id: 'agent-customer-support-bilingual',
+    name: 'Customer Support (Bilingual ES/EN)',
+    description:
+      'Handles support tickets in Spanish and English. Drafts replies, escalates edge cases, and keeps CSAT scores high.',
+    longDescription:
+      'A bilingual Customer Support agent fluent in both Spanish and English. It triages incoming tickets, drafts empathetic replies following your brand tone, escalates complex technical issues to the right team members, and tracks resolution metrics. Trained on your product documentation and common support patterns.',
+    category: 'agent-template',
+    persona:
+      'Eres un agente de soporte al cliente empático, profesional y eficiente. You switch seamlessly between Spanish and English based on the customer\'s language. You prioritize customer satisfaction and swift resolution.',
+    includedSkills: ['ticket-triager', 'reply-drafter', 'escalation-router', 'csat-tracker'],
+    includedTools: ['zendesk', 'intercom', 'notion', 'slack'],
+    brainContext: ['support/product-docs', 'support/faq', 'support/escalation-matrix'],
+    tier: 'primary',
+    tags: ['customer-support', 'bilingual', 'spanish', 'zendesk', 'tickets', 'csat'],
+    author: 'Space Agent OS',
+    version: '2.0.1',
+    rating: 4.9,
+    installCount: 3891,
+    pricing: { model: 'free' },
+    icon: '🎧',
+    includedComponents: [
+      'Ticket triage skill',
+      'Bilingual reply drafter skill',
+      'Escalation router skill',
+      'Zendesk + Intercom integration',
+      'Product docs brain context',
+    ],
+    requirements: ['Anthropic API key', 'Zendesk or Intercom account'],
+  } satisfies AgentTemplate,
+
+  {
+    id: 'agent-bookkeeper-sat-cfdi',
+    name: 'Bookkeeper (SAT / CFDI)',
+    description:
+      'Mexican tax-compliant bookkeeper. Processes CFDI invoices, reconciles accounts, and generates SAT-ready reports.',
+    longDescription:
+      'A specialized bookkeeper agent designed for Mexican businesses operating under SAT regulations. It ingests CFDI XML files, categorizes expenses, reconciles bank statements, flags VAT discrepancies, and produces monthly financial summaries ready for your contador. Supports RFC validation and complemento de pago tracking.',
+    category: 'agent-template',
+    persona:
+      'Eres un contador público certificado con especialidad en cumplimiento fiscal mexicano (SAT, CFDI 4.0, IVA, ISR). Eres meticuloso, preciso y conoces a fondo el Código Fiscal de la Federación.',
+    includedSkills: ['cfdi-parser', 'bank-reconciler', 'tax-categorizer', 'sat-report-generator'],
+    includedTools: ['sat-portal', 'quickbooks', 'google-sheets', 'gmail'],
+    brainContext: ['finance/chart-of-accounts', 'finance/sat-guidelines', 'finance/vendor-list'],
+    tier: 'secondary',
+    tags: ['accounting', 'mexico', 'sat', 'cfdi', 'tax', 'bookkeeping', 'iva'],
+    author: 'Space Agent OS',
+    version: '1.0.3',
+    rating: 4.7,
+    installCount: 1204,
+    pricing: { model: 'subscription', price: 2900, interval: 'month' },
+    icon: '📒',
+    includedComponents: [
+      'CFDI 4.0 XML parser skill',
+      'Bank reconciliation skill',
+      'SAT tax categorizer skill',
+      'Monthly SAT report generator',
+      'RFC validator',
+    ],
+    requirements: ['Google Gemini API key', 'SAT portal credentials', 'QuickBooks account (optional)'],
+  } satisfies AgentTemplate,
+
+  {
+    id: 'agent-sdr-sales-development',
+    name: 'Sales Development Rep (SDR)',
+    description:
+      'Prospecting and outreach agent. Enriches leads, writes personalized cold emails, tracks replies, and books meetings.',
+    longDescription:
+      'An AI SDR that works your pipeline around the clock. It pulls leads from your CRM, enriches them with company and contact data, writes hyper-personalized cold emails, sends follow-up sequences, monitors for replies, and automatically books discovery calls on your calendar. Built-in A/B testing for subject lines.',
+    category: 'agent-template',
+    persona:
+      'You are an elite SDR with a 35% reply rate. You write emails that feel personal, not automated. You lead with value, not features. You are persistent but never pushy.',
+    includedSkills: ['lead-enricher', 'email-writer', 'sequence-manager', 'meeting-booker'],
+    includedTools: ['apollo', 'hubspot', 'gmail', 'cal-com', 'slack'],
+    brainContext: ['sales/icp-profile', 'sales/email-templates', 'sales/objection-handling'],
+    tier: 'primary',
+    tags: ['sales', 'outreach', 'lead-gen', 'cold-email', 'crm', 'sdr'],
+    author: 'Space Agent OS',
+    version: '1.4.2',
+    rating: 4.6,
+    installCount: 5120,
+    pricing: { model: 'subscription', price: 4900, interval: 'month' },
+    icon: '📬',
+    includedComponents: [
+      'Lead enrichment skill',
+      'Personalized email writer skill',
+      'Multi-step sequence manager',
+      'Calendar booking integration',
+      'A/B subject line tester',
+    ],
+    requirements: ['Anthropic API key', 'Apollo.io or HubSpot', 'Gmail + Cal.com'],
+  } satisfies AgentTemplate,
+
+  // ── Skills ─────────────────────────────────────────────────
+  {
+    id: 'skill-social-content-generator',
     name: 'Social Media Content Generator',
     description:
-      'Generates platform-optimized posts for Instagram, Twitter/X, LinkedIn, and TikTok from a single brief.',
+      'Generates platform-optimized posts for Twitter/X, LinkedIn, and Instagram from a single brief.',
     longDescription:
-      'Feed it a topic, brand voice guide, and target platform — get back ready-to-post content with hashtags, optimal posting times, and image prompts. Supports carousel scripts, thread formats, short-form video scripts, and LinkedIn articles. Learns your brand voice over time.',
+      'Give this skill a topic, tone, and target audience — it outputs ready-to-publish posts for Twitter/X (thread format supported), LinkedIn (professional long-form), and Instagram (caption + hashtag suggestions). Trained on high-performing content patterns across B2B and B2C verticals.',
     category: 'skill',
-    tags: ['social-media', 'content', 'copywriting', 'instagram', 'linkedin'],
-    author: 'ContentCraft',
-    version: '1.5.0',
-    rating: 4.4,
-    installCount: 5200,
-    pricing: { type: 'free' },
+    tags: ['social-media', 'content', 'twitter', 'linkedin', 'instagram', 'copywriting'],
+    author: 'Space Agent OS',
+    version: '1.1.0',
+    rating: 4.7,
+    installCount: 8934,
+    pricing: { model: 'free' },
     icon: '✍️',
-    tier: 'free',
+    includedComponents: [
+      'Twitter/X thread generator',
+      'LinkedIn post writer',
+      'Instagram caption + hashtag generator',
+      'Tone adapter (professional / casual / bold)',
+    ],
+    requirements: ['Any LLM provider configured'],
   },
+
   {
     id: 'skill-lead-enrichment',
-    name: 'Lead Enrichment Engine',
+    name: 'Lead Enrichment',
     description:
-      'Enriches raw lead lists with company data, social profiles, tech stack, funding info, and ICP scores.',
+      'Enriches contact records with company data, tech stack, LinkedIn profile, and intent signals.',
     longDescription:
-      'Upload a CSV of company names or domains and get back enriched records with employee count, revenue range, tech stack (via BuiltWith), recent funding rounds, social profiles, and a custom ICP fit score. Deduplicates and validates email addresses. Outputs to CSV or direct CRM push.',
+      'Drop in an email address or company domain and this skill returns a fully enriched contact record: company size, industry, tech stack (via BuiltWith), LinkedIn profile URL, funding status, estimated ARR, and recent news mentions. Output is structured JSON ready to push to your CRM.',
     category: 'skill',
-    tags: ['enrichment', 'leads', 'data', 'crm', 'sales'],
-    author: 'DataForge',
-    version: '2.0.0',
+    tags: ['sales', 'lead-gen', 'enrichment', 'crm', 'data', 'prospecting'],
+    author: 'Space Agent OS',
+    version: '2.1.0',
     rating: 4.5,
-    installCount: 3100,
-    pricing: { type: 'paid', amount: 9, currency: 'USD', interval: 'monthly' },
+    installCount: 6203,
+    pricing: { model: 'one-time', price: 1900 },
     icon: '🔍',
-    tier: 'starter',
-  },
-  {
-    id: 'skill-invoice-gen',
-    name: 'Invoice Generator',
-    description:
-      'Creates professional PDF invoices from structured data with multi-currency support and payment tracking.',
-    longDescription:
-      'Generates branded PDF invoices from order data or manual input. Supports multi-currency, tax calculations (VAT/IVA/GST), line item discounts, payment terms, and recurring invoice schedules. Tracks payment status and sends reminders. Integrates with Stripe, PayPal, and bank transfer workflows.',
-    category: 'skill',
-    tags: ['invoicing', 'pdf', 'billing', 'payments', 'finance'],
-    author: 'SpaceAgent Labs',
-    version: '1.2.0',
-    rating: 4.3,
-    installCount: 2400,
-    pricing: { type: 'free' },
-    icon: '🧾',
-    tier: 'free',
+    includedComponents: [
+      'Company data lookup',
+      'Tech stack detector',
+      'LinkedIn profile resolver',
+      'Funding & revenue estimator',
+      'Recent news fetcher',
+    ],
+    requirements: ['Apollo.io API key or Clearbit API key'],
   },
 
-  // ── Playwright Scripts (3) ───────────────────────────────
   {
-    id: 'pw-competitor-pricing',
+    id: 'skill-invoice-generator',
+    name: 'Invoice Generator (PDF)',
+    description: 'Generates professional PDF invoices from structured data. Supports multi-currency and tax.',
+    longDescription:
+      'Pass invoice data (client info, line items, tax rates, currency) and receive a beautifully formatted PDF invoice. Supports USD, MXN, EUR, GBP. Handles multiple tax types (IVA, VAT, GST). Outputs to Google Drive or S3. Optional CFDI XML generation for Mexican businesses.',
+    category: 'skill',
+    tags: ['invoicing', 'pdf', 'billing', 'finance', 'multi-currency'],
+    author: 'Community',
+    version: '1.0.5',
+    rating: 4.4,
+    installCount: 3421,
+    pricing: { model: 'free' },
+    icon: '🧾',
+    includedComponents: [
+      'PDF template engine',
+      'Multi-currency formatter',
+      'Tax calculator (IVA / VAT / GST)',
+      'Google Drive + S3 uploader',
+      'CFDI XML generator (MX)',
+    ],
+    requirements: ['Google Drive or AWS S3 credentials'],
+  },
+
+  // ── Playwright Scripts ──────────────────────────────────────
+  {
+    id: 'playwright-competitor-pricing',
     name: 'Competitor Pricing Scraper',
     description:
-      'Monitors competitor product pages and extracts pricing changes into a structured feed with diff alerts.',
+      'Scrapes pricing pages of up to 10 competitors daily and surfaces changes in a Slack digest.',
     longDescription:
-      'Configurable Playwright script that navigates competitor product/pricing pages on a schedule, extracts current prices, detects changes, and logs everything to a Google Sheet or webhook. Handles dynamic JS-rendered pages, pagination, and anti-bot challenges with stealth mode. Sends Slack/email alerts on price changes.',
+      'Configure a list of competitor URLs and pricing selectors. This Playwright script runs on a schedule, extracts current pricing tiers and feature lists, compares against the previous snapshot, and posts a structured diff to your Slack channel. Detects plan additions, removals, and price changes.',
     category: 'playwright-script',
-    tags: ['scraping', 'pricing', 'competitor', 'monitoring', 'alerts'],
-    author: 'ScrapeOps',
-    version: '1.1.0',
-    rating: 4.2,
-    installCount: 1850,
-    pricing: { type: 'paid', amount: 14, currency: 'USD', interval: 'one-time' },
+    tags: ['competitor-intel', 'pricing', 'scraping', 'slack', 'monitoring'],
+    author: 'Space Agent OS',
+    version: '1.0.2',
+    rating: 4.6,
+    installCount: 1892,
+    pricing: { model: 'free' },
     icon: '🕵️',
-    tier: 'starter',
-  },
-  {
-    id: 'pw-social-poster',
-    name: 'Social Media Auto-Poster',
-    description:
-      'Automates posting to social platforms that lack API access using browser automation with human-like behavior.',
-    longDescription:
-      'Posts content to platforms without public APIs by automating the browser with realistic human-like delays, mouse movements, and interaction patterns. Supports scheduled posting, image/video uploads, and hashtag insertion. Includes session persistence so you don\'t need to re-login each run.',
-    category: 'playwright-script',
-    tags: ['social-media', 'automation', 'posting', 'browser'],
-    author: 'AutoPost',
-    version: '2.0.0',
-    rating: 4.0,
-    installCount: 2200,
-    pricing: { type: 'paid', amount: 19, currency: 'USD', interval: 'one-time' },
-    icon: '📱',
-    tier: 'starter',
-  },
-  {
-    id: 'pw-review-monitor',
-    name: 'Review Site Monitor',
-    description:
-      'Tracks new reviews across Google Business, Trustpilot, and G2 — alerts on negative sentiment in real time.',
-    longDescription:
-      'Continuously monitors your business profiles on major review platforms. Extracts new reviews, runs sentiment analysis, and sends instant alerts for negative reviews so you can respond quickly. Aggregates review data into a dashboard with trend charts and average rating tracking over time.',
-    category: 'playwright-script',
-    tags: ['reviews', 'monitoring', 'sentiment', 'reputation', 'alerts'],
-    author: 'RepWatch',
-    version: '1.3.0',
-    rating: 4.1,
-    installCount: 980,
-    pricing: { type: 'free' },
-    icon: '⭐',
-    tier: 'free',
+    includedComponents: [
+      'Playwright scraper engine',
+      'Pricing diff detector',
+      'Slack notification formatter',
+      'Snapshot storage (JSON)',
+    ],
+    requirements: ['Node.js 18+', 'Playwright installed', 'Slack webhook URL'],
   },
 
-  // ── MCP Integrations (2) ─────────────────────────────────
+  {
+    id: 'playwright-social-auto-post',
+    name: 'Auto-Post to Social Media',
+    description:
+      'Automatically publishes scheduled posts to Twitter/X and LinkedIn via browser automation.',
+    longDescription:
+      'A Playwright-powered script that reads from a Google Sheets content calendar and publishes posts at scheduled times. Handles image attachments, thread creation on X, and multi-image carousels on LinkedIn. Falls back to Buffer API when available.',
+    category: 'playwright-script',
+    tags: ['social-media', 'automation', 'twitter', 'linkedin', 'scheduling'],
+    author: 'Community',
+    version: '2.3.1',
+    rating: 4.3,
+    installCount: 4102,
+    pricing: { model: 'free' },
+    icon: '📅',
+    includedComponents: [
+      'Google Sheets content calendar reader',
+      'Twitter/X post + thread publisher',
+      'LinkedIn post publisher',
+      'Image upload handler',
+    ],
+    requirements: ['Node.js 18+', 'Playwright', 'Google Sheets API', 'Social media credentials'],
+  },
+
+  {
+    id: 'playwright-review-monitor',
+    name: 'Review Monitor',
+    description:
+      'Monitors Google Reviews and Yelp for new reviews. Sends alerts and drafts response suggestions.',
+    longDescription:
+      'Checks your Google Business Profile and Yelp listing daily for new reviews. For each new review, it generates a suggested response (personalized, not templated) using your brand voice guidelines and sends it via email or Slack for human approval before posting.',
+    category: 'playwright-script',
+    tags: ['reputation', 'reviews', 'google', 'yelp', 'monitoring', 'local-seo'],
+    author: 'Space Agent OS',
+    version: '1.1.4',
+    rating: 4.5,
+    installCount: 2744,
+    pricing: { model: 'one-time', price: 4900 },
+    icon: '⭐',
+    includedComponents: [
+      'Google Reviews scraper',
+      'Yelp reviews scraper',
+      'AI response drafter',
+      'Slack / email alerter',
+      'Review sentiment analyzer',
+    ],
+    requirements: ['Node.js 18+', 'Playwright', 'Google Business Profile access', 'Anthropic API key'],
+  },
+
+  // ── MCP Integrations ────────────────────────────────────────
   {
     id: 'mcp-whatsapp-business',
-    name: 'WhatsApp Business Integration',
+    name: 'WhatsApp Business MCP',
     description:
-      'Two-way WhatsApp Business API connector for sending templates, receiving messages, and managing conversations.',
+      'MCP server that gives agents full access to WhatsApp Business API: send messages, media, templates.',
     longDescription:
-      'Full MCP integration with the WhatsApp Business API (Cloud API). Send template messages, receive and process inbound messages, manage conversation threads, handle media attachments, and track delivery/read receipts. Includes webhook handler for real-time message processing and conversation routing to agents.',
+      'Expose WhatsApp Business Cloud API as MCP tools. Agents can send text messages, images, documents, and template messages to individual contacts or broadcasts. Includes incoming message webhook listener with real-time delivery to agent context. Supports multiple WA Business accounts.',
     category: 'mcp-integration',
-    tags: ['whatsapp', 'messaging', 'chat', 'api', 'communication'],
-    author: 'SpaceAgent Labs',
-    version: '1.6.0',
-    rating: 4.7,
-    installCount: 3800,
-    pricing: { type: 'paid', amount: 15, currency: 'USD', interval: 'monthly' },
+    tags: ['whatsapp', 'messaging', 'mcp', 'api', 'notifications', 'customer-comms'],
+    author: 'Space Agent OS',
+    version: '1.0.0',
+    rating: 4.8,
+    installCount: 3201,
+    pricing: { model: 'free' },
     icon: '💬',
-    tier: 'starter',
+    includedComponents: [
+      'send_message tool',
+      'send_media tool',
+      'send_template tool',
+      'list_conversations tool',
+      'Webhook listener for incoming messages',
+    ],
+    requirements: ['WhatsApp Business Cloud API access', 'Meta Developer account', 'Node.js 18+'],
   },
+
   {
     id: 'mcp-shopify',
-    name: 'Shopify Connector',
+    name: 'Shopify MCP',
     description:
-      'Reads and manages Shopify store data — products, orders, customers, inventory, and fulfillment status.',
+      'Full Shopify Admin API access via MCP. Manage products, orders, inventory, and customers from agents.',
     longDescription:
-      'Complete MCP bridge to the Shopify Admin API. Query products, variants, and collections; read and update orders; manage customer records; track inventory levels; and monitor fulfillment status. Supports bulk operations, webhook subscriptions for real-time updates, and metafield access for custom data.',
+      'A comprehensive MCP server wrapping the Shopify Admin GraphQL API. Gives agents the ability to query and mutate products, variants, orders, customers, discounts, and inventory levels. Supports both REST and GraphQL endpoints. Handles pagination and rate limiting automatically.',
     category: 'mcp-integration',
-    tags: ['shopify', 'ecommerce', 'orders', 'products', 'inventory'],
-    author: 'CommerceHub',
-    version: '2.2.0',
+    tags: ['shopify', 'ecommerce', 'mcp', 'products', 'orders', 'inventory'],
+    author: 'Community',
+    version: '2.0.0',
     rating: 4.6,
-    installCount: 2950,
-    pricing: { type: 'paid', amount: 12, currency: 'USD', interval: 'monthly' },
+    installCount: 5890,
+    pricing: { model: 'free' },
     icon: '🛍️',
-    tier: 'starter',
+    includedComponents: [
+      'list_products / get_product tools',
+      'list_orders / get_order tools',
+      'update_inventory tool',
+      'get_customer / update_customer tools',
+      'create_discount tool',
+    ],
+    requirements: ['Shopify store with Admin API access', 'Private app or custom app credentials'],
   },
 
-  // ── n8n Workflows (2) ────────────────────────────────────
+  // ── n8n Workflows ───────────────────────────────────────────
   {
-    id: 'wf-lead-capture',
+    id: 'workflow-lead-capture-funnel',
     name: 'Lead Capture Funnel',
     description:
-      'End-to-end lead capture: form submission → enrichment → CRM entry → Slack notification → drip sequence.',
+      'End-to-end n8n workflow: form submission → enrichment → CRM entry → welcome email sequence.',
     longDescription:
-      'n8n workflow that triggers on form submission (Typeform, Tally, or webhook), enriches the lead with company data, creates a CRM record in HubSpot or Pipedrive, notifies your sales channel in Slack with a rich card, and enrolls the lead in an email drip sequence. Includes deduplication logic and lead scoring.',
+      'A complete lead capture automation built in n8n. When a lead fills out your Typeform/Webflow form, the workflow enriches the contact, creates a CRM record in HubSpot, assigns it to the right sales rep based on ICP scoring, and triggers a personalized 5-email welcome sequence via SendGrid. Includes Slack notification for high-score leads.',
     category: 'workflow',
-    tags: ['leads', 'crm', 'automation', 'forms', 'email', 'slack'],
-    author: 'FlowOps',
-    version: '1.4.0',
-    rating: 4.5,
-    installCount: 2100,
-    pricing: { type: 'free' },
-    icon: '🔄',
-    tier: 'free',
-  },
-  {
-    id: 'wf-customer-onboarding',
-    name: 'Customer Onboarding Flow',
-    description:
-      'Automated onboarding sequence: welcome email → account setup → training schedule → 30-day check-in.',
-    longDescription:
-      'n8n workflow that orchestrates new customer onboarding. Triggers on deal-closed in CRM, sends a branded welcome email, provisions account access, schedules training sessions, assigns a CSM, creates onboarding tasks in your project tracker, and sends automated check-ins at day 7, 14, and 30. Tracks completion percentage per customer.',
-    category: 'workflow',
-    tags: ['onboarding', 'customers', 'automation', 'email', 'crm'],
-    author: 'SpaceAgent Labs',
-    version: '1.1.0',
-    rating: 4.4,
-    installCount: 1650,
-    pricing: { type: 'paid', amount: 9, currency: 'USD', interval: 'one-time' },
-    icon: '🎯',
-    tier: 'starter',
+    tags: ['lead-gen', 'n8n', 'crm', 'email', 'hubspot', 'typeform', 'automation'],
+    author: 'Space Agent OS',
+    version: '1.3.0',
+    rating: 4.7,
+    installCount: 7231,
+    pricing: { model: 'free' },
+    icon: '🔀',
+    includedComponents: [
+      'Typeform / Webflow form trigger',
+      'Lead enrichment step',
+      'HubSpot CRM entry creator',
+      'ICP scoring model',
+      '5-email welcome sequence (SendGrid)',
+      'Slack alert for hot leads',
+    ],
+    requirements: ['n8n instance (self-hosted or cloud)', 'HubSpot API key', 'SendGrid API key'],
   },
 
-  // ── GitHub Action (1) ────────────────────────────────────
   {
-    id: 'gh-auto-deploy',
+    id: 'workflow-customer-onboarding',
+    name: 'Customer Onboarding Sequence',
+    description:
+      'Automates the first 30 days of customer onboarding: emails, check-ins, health scores, and Slack alerts.',
+    longDescription:
+      'A battle-tested 30-day onboarding automation. Triggered on new customer creation in Stripe or HubSpot, it sends a time-cadenced sequence of onboarding emails, schedules automated check-in tasks for the CSM, tracks product activation milestones, computes a health score, and escalates at-risk customers to the CS team in Slack.',
+    category: 'workflow',
+    tags: ['onboarding', 'customer-success', 'n8n', 'email', 'stripe', 'health-score'],
+    author: 'Space Agent OS',
+    version: '2.1.0',
+    rating: 4.8,
+    installCount: 4512,
+    pricing: { model: 'subscription', price: 1900, interval: 'month' },
+    icon: '🚀',
+    includedComponents: [
+      'Stripe / HubSpot new customer trigger',
+      '30-day email cadence (8 emails)',
+      'Activation milestone tracker',
+      'Health score calculator',
+      'At-risk escalation to Slack',
+      'CSM task scheduler',
+    ],
+    requirements: ['n8n instance', 'Stripe or HubSpot', 'SendGrid or Postmark', 'Slack webhook'],
+  },
+
+  // ── GitHub Actions ──────────────────────────────────────────
+  {
+    id: 'github-action-auto-deploy',
     name: 'Auto-Deploy on Merge',
     description:
-      'GitHub Action that builds, tests, and deploys your app on merge to main with rollback on failure.',
+      'GitHub Action that deploys to Railway or Fly.io on merge to main, with rollback on failure.',
     longDescription:
-      'Composite GitHub Action that triggers on merge to main/master. Runs your test suite, builds the project, deploys to your configured target (Vercel, Railway, AWS, or Docker registry), runs smoke tests against the deployment, and automatically rolls back if smoke tests fail. Includes Slack notifications for deploy status and a deployment log.',
+      'A production-grade GitHub Actions workflow for zero-downtime deployments to Railway or Fly.io. On merge to main: runs tests, builds Docker image, pushes to registry, deploys to production, runs smoke tests, and auto-rolls back if smoke tests fail. Sends deployment status to Slack.',
     category: 'github-action',
-    tags: ['ci-cd', 'deployment', 'github', 'automation', 'devops'],
-    author: 'DevOps Pro',
-    version: '3.1.0',
-    rating: 4.8,
-    installCount: 5600,
-    pricing: { type: 'free' },
-    icon: '⚡',
-    tier: 'free',
+    tags: ['ci-cd', 'github-actions', 'railway', 'fly-io', 'deployment', 'docker'],
+    author: 'Space Agent OS',
+    version: '1.2.0',
+    rating: 4.9,
+    installCount: 9834,
+    pricing: { model: 'free' },
+    icon: '⚙️',
+    includedComponents: [
+      'Test runner step',
+      'Docker build + push step',
+      'Railway / Fly.io deploy step',
+      'Smoke test runner',
+      'Auto-rollback on failure',
+      'Slack deployment notifier',
+    ],
+    requirements: ['GitHub repository', 'Railway or Fly.io account', 'Docker registry'],
   },
-];
+]
+
+// Lookup by ID
+export function getMarketplaceItem(id: string): MarketplaceItem | AgentTemplate | undefined {
+  return MARKETPLACE_ITEMS.find((item) => item.id === id)
+}
+
+// Filter by category
+export function filterByCategory(
+  items: (MarketplaceItem | AgentTemplate)[],
+  categories: string[]
+): (MarketplaceItem | AgentTemplate)[] {
+  if (categories.includes('all')) return items
+  return items.filter((item) => categories.includes(item.category))
+}
+
+// Search by name/description/tags
+export function searchItems(
+  items: (MarketplaceItem | AgentTemplate)[],
+  query: string
+): (MarketplaceItem | AgentTemplate)[] {
+  if (!query.trim()) return items
+  const q = query.toLowerCase()
+  return items.filter(
+    (item) =>
+      item.name.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q) ||
+      item.tags.some((t) => t.includes(q)) ||
+      item.category.includes(q)
+  )
+}

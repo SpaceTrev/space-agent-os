@@ -62,7 +62,7 @@ function formatInstalls(n: number): string {
 function ItemCard({ item }: { item: MarketplaceItem }) {
   const gradient = ICON_GRADIENTS[item.category] ?? 'from-gray-500 to-gray-700'
   const CategoryIcon = CATEGORY_ICONS[item.category] ?? Bot
-  const isFree = item.pricing.type === 'free'
+  const isFree = item.pricing.model === 'free'
   const categoryStyle = CATEGORY_COLORS[item.category]
 
   return (
@@ -72,10 +72,10 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
         <div className={clsx('w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0', gradient)}>
           <CategoryIcon className="w-6 h-6 text-white" />
         </div>
-        {item.tier !== 'free' && (
+        {!isFree && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 text-xs font-medium capitalize">
             <Sparkles className="w-3 h-3" />
-            {item.tier}
+            Pro
           </span>
         )}
       </div>
@@ -134,7 +134,9 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
         )}>
           {isFree
             ? 'Install'
-            : `$${item.pricing.amount}/${item.pricing.interval === 'monthly' ? 'mo' : 'yr'}`}
+            : item.pricing.price
+            ? `$${(item.pricing.price / 100).toFixed(0)}/${item.pricing.interval === 'year' ? 'yr' : 'mo'}`
+            : 'Paid'}
         </button>
       </div>
     </div>

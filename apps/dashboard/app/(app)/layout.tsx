@@ -14,7 +14,7 @@ import {
   Plus,
   User,
   Terminal,
-  Globe,
+  Store,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
@@ -71,20 +71,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             Dashboard
           </Link>
 
-          {/* Marketplace */}
-          <Link
-            href="/marketplace"
-            className={clsx(
-              'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
-              pathname === '/marketplace'
-                ? 'bg-border-base text-text-primary font-medium'
-                : 'text-text-secondary hover:text-text-primary hover:bg-border-base'
-            )}
-          >
-            <Globe className="w-4 h-4 flex-shrink-0" />
-            Marketplace
-          </Link>
-
           {/* Mission Control */}
           <Link
             href="/mission-control"
@@ -97,6 +83,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <Terminal className="w-4 h-4 flex-shrink-0" />
             Mission Control
+          </Link>
+
+          {/* Marketplace */}
+          <Link
+            href="/marketplace"
+            className={clsx(
+              'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+              pathname.startsWith('/marketplace')
+                ? 'bg-border-base text-text-primary font-medium'
+                : 'text-text-secondary hover:text-text-primary hover:bg-border-base'
+            )}
+          >
+            <Store className="w-4 h-4 flex-shrink-0" />
+            Marketplace
           </Link>
 
           {/* Workspaces section */}
