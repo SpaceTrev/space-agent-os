@@ -1,98 +1,13 @@
-// GET /api/system/agents — public agent roster, no auth required
-// Returns the full Space-Agent-OS agent architecture (hardcoded from design spec)
-export function GET() {
-  const agents = [
-    {
-      id: 'context-agent',
-      name: 'ContextAgent',
-      role: 'Context Management',
-      tier: 'primary',
-      model: 'claude-sonnet-4-6',
-      provider: 'OpenClaw',
-      description: 'Maintains conversation context, compresses history, surfaces relevant memory.',
-      status: 'idle',
-    },
-    {
-      id: 'pm-agent',
-      name: 'PMAgent',
-      role: 'Project Management',
-      tier: 'secondary',
-      model: 'gemini-2.0-flash',
-      provider: 'Google',
-      description: 'Tracks tasks, sprints, and priorities. Writes to TASKS.md and brain vault.',
-      status: 'idle',
-    },
-    {
-      id: 'planner-agent',
-      name: 'PlannerAgent',
-      role: 'Task Planning',
-      tier: 'primary',
-      model: 'claude-sonnet-4-6',
-      provider: 'OpenClaw',
-      description: 'Decomposes goals into executable plans. Creates dependency graphs.',
-      status: 'idle',
-    },
-    {
-      id: 'researcher-agent',
-      name: 'ResearcherAgent',
-      role: 'Research & Synthesis',
-      tier: 'secondary',
-      model: 'gemini-2.0-flash',
-      provider: 'Google',
-      description: 'Searches web, reads docs, synthesizes findings into structured notes.',
-      status: 'idle',
-    },
-    {
-      id: 'lead-architect-agent',
-      name: 'LeadArchitectAgent',
-      role: 'System Architecture',
-      tier: 'orchestrator',
-      model: 'claude-opus-4-6',
-      provider: 'OpenClaw',
-      description: 'Owns technical decisions, ADRs, and system-wide design. Delegates to engineers.',
-      status: 'idle',
-    },
-    {
-      id: 'reviewer-agent',
-      name: 'ReviewerAgent',
-      role: 'Code Review',
-      tier: 'primary',
-      model: 'claude-sonnet-4-6',
-      provider: 'OpenClaw',
-      description: 'Reviews PRs for correctness, security, and style. Blocks bad code.',
-      status: 'idle',
-    },
-    {
-      id: 'backend-engineer-agent',
-      name: 'BackendEngineerAgent',
-      role: 'Backend Engineering',
-      tier: 'primary',
-      model: 'claude-sonnet-4-6',
-      provider: 'OpenClaw',
-      description: 'Builds APIs, workers, and data pipelines. Python + TypeScript.',
-      status: 'idle',
-    },
-    {
-      id: 'frontend-engineer-agent',
-      name: 'FrontendEngineerAgent',
-      role: 'Frontend Engineering',
-      tier: 'primary',
-      model: 'claude-sonnet-4-6',
-      provider: 'OpenClaw',
-      description: 'Builds React/Next.js UI. Owns design system and accessibility.',
-      status: 'idle',
-    },
-    {
-      id: 'domain-agent',
-      name: 'DomainAgent',
-      role: 'Domain Expertise',
-      tier: 'local',
-      model: 'qwen3-coder:30b',
-      provider: 'Ollama',
-      description: 'Handles domain-specific tasks offline. Privacy-sensitive workloads.',
-      status: 'idle',
-    },
-  ]
+import { NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
 
-  return Response.json({ agents, total: agents.length })
+export async function GET() {
+  try {
+    const file = path.join(process.cwd(), 'public', 'system-agents.json')
+    const data = JSON.parse(fs.readFileSync(file, 'utf-8'))
+    return NextResponse.json(data)
+  } catch {
+    return NextResponse.json({ agents: [], count: 0 })
+  }
 }
