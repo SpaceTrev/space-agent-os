@@ -11,15 +11,15 @@ const PUBLIC_PATHS = [
   '/login',
   '/signup',
   '/mission-control',
+  '/marketplace',
   '/api/auth/login',
   '/api/auth/signup',
   '/api/health',
   '/api/system',
   '/api/billing/webhook',
   '/api/ops',
-  '/marketplace',
-  '/api/marketplace',
   '/api/webhooks',
+  '/api/marketplace',
 ]
 
 export async function middleware(req: NextRequest) {
