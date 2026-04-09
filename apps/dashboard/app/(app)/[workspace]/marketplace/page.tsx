@@ -1,0 +1,231 @@
+'use client'
+
+import { useEffect, useState, use } from 'react'
+import { clsx } from 'clsx'
+import {
+  Search,
+  Star,
+  Download,
+  Bot,
+  Wrench,
+  Zap,
+  LayoutTemplate,
+  Plug,
+  BadgeCheck,
+  Sparkles,
+} from 'lucide-react'
+import type { MarketplaceItem, MarketplaceCategory } from '@/lib/types'
+
+const CATEGORIES: { value: 'all' | MarketplaceCategory; label: string; icon: React.ElementType }[] = [
+  { value: 'all', label: 'All', icon: Sparkles },
+  { value: 'agents', label: 'Agents', icon: Bot },
+  { value: 'tools', label: 'Tools', icon: Wrench },
+  { value: 'skills', label: 'Skills', icon: Zap },
+  { value: 'templates', label: 'Templates', icon: LayoutTemplate },
+  { value: 'integrations', label: 'Integrations', icon: Plug },
+]
+
+const ICON_GRADIENTS: Record<string, string> = {
+  blue: 'from-blue-500 to-blue-700',
+  purple: 'from-purple-500 to-purple-700',
+  orange: 'from-orange-500 to-orange-700',
+  green: 'from-green-500 to-green-700',
+  red: 'from-red-500 to-red-700',
+  sky: 'from-sky-500 to-sky-700',
+  gray: 'from-gray-500 to-gray-700',
+  yellow: 'from-yellow-500 to-yellow-700',
+  teal: 'from-teal-500 to-teal-700',
+  pink: 'from-pink-500 to-pink-700',
+  indigo: 'from-indigo-500 to-indigo-700',
+}
+
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  agents: Bot,
+  tools: Wrench,
+  skills: Zap,
+  templates: LayoutTemplate,
+  integrations: Plug,
+}
+
+function formatInstalls(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
+  return String(n)
+}
+
+function ItemCard({ item }: { item: MarketplaceItem }) {
+  const gradient = ICON_GRADIENTS[item.icon_color] ?? 'from-gray-500 to-gray-700'
+  const CategoryIcon = CATEGORY_ICONS[item.category] ?? Bot
+  const isFree = item.price_monthly === null
+
+  return (
+    <div className="group flex flex-col bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 hover:bg-gray-800/60 transition-all duration-150">
+      {/* Icon + featured badge */}
+      <div className="flex items-start justify-between mb-4">
+        <div className={clsx('w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0', gradient)}>
+          <CategoryIcon className="w-6 h-6 text-white" />
+        </div>
+        {item.featured && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 text-xs font-medium">
+            <Sparkles className="w-3 h-3" />
+            Featured
+          </span>
+        )}
+      </div>
+
+      {/* Name + author */}
+      <div className="mb-2">
+        <div className="flex items-center gap-1.5">
+          <h3 className="text-sm font-semibold text-white leading-snug">{item.name}</h3>
+          {item.author_verified && (
+            <BadgeCheck className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
+          )}
+        </div>
+        <p className="text-xs text-gray-500 mt-0.5">{item.author}</p>
+      </div>
+
+      {/* Description */}
+      <p className="text-xs text-gray-400 leading-relaxed flex-1 mb-4 line-clamp-2">
+        {item.description}
+      </p>
+
+      {/* Tags */}
+      <div className="flex flex-wrap gap-1 mb-4">
+        {item.tags.slice(0, 3).map((tag) => (
+          <span
+            key={tag}
+            className="px-1.5 py-0.5 rounded bg-gray-800 text-gray-500 text-[10px] font-medium"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Stats + CTA */}
+      <div className="flex items-center justify-between pt-3 border-t border-gray-800">
+        <div className="flex items-center gap-3 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+            {item.rating.toFixed(1)}
+            <span className="text-gray-600">({item.rating_count})</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <Download className="w-3 h-3" />
+            {formatInstalls(item.installs)}
+          </span>
+        </div>
+        <button className={clsx(
+          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+          isFree
+            ? 'bg-brand-600 hover:bg-brand-500 text-white'
+            : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+        )}>
+          {isFree ? 'Install' : `$${(item.price_monthly! / 100).toFixed(0)}/mo`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default function MarketplacePage({ params }: { params: Promise<{ workspace: string }> }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { workspace } = use(params)
+  const [items, setItems] = useState<MarketplaceItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [category, setCategory] = useState<'all' | MarketplaceCategory>('all')
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 250)
+    return () => clearTimeout(t)
+  }, [search])
+
+  useEffect(() => {
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (category !== 'all') params.set('category', category)
+    if (debouncedSearch) params.set('search', debouncedSearch)
+
+    fetch(`/api/marketplace?${params}`)
+      .then((r) => r.ok ? r.json() : { items: [] })
+      .then((data) => setItems(data.items ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [category, debouncedSearch])
+
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white">Marketplace</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Browse and install agents, tools, skills, and templates for your workspace.
+        </p>
+      </div>
+
+      {/* Search + filter bar */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search marketplace..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gray-600 transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* Category tabs */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {CATEGORIES.map(({ value, label, icon: Icon }) => (
+          <button
+            key={value}
+            onClick={() => setCategory(value)}
+            className={clsx(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+              category === value
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            )}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Item count */}
+      {!loading && (
+        <p className="text-xs text-gray-500 mb-4">
+          {items.length} {items.length === 1 ? 'result' : 'results'}
+          {category !== 'all' && ` in ${category}`}
+          {debouncedSearch && ` for "${debouncedSearch}"`}
+        </p>
+      )}
+
+      {/* Grid */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center mb-4">
+            <Search className="w-8 h-8 text-gray-600" />
+          </div>
+          <p className="text-sm font-medium text-gray-300">No results found</p>
+          <p className="text-xs text-gray-500 mt-1">Try a different search term or category</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item) => (
+            <ItemCard key={item.id} item={item} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
