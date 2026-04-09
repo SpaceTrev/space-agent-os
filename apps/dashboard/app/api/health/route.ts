@@ -1,14 +1,14 @@
-// GET /api/health — public system status endpoint, no auth required
-export function GET() {
-  return Response.json({
-    status: 'online',
-    system: 'Space-Agent-OS',
-    persona: 'Space-Claw',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    agents_total: 9,
-    model_tiers: 4,
-    brain_domains: 6,
-    deployment: 'vercel',
-  })
+import { NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
+
+export async function GET() {
+  try {
+    const file = path.join(process.cwd(), 'public', 'system-health.json')
+    const data = JSON.parse(fs.readFileSync(file, 'utf-8'))
+    data._source = 'live-snapshot'
+    return NextResponse.json(data)
+  } catch {
+    return NextResponse.json({ status: 'offline', _source: 'fallback' })
+  }
 }
