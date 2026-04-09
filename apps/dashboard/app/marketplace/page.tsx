@@ -1,443 +1,653 @@
-// apps/dashboard/app/marketplace/page.tsx
-'use client';
+'use client'
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react'
+import Link from 'next/link'
+import { clsx } from 'clsx'
 import {
+  Bot,
+  Zap,
+  FileCode2,
+  Globe,
+  GitBranch,
+  Play,
+  Puzzle,
   Search,
   Star,
   Download,
   X,
-  ArrowLeft,
-  Sparkles,
-  Filter,
-  ChevronDown,
-} from 'lucide-react';
-import { marketplaceItems } from '@/lib/marketplace-data';
-import {
-  MarketplaceItem,
-  MarketplaceCategory,
-  CATEGORY_LABELS,
-  CATEGORY_COLORS,
-} from '@/lib/marketplace-types';
+  ExternalLink,
+  ChevronLeft,
+  Tag,
+  User,
+  Calendar,
+} from 'lucide-react'
 
-// ── Filter tab config ──────────────────────────────────────
-type TabKey = 'all' | 'agent-template' | 'skill' | 'workflow' | 'playwright-script' | 'mcp-integration' | 'github-action';
+// ─── Types ──────────────────────────────────────────────────────────────────
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'agent-template', label: 'Agent Teams' },
-  { key: 'skill', label: 'Skills' },
-  { key: 'workflow', label: 'Automations' },
-  { key: 'playwright-script', label: 'Scripts' },
-  { key: 'mcp-integration', label: 'Integrations' },
-  { key: 'github-action', label: 'Actions' },
-];
+type MarketplaceCategory =
+  | 'agent-template'
+  | 'skill'
+  | 'workflow'
+  | 'playwright-script'
+  | 'mcp-integration'
+  | 'github-action'
+  | 'script-utility'
 
-// ── Stars component ────────────────────────────────────────
-function RatingStars({ rating }: { rating: number }) {
+interface MarketplaceItem {
+  id: string
+  name: string
+  category: MarketplaceCategory
+  description: string
+  longDescription: string
+  author: string
+  version: string
+  rating: number
+  ratingCount: number
+  installCount: number
+  tags: string[]
+  publishedAt: string
+  featured?: boolean
+}
+
+// ─── Seed Data ───────────────────────────────────────────────────────────────
+
+const ITEMS: MarketplaceItem[] = [
+  // Agent Templates (4)
+  {
+    id: 'agent-research-assistant',
+    name: 'Research Assistant',
+    category: 'agent-template',
+    description: 'Web research agent that finds, synthesizes, and summarizes information from multiple sources.',
+    longDescription:
+      'A fully-configured agent template for deep research tasks. Integrates Perplexity for web search, automatic source deduplication, and structured markdown output. Supports iterative refinement — ask follow-up questions to drill deeper into any topic. Ideal for competitive research, market analysis, and technical deep-dives.',
+    author: 'space-agent-os',
+    version: '1.3.0',
+    rating: 4.8,
+    ratingCount: 142,
+    installCount: 2341,
+    tags: ['research', 'web-search', 'summarization', 'perplexity'],
+    publishedAt: '2026-01-15',
+    featured: true,
+  },
+  {
+    id: 'agent-code-reviewer',
+    name: 'Code Reviewer',
+    category: 'agent-template',
+    description: 'Automated PR review agent that checks for bugs, security issues, and style violations.',
+    longDescription:
+      'Drop this agent into your workspace and point it at your GitHub repo. It reviews pull requests for logic errors, security vulnerabilities (OWASP Top 10), test coverage gaps, and style inconsistencies. Outputs structured comments you can paste directly into GitHub or Linear. Works with TypeScript, Python, Go, and Rust.',
+    author: 'space-agent-os',
+    version: '2.1.0',
+    rating: 4.9,
+    ratingCount: 89,
+    installCount: 1872,
+    tags: ['code-review', 'github', 'security', 'quality'],
+    publishedAt: '2026-02-03',
+    featured: true,
+  },
+  {
+    id: 'agent-email-triage',
+    name: 'Email Triage',
+    category: 'agent-template',
+    description: 'Inbox zero agent that categorizes, prioritizes, and drafts replies to your emails.',
+    longDescription:
+      'Connects to Gmail via OAuth and runs on a schedule. Reads unread emails, categorizes them (urgent, follow-up, FYI, spam), and drafts responses for high-priority items. Generates a daily digest of what it handled. Configurable with your personal context so replies match your voice.',
+    author: 'community',
+    version: '1.0.2',
+    rating: 4.5,
+    ratingCount: 61,
+    installCount: 934,
+    tags: ['email', 'gmail', 'productivity', 'scheduling'],
+    publishedAt: '2026-02-28',
+  },
+  {
+    id: 'agent-data-analyst',
+    name: 'Data Analyst',
+    category: 'agent-template',
+    description: 'Analyze CSV/JSON datasets and generate insights, charts, and executive summaries.',
+    longDescription:
+      'Upload a dataset and this agent generates descriptive statistics, identifies trends, flags anomalies, and produces a narrative summary with recommended actions. Outputs a markdown report with embedded chart definitions (Recharts-compatible). Supports datasets up to 100k rows via chunked processing.',
+    author: 'community',
+    version: '1.1.0',
+    rating: 4.6,
+    ratingCount: 48,
+    installCount: 721,
+    tags: ['data', 'analytics', 'csv', 'charts', 'reporting'],
+    publishedAt: '2026-03-10',
+  },
+
+  // Skills (3)
+  {
+    id: 'skill-web-search',
+    name: 'Web Search',
+    category: 'skill',
+    description: 'Real-time web search via Perplexity and Brave Search APIs with source citation.',
+    longDescription:
+      'Gives any agent the ability to search the web in real-time. Supports both Perplexity Sonar (AI-summarized results) and Brave Search (raw results with full citation). Configurable per-query result count, freshness filters, and domain blocklists. Returns structured JSON so agents can reason over the results.',
+    author: 'space-agent-os',
+    version: '3.0.1',
+    rating: 4.9,
+    ratingCount: 203,
+    installCount: 4102,
+    tags: ['search', 'perplexity', 'brave', 'web', 'real-time'],
+    publishedAt: '2025-11-20',
+    featured: true,
+  },
+  {
+    id: 'skill-git-operations',
+    name: 'Git Operations',
+    category: 'skill',
+    description: 'Clone repos, create branches, commit changes, open PRs — all from agent tasks.',
+    longDescription:
+      'A comprehensive Git skill that enables agents to interact with GitHub and GitLab repositories. Supports clone, branch, commit, push, PR creation, and review comment posting. Handles authentication via stored tokens. Includes sandboxed execution so file operations are isolated to a temp workspace per task.',
+    author: 'space-agent-os',
+    version: '2.4.0',
+    rating: 4.7,
+    ratingCount: 117,
+    installCount: 2088,
+    tags: ['git', 'github', 'gitlab', 'ci', 'automation'],
+    publishedAt: '2025-12-05',
+  },
+  {
+    id: 'skill-slack-notifier',
+    name: 'Slack Notifier',
+    category: 'skill',
+    description: 'Send rich Slack messages with blocks, attachments, and thread replies from agents.',
+    longDescription:
+      'Equips agents with the ability to send Slack messages using Block Kit formatting. Supports sending to channels, DMs, and threads. Includes templates for common patterns: task completion notices, error alerts, daily digests, and approval requests. Configures with your Slack Bot OAuth token stored encrypted in your workspace.',
+    author: 'community',
+    version: '1.2.0',
+    rating: 4.4,
+    ratingCount: 79,
+    installCount: 1543,
+    tags: ['slack', 'notifications', 'messaging', 'block-kit'],
+    publishedAt: '2026-01-08',
+  },
+
+  // Scripts / script-utility (3)
+  {
+    id: 'script-railway-deploy',
+    name: 'Deploy to Railway',
+    category: 'script-utility',
+    description: 'One-click Railway deployment script with env var syncing and health check polling.',
+    longDescription:
+      'Automates Railway service deployments from your agent tasks. Syncs environment variables from your .env file, triggers a deploy, polls for build completion, runs a configurable health check URL, and reports success or rollback. Supports mono-repo service selection and multi-service deployments.',
+    author: 'space-agent-os',
+    version: '1.0.5',
+    rating: 4.6,
+    ratingCount: 53,
+    installCount: 876,
+    tags: ['railway', 'deployment', 'devops', 'ci-cd'],
+    publishedAt: '2026-02-12',
+  },
+  {
+    id: 'script-db-backup',
+    name: 'Database Backup',
+    category: 'script-utility',
+    description: 'Automated Postgres dump with compression, S3 upload, and retention management.',
+    longDescription:
+      'Runs pg_dump on your Supabase or self-hosted Postgres instance, compresses with gzip, uploads to an S3-compatible bucket (AWS S3, Cloudflare R2, Backblaze B2), and prunes backups older than your retention window. Sends a Slack notification on completion or failure. Schedule it via cron or trigger from an agent.',
+    author: 'community',
+    version: '2.0.0',
+    rating: 4.8,
+    ratingCount: 37,
+    installCount: 612,
+    tags: ['postgres', 'backup', 's3', 'database', 'scheduled'],
+    publishedAt: '2026-01-22',
+  },
+  {
+    id: 'script-log-aggregator',
+    name: 'Log Aggregator',
+    category: 'script-utility',
+    description: 'Collect, filter, and summarize agent execution logs into a readable daily report.',
+    longDescription:
+      'Scrapes audit.jsonl and task logs from all your agents, deduplicates noise, groups errors by root cause, and produces a concise daily operations report. Highlights anomalies, cost spikes, and recurring failures. Outputs Markdown suitable for Slack, email, or Notion. Configurable severity thresholds.',
+    author: 'space-agent-os',
+    version: '1.1.0',
+    rating: 4.3,
+    ratingCount: 28,
+    installCount: 441,
+    tags: ['logs', 'monitoring', 'reporting', 'devops', 'audit'],
+    publishedAt: '2026-03-01',
+  },
+
+  // MCP Integrations (2)
+  {
+    id: 'mcp-linear',
+    name: 'Linear MCP',
+    category: 'mcp-integration',
+    description: 'Full Linear integration — read issues, create tasks, update status, and triage cycles.',
+    longDescription:
+      'Connects your agents to Linear via the official MCP protocol. Exposes tools for listing issues, creating new tickets, updating status and priority, adding comments, and assigning to team members. Agents can autonomously triage inbound issues, move tasks through your workflow, and generate weekly cycle summaries.',
+    author: 'space-agent-os',
+    version: '1.5.0',
+    rating: 4.9,
+    ratingCount: 94,
+    installCount: 1677,
+    tags: ['linear', 'project-management', 'mcp', 'issues', 'triage'],
+    publishedAt: '2025-12-18',
+    featured: true,
+  },
+  {
+    id: 'mcp-notion',
+    name: 'Notion MCP',
+    category: 'mcp-integration',
+    description: 'Read and write Notion pages, databases, and blocks from any connected agent.',
+    longDescription:
+      'Exposes Notion as an MCP server so agents can read pages, query databases, create new pages, and append content blocks. Supports rich content types: paragraphs, code blocks, tables, callouts, and toggles. Great for agents that need to maintain living documents, wikis, or project trackers in Notion.',
+    author: 'community',
+    version: '1.0.3',
+    rating: 4.5,
+    ratingCount: 62,
+    installCount: 1189,
+    tags: ['notion', 'documentation', 'database', 'mcp', 'knowledge-base'],
+    publishedAt: '2026-01-30',
+  },
+
+  // Workflows (2)
+  {
+    id: 'workflow-sprint-kickoff',
+    name: 'Sprint Kickoff',
+    category: 'workflow',
+    description: 'End-to-end sprint setup: create sprint, assign agents, set goals, post to Slack.',
+    longDescription:
+      'A multi-step workflow that automates your sprint kickoff. It creates a new sprint in Agent OS, pulls open issues from Linear, scores and prioritizes them by impact, assigns tasks to available agents based on their type and workload, generates a sprint goal statement, and posts a kickoff summary to your Slack standup channel. Reduces 45-minute meetings to 2 minutes.',
+    author: 'space-agent-os',
+    version: '1.2.0',
+    rating: 4.7,
+    ratingCount: 44,
+    installCount: 723,
+    tags: ['sprint', 'planning', 'linear', 'slack', 'agile'],
+    publishedAt: '2026-02-20',
+  },
+  {
+    id: 'workflow-daily-standup',
+    name: 'Daily Standup',
+    category: 'workflow',
+    description: 'Auto-collect agent status updates and post a formatted standup to Slack.',
+    longDescription:
+      'Runs on a morning schedule (configurable timezone). Queries all active agents for their current task, last completed task, and any blockers. Formats the results into a clean Slack standup post with per-agent sections, a summary of what shipped yesterday, and what\'s in progress today. Links to relevant Linear issues and task logs.',
+    author: 'space-agent-os',
+    version: '1.0.1',
+    rating: 4.6,
+    ratingCount: 38,
+    installCount: 654,
+    tags: ['standup', 'slack', 'daily', 'scheduled', 'status'],
+    publishedAt: '2026-03-05',
+  },
+
+  // GitHub Action (1)
+  {
+    id: 'action-agent-os-deploy',
+    name: 'Agent OS Deploy',
+    category: 'github-action',
+    description: 'GitHub Action to deploy Agent OS updates and sync workspace configs on push.',
+    longDescription:
+      'A composable GitHub Action for CI/CD of your Agent OS workspace. On push to main, it builds your dashboard, runs migrations, deploys to Railway (or Vercel), syncs agent configs from your repo to the live workspace, and runs a smoke test. Configurable via action inputs. Supports staging → production promotion gating with manual approval.',
+    author: 'space-agent-os',
+    version: '1.0.0',
+    rating: 4.8,
+    ratingCount: 31,
+    installCount: 509,
+    tags: ['github-actions', 'ci-cd', 'deployment', 'railway', 'vercel'],
+    publishedAt: '2026-03-18',
+  },
+]
+
+// ─── Category Config ─────────────────────────────────────────────────────────
+
+const CATEGORIES: { id: MarketplaceCategory | 'all'; label: string; icon: React.ElementType }[] = [
+  { id: 'all', label: 'All', icon: Globe },
+  { id: 'agent-template', label: 'Agent Templates', icon: Bot },
+  { id: 'skill', label: 'Skills', icon: Zap },
+  { id: 'script-utility', label: 'Scripts', icon: FileCode2 },
+  { id: 'mcp-integration', label: 'MCPs', icon: Puzzle },
+  { id: 'workflow', label: 'Workflows', icon: GitBranch },
+  { id: 'github-action', label: 'GitHub Actions', icon: Play },
+]
+
+const CATEGORY_COLORS: Record<MarketplaceCategory, string> = {
+  'agent-template': 'text-brand-400 bg-brand-500/10 ring-brand-500/20',
+  'skill': 'text-purple-400 bg-purple-500/10 ring-purple-500/20',
+  'workflow': 'text-emerald-400 bg-emerald-500/10 ring-emerald-500/20',
+  'playwright-script': 'text-orange-400 bg-orange-500/10 ring-orange-500/20',
+  'mcp-integration': 'text-yellow-400 bg-yellow-500/10 ring-yellow-500/20',
+  'github-action': 'text-gray-400 bg-gray-500/10 ring-gray-500/20',
+  'script-utility': 'text-pink-400 bg-pink-500/10 ring-pink-500/20',
+}
+
+const CATEGORY_ICONS: Record<MarketplaceCategory, React.ElementType> = {
+  'agent-template': Bot,
+  'skill': Zap,
+  'workflow': GitBranch,
+  'playwright-script': Play,
+  'mcp-integration': Puzzle,
+  'github-action': Play,
+  'script-utility': FileCode2,
+}
+
+function categoryLabel(cat: MarketplaceCategory): string {
+  return CATEGORIES.find((c) => c.id === cat)?.label ?? cat
+}
+
+// ─── Star Rating ──────────────────────────────────────────────────────────────
+
+function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-3.5 w-3.5 ${
-            i <= Math.round(rating)
-              ? 'fill-amber-400 text-amber-400'
-              : 'fill-slate-700 text-slate-700'
-          }`}
-        />
-      ))}
-      <span className="ml-1 text-xs text-slate-400">{rating.toFixed(1)}</span>
+    <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={clsx(
+              'w-3 h-3',
+              star <= Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-700'
+            )}
+          />
+        ))}
+      </div>
+      <span className="text-xs text-gray-500">{rating.toFixed(1)} ({count})</span>
     </div>
-  );
+  )
 }
 
-// ── Price badge ────────────────────────────────────────────
-function PriceBadge({ pricing }: { pricing: MarketplaceItem['pricing'] }) {
-  if (pricing.type === 'free') {
-    return (
-      <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-400 border border-emerald-500/25">
-        Free
-      </span>
-    );
-  }
-  return (
-    <span className="rounded-full bg-indigo-500/15 px-2.5 py-0.5 text-xs font-medium text-indigo-300 border border-indigo-500/25">
-      ${pricing.amount}
-      {pricing.interval === 'monthly' && '/mo'}
-      {pricing.interval === 'yearly' && '/yr'}
-    </span>
-  );
-}
+// ─── Detail Modal ─────────────────────────────────────────────────────────────
 
-// ── Install count formatter ────────────────────────────────
-function formatInstalls(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return n.toString();
-}
-
-// ── Marketplace card ───────────────────────────────────────
-function MarketplaceCard({
-  item,
-  onClick,
-}: {
-  item: MarketplaceItem;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="group relative flex flex-col rounded-xl border border-slate-800 bg-slate-900/60 p-5 text-left transition-all duration-200 hover:border-indigo-500/40 hover:bg-slate-900/90 hover:shadow-lg hover:shadow-indigo-500/5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-    >
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-800/80 text-2xl">
-          {item.icon}
-        </div>
-        <PriceBadge pricing={item.pricing} />
-      </div>
-
-      {/* Name */}
-      <h3 className="mt-3 text-sm font-semibold text-slate-100 group-hover:text-white">
-        {item.name}
-      </h3>
-
-      {/* Category badge */}
-      <span
-        className={`mt-2 inline-flex w-fit rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-          CATEGORY_COLORS[item.category]
-        }`}
-      >
-        {CATEGORY_LABELS[item.category]}
-      </span>
-
-      {/* Description */}
-      <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-slate-400">
-        {item.description}
-      </p>
-
-      {/* Footer */}
-      <div className="mt-auto flex items-center justify-between pt-4">
-        <RatingStars rating={item.rating} />
-        <div className="flex items-center gap-1 text-xs text-slate-500">
-          <Download className="h-3 w-3" />
-          {formatInstalls(item.installCount)}
-        </div>
-      </div>
-
-      {/* Author */}
-      <p className="mt-2 text-[11px] text-slate-600">by {item.author}</p>
-    </button>
-  );
-}
-
-// ── Detail panel ───────────────────────────────────────────
-function DetailPanel({
-  item,
-  onClose,
-}: {
-  item: MarketplaceItem;
-  onClose: () => void;
-}) {
-  const [installing, setInstalling] = useState(false);
-
-  const handleInstall = () => {
-    setInstalling(true);
-    setTimeout(() => setInstalling(false), 2000);
-  };
+function DetailModal({ item, onClose }: { item: MarketplaceItem; onClose: () => void }) {
+  const Icon = CATEGORY_ICONS[item.category]
+  const colorClass = CATEGORY_COLORS[item.category]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-4 sm:p-8">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-slate-800 bg-[#0C0C0F] shadow-2xl shadow-indigo-500/5">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-800 hover:text-slate-300"
-        >
-          <X className="h-5 w-5" />
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-        <div className="p-6 sm:p-8">
-          {/* Back link */}
-          <button
-            onClick={onClose}
-            className="mb-6 flex items-center gap-1.5 text-xs text-slate-500 transition hover:text-slate-300"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Marketplace
-          </button>
-
-          {/* Header */}
-          <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-800/80 text-3xl">
-              {item.icon}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-xl font-bold text-white">{item.name}</h2>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span
-                  className={`rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-                    CATEGORY_COLORS[item.category]
-                  }`}
-                >
-                  {CATEGORY_LABELS[item.category]}
-                </span>
-                <span className="text-xs text-slate-500">v{item.version}</span>
-                <span className="text-xs text-slate-500">by {item.author}</span>
+      {/* Modal */}
+      <div className="relative w-full max-w-2xl bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-start gap-4 p-6 border-b border-gray-800">
+          <div className={clsx('w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', colorClass.split(' ').slice(1).join(' '))}>
+            <Icon className={clsx('w-6 h-6', colorClass.split(' ')[0])} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-white">{item.name}</h2>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ring-1', colorClass)}>
+                    {categoryLabel(item.category)}
+                  </span>
+                  <span className="text-xs text-gray-500">v{item.version}</span>
+                </div>
               </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors flex-shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
+        </div>
 
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* Stats row */}
-          <div className="mt-6 flex flex-wrap items-center gap-6 rounded-lg border border-slate-800/60 bg-slate-900/40 px-5 py-3">
-            <div className="flex items-center gap-2">
-              <RatingStars rating={item.rating} />
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-slate-400">
-              <Download className="h-4 w-4" />
+          <div className="flex items-center gap-6">
+            <StarRating rating={item.rating} count={item.ratingCount} />
+            <div className="flex items-center gap-1.5 text-xs text-gray-500">
+              <Download className="w-3.5 h-3.5" />
               {item.installCount.toLocaleString()} installs
             </div>
-            <PriceBadge pricing={item.pricing} />
           </div>
 
           {/* Description */}
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold text-slate-200">Description</h3>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              {item.longDescription || item.description}
-            </p>
+          <p className="text-sm text-gray-300 leading-relaxed">{item.longDescription}</p>
+
+          {/* Meta */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <User className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">{item.author}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+              {new Date(item.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+            </div>
           </div>
 
           {/* Tags */}
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold text-slate-200">Tags</h3>
-            <div className="mt-2 flex flex-wrap gap-2">
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <Tag className="w-3.5 h-3.5 text-gray-500" />
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
               {item.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-md bg-slate-800/80 px-2.5 py-1 text-xs text-slate-400"
+                  className="px-2 py-0.5 bg-gray-800 text-gray-400 text-xs rounded-md font-mono"
                 >
                   {tag}
                 </span>
               ))}
             </div>
           </div>
-
-          {/* Tier */}
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold text-slate-200">Required Tier</h3>
-            <p className="mt-1 text-sm capitalize text-slate-400">{item.tier}</p>
-          </div>
-
-          {/* Install button */}
-          <div className="mt-8 flex items-center gap-3">
-            <button
-              onClick={handleInstall}
-              disabled={installing}
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {installing ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Installing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Install
-                </>
-              )}
-            </button>
-            {item.pricing.type === 'paid' && (
-              <span className="text-xs text-slate-500">
-                ${item.pricing.amount}
-                {item.pricing.interval === 'monthly' && '/month'}
-                {item.pricing.interval === 'yearly' && '/year'}
-                {item.pricing.interval === 'one-time' && ' one-time'}
-              </span>
-            )}
-          </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-// ── Sort dropdown ──────────────────────────────────────────
-type SortKey = 'popular' | 'rating' | 'newest';
-
-function SortDropdown({
-  value,
-  onChange,
-}: {
-  value: SortKey;
-  onChange: (v: SortKey) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const labels: Record<SortKey, string> = {
-    popular: 'Most Popular',
-    rating: 'Highest Rated',
-    newest: 'Newest',
-  };
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs text-slate-300 transition hover:border-slate-700"
-      >
-        <Filter className="h-3.5 w-3.5 text-slate-500" />
-        {labels[value]}
-        <ChevronDown className="h-3 w-3 text-slate-500" />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-slate-800 bg-[#0C0C0F] py-1 shadow-xl">
-            {(Object.keys(labels) as SortKey[]).map((key) => (
-              <button
-                key={key}
-                onClick={() => {
-                  onChange(key);
-                  setOpen(false);
-                }}
-                className={`w-full px-3 py-1.5 text-left text-xs transition hover:bg-slate-800 ${
-                  value === key ? 'text-indigo-400' : 'text-slate-400'
-                }`}
-              >
-                {labels[key]}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ── Main page ──────────────────────────────────────────────
-export default function MarketplacePage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortKey>('popular');
-  const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
-
-  const filteredItems = useMemo(() => {
-    let items = [...marketplaceItems];
-
-    // Category filter
-    if (activeTab !== 'all') {
-      items = items.filter((item) => item.category === activeTab);
-    }
-
-    // Search filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      items = items.filter(
-        (item) =>
-          item.name.toLowerCase().includes(q) ||
-          item.description.toLowerCase().includes(q) ||
-          item.tags.some((tag) => tag.includes(q)) ||
-          item.author.toLowerCase().includes(q)
-      );
-    }
-
-    // Sort
-    switch (sortBy) {
-      case 'rating':
-        items.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'newest':
-        items.sort((a, b) => b.version.localeCompare(a.version));
-        break;
-      case 'popular':
-      default:
-        items.sort((a, b) => b.installCount - a.installCount);
-        break;
-    }
-
-    return items;
-  }, [activeTab, searchQuery, sortBy]);
-
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* ── Header ─────────────────────────────────────── */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          Marketplace
-        </h1>
-        <p className="text-sm text-slate-400">
-          Extend your agents with templates, skills, integrations, and automations.
-        </p>
-      </div>
-
-      {/* ── Search + Sort bar ──────────────────────────── */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search marketplace..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-slate-800 bg-slate-900/60 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none transition focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30"
-          />
-        </div>
-        <SortDropdown value={sortBy} onChange={setSortBy} />
-      </div>
-
-      {/* ── Category tabs ──────────────────────────────── */}
-      <div className="mt-5 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`shrink-0 rounded-lg px-3.5 py-1.5 text-xs font-medium transition ${
-              activeTab === tab.key
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-            }`}
-          >
-            {tab.label}
+        {/* Footer */}
+        <div className="flex items-center gap-3 p-6 border-t border-gray-800 bg-gray-900/50">
+          <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-lg transition-colors">
+            <Download className="w-4 h-4" />
+            Install
           </button>
-        ))}
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors">
+            <ExternalLink className="w-4 h-4" />
+            Docs
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Item Card ────────────────────────────────────────────────────────────────
+
+function ItemCard({ item, onClick }: { item: MarketplaceItem; onClick: () => void }) {
+  const Icon = CATEGORY_ICONS[item.category]
+  const colorClass = CATEGORY_COLORS[item.category]
+
+  return (
+    <button
+      onClick={onClick}
+      className="group w-full text-left bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-gray-700 hover:bg-gray-800/50 transition-all duration-150 flex flex-col gap-3"
+    >
+      {/* Icon + category */}
+      <div className="flex items-start justify-between">
+        <div className={clsx('w-10 h-10 rounded-lg flex items-center justify-center', colorClass.split(' ').slice(1).join(' '))}>
+          <Icon className={clsx('w-5 h-5', colorClass.split(' ')[0])} />
+        </div>
+        {item.featured && (
+          <span className="px-1.5 py-0.5 bg-brand-500/10 text-brand-400 text-[10px] font-medium rounded ring-1 ring-brand-500/20">
+            Featured
+          </span>
+        )}
       </div>
 
-      {/* ── Results count ──────────────────────────────── */}
-      <p className="mt-5 text-xs text-slate-500">
-        {filteredItems.length} item{filteredItems.length !== 1 && 's'} found
+      {/* Name + category */}
+      <div>
+        <h3 className="text-sm font-semibold text-white group-hover:text-brand-300 transition-colors">
+          {item.name}
+        </h3>
+        <span className={clsx('inline-flex items-center mt-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium ring-1', colorClass)}>
+          {categoryLabel(item.category)}
+        </span>
+      </div>
+
+      {/* Description */}
+      <p className="text-xs text-gray-400 leading-relaxed line-clamp-2 flex-1">
+        {item.description}
       </p>
 
-      {/* ── Grid ───────────────────────────────────────── */}
-      {filteredItems.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-800/60 text-3xl">
-            🔍
-          </div>
-          <p className="mt-4 text-sm font-medium text-slate-300">No items found</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Try adjusting your search or filters.
-          </p>
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-1">
+        <StarRating rating={item.rating} count={item.ratingCount} />
+        <div className="flex items-center gap-1 text-xs text-gray-600">
+          <Download className="w-3 h-3" />
+          {item.installCount >= 1000
+            ? `${(item.installCount / 1000).toFixed(1)}k`
+            : item.installCount}
         </div>
-      ) : (
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredItems.map((item) => (
-            <MarketplaceCard
-              key={item.id}
-              item={item}
-              onClick={() => setSelectedItem(item)}
-            />
-          ))}
-        </div>
-      )}
+      </div>
+    </button>
+  )
+}
 
-      {/* ── Detail modal ───────────────────────────────── */}
-      {selectedItem && (
-        <DetailPanel
-          item={selectedItem}
-          onClose={() => setSelectedItem(null)}
-        />
-      )}
-    </div>
-  );
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function MarketplacePage() {
+  const [activeCategory, setActiveCategory] = useState<MarketplaceCategory | 'all'>('all')
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<MarketplaceItem | null>(null)
+
+  const filtered = useMemo(() => {
+    return ITEMS.filter((item) => {
+      const matchCat = activeCategory === 'all' || item.category === activeCategory
+      const q = search.toLowerCase()
+      const matchSearch =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q) ||
+        item.tags.some((t) => t.includes(q))
+      return matchCat && matchSearch
+    })
+  }, [activeCategory, search])
+
+  const counts = useMemo(() => {
+    const map: Record<string, number> = { all: ITEMS.length }
+    ITEMS.forEach((item) => {
+      map[item.category] = (map[item.category] ?? 0) + 1
+    })
+    return map
+  }, [])
+
+  return (
+    <>
+      <div className="min-h-screen bg-gray-950 text-white">
+        {/* Top nav bar */}
+        <header className="sticky top-0 z-40 bg-gray-950/80 backdrop-blur border-b border-gray-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-4">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors mr-2"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              Dashboard
+            </Link>
+            <div className="w-px h-4 bg-gray-800" />
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-brand-600 flex items-center justify-center">
+                <Globe className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="text-sm font-semibold">Marketplace</span>
+            </div>
+
+            <div className="flex-1" />
+
+            {/* Search */}
+            <div className="relative w-full max-w-xs hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search templates, skills…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 transition-colors"
+              />
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          {/* Hero */}
+          <div className="mb-10 text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-3">
+              Agent OS Marketplace
+            </h1>
+            <p className="text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
+              Install agent templates, skills, workflows, and integrations to supercharge your workspace.
+            </p>
+          </div>
+
+          {/* Mobile search */}
+          <div className="relative mb-6 sm:hidden">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 transition-colors"
+            />
+          </div>
+
+          {/* Category tabs */}
+          <div className="flex gap-1 overflow-x-auto pb-1 mb-8 scrollbar-hide">
+            {CATEGORIES.map((cat) => {
+              const Icon = cat.icon
+              const isActive = activeCategory === cat.id
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id as MarketplaceCategory | 'all')}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0',
+                    isActive
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-gray-900 text-gray-400 hover:text-gray-200 hover:bg-gray-800 border border-gray-800'
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {cat.label}
+                  <span className={clsx(
+                    'ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold',
+                    isActive ? 'bg-white/20 text-white' : 'bg-gray-800 text-gray-500'
+                  )}>
+                    {counts[cat.id] ?? 0}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Results count */}
+          <p className="text-xs text-gray-500 mb-4">
+            {filtered.length} {filtered.length === 1 ? 'result' : 'results'}
+            {search && <span> for &ldquo;{search}&rdquo;</span>}
+          </p>
+
+          {/* Grid */}
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <Search className="w-10 h-10 text-gray-700 mb-4" />
+              <p className="text-gray-400 font-medium">No results found</p>
+              <p className="text-sm text-gray-600 mt-1">Try a different search or category</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filtered.map((item) => (
+                <ItemCard key={item.id} item={item} onClick={() => setSelected(item)} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Detail Modal */}
+      {selected && <DetailModal item={selected} onClose={() => setSelected(null)} />}
+    </>
+  )
 }
