@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Smartphone,
   ChevronLeft,
+  Store,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
@@ -27,6 +28,7 @@ const navItems = [
   { label: 'Remote', href: '/remote', icon: Smartphone },
   { label: 'Compute', href: '/compute', icon: Server },
   { label: 'Models', href: '/models', icon: Brain },
+  { label: 'Marketplace', href: '/marketplace', icon: Store },
   { label: 'Billing', href: '/billing', icon: CreditCard },
   { label: 'Settings', href: '/settings', icon: Settings },
 ]

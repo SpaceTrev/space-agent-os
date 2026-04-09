@@ -12,10 +12,18 @@ import { FILTER_TABS } from '@/lib/marketplace-types'
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const tab = searchParams.get('tab') ?? 'all'
+  const category = searchParams.get('category') // direct category filter from workspace page
   const search = searchParams.get('search') ?? ''
 
-  const filterTab = FILTER_TABS.find((t) => t.id === tab) ?? FILTER_TABS[0]
-  let items = filterByCategory(MARKETPLACE_ITEMS, filterTab.categories)
+  let items
+  if (category) {
+    // Direct category filter (used by workspace marketplace page)
+    items = filterByCategory(MARKETPLACE_ITEMS, [category])
+  } else {
+    const filterTab = FILTER_TABS.find((t) => t.id === tab) ?? FILTER_TABS[0]
+    items = filterByCategory(MARKETPLACE_ITEMS, filterTab.categories)
+  }
+
   items = searchItems(items, search)
 
   return NextResponse.json({ items, total: items.length })

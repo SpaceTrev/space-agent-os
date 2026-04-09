@@ -135,3 +135,24 @@ export function categoryLabel(category: MarketplaceCategory): string {
   const meta = CATEGORY_META.find((m) => m.id === category)
   return meta?.label ?? category
 }
+
+// Convenience record aliases (used by workspace-scoped marketplace page)
+export const CATEGORY_LABELS: Record<MarketplaceCategory, string> = {
+  'agent-template': 'Agent Teams',
+  skill: 'Skills',
+  workflow: 'Automations',
+  'playwright-script': 'Scripts',
+  'mcp-integration': 'Integrations',
+  'github-action': 'GitHub Actions',
+  'script-utility': 'Utilities',
+}
+
+export const CATEGORY_COLORS: Record<MarketplaceCategory, string> = {
+  'agent-template': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+  skill: 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+  workflow: 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+  'playwright-script': 'bg-green-500/20 text-green-400 border border-green-500/30',
+  'mcp-integration': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+  'github-action': 'bg-red-500/20 text-red-400 border border-red-500/30',
+  'script-utility': 'bg-teal-500/20 text-teal-400 border border-teal-500/30',
+}
