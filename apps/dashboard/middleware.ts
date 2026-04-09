@@ -16,6 +16,7 @@ const PUBLIC_PATHS = [
   '/api/health',
   '/api/system',
   '/api/billing/webhook',
+  '/api/ops',
   '/api/webhooks',
 ]
 
