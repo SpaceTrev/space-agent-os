@@ -586,30 +586,3 @@ export interface ModelToolCall {
   name: string
   arguments: Record<string, unknown>
 }
-
-// ----------------------------------------------------------
-// Marketplace
-// ----------------------------------------------------------
-
-export type MarketplaceCategory = 'agents' | 'tools' | 'skills' | 'templates' | 'integrations'
-
-export interface MarketplaceItem {
-  id: string
-  name: string
-  description: string
-  long_description: string
-  category: MarketplaceCategory
-  author: string
-  author_verified: boolean
-  /** Monthly price in USD cents — null means free */
-  price_monthly: number | null
-  installs: number
-  rating: number
-  rating_count: number
-  tags: string[]
-  /** Tailwind color token used for the icon gradient */
-  icon_color: string
-  featured: boolean
-  created_at: string
-  updated_at: string
-}
