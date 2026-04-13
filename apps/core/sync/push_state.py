@@ -74,8 +74,8 @@ async def _push_once() -> None:
         model_list = models if isinstance(models, list) else models.get("models", [])
         for model in model_list:
             row = {
-                "name": model.get("name", "unknown"),
-                "available": model.get("available", False),
+                "name": model if isinstance(model, str) else model.get("name", "unknown"),
+                "available": True if isinstance(model, str) else model.get("available", False),
                 "updated_at": now,
             }
             supabase.table("model_status").upsert(row).execute()
