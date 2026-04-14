@@ -36,6 +36,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
+  // If Supabase fails, just let the request through
+  try {
   let response = NextResponse.next({
     request: { headers: req.headers },
   })
@@ -78,6 +80,11 @@ export async function middleware(req: NextRequest) {
   }
 
   return response
+}
+
+  } catch (e) {
+    return NextResponse.next()
+  }
 }
 
 export const config = {
