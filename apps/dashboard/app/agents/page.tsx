@@ -1,6 +1,8 @@
 // apps/dashboard/app/agents/page.tsx
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
