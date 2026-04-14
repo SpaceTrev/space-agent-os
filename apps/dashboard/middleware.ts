@@ -1,17 +1,12 @@
-// ============================================================
-// Agent OS — Middleware
-// Protects app routes, redirects unauthenticated users to /login
-// ============================================================
-
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
 
 const PUBLIC_PATHS = [
   '/login',
   '/signup',
   '/mission-control',
   '/marketplace',
+  '/dispatch',
   '/api/auth/login',
   '/api/auth/signup',
   '/api/health',
@@ -20,13 +15,13 @@ const PUBLIC_PATHS = [
   '/api/ops',
   '/api/webhooks',
   '/api/marketplace',
-  '/dispatch',
+  '/api/sync',
 ]
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Allow public paths, static files, and API webhook routes
+  // Allow public paths, static files, and root
   if (
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith('/_next') ||
@@ -36,20 +31,21 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // If Supabase fails, just let the request through
+  // For non-public routes, try Supabase auth — but don't crash if it fails
   try {
-  let response = NextResponse.next({
-    request: { headers: req.headers },
-  })
+    const { createServerClient } = await import('@supabase/ssr')
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.next()
+    }
+
+    let response = NextResponse.next({ request: { headers: req.headers } })
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
-        getAll() {
-          return req.cookies.getAll()
-        },
+        getAll() { return req.cookies.getAll() },
         setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           cookiesToSet.forEach(({ name, value, options }) => {
             req.cookies.set(name, value)
@@ -57,32 +53,25 @@ export async function middleware(req: NextRequest) {
           })
         },
       },
+    })
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user && (pathname.startsWith('/dashboard') || pathname.match(/^\/[^/]+/))) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      const loginUrl = new URL('/login', req.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
     }
-  )
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Redirect unauthenticated users to login
-  if (!user && (pathname.startsWith('/dashboard') || pathname.match(/^\/[^/]+/))) {
-    // Don't redirect API routes — return 401 instead
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user && (pathname === '/login' || pathname === '/signup')) {
+      return NextResponse.redirect(new URL('/dashboard', req.url))
     }
 
-    const loginUrl = new URL('/login', req.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // Redirect authenticated users away from auth pages
-  if (user && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
-  }
-
-  return response
-}
-
-  } catch (e) {
+    return response
+  } catch {
     return NextResponse.next()
   }
 }
