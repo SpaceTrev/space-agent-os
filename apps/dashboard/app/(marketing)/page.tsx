@@ -72,16 +72,17 @@ function Navbar() {
           <span className="text-sm font-bold tracking-tight text-slate-100">Agent OS</span>
         </Link>
         <div className="hidden md:flex items-center gap-6 text-sm text-slate-400 font-medium">
-          <Link href="#features" className="hover:text-slate-100 hover:-translate-y-[1px] transition-all">Features</Link>
-          <Link href="#protocol" className="hover:text-slate-100 hover:-translate-y-[1px] transition-all">Protocol</Link>
-          <Link href="#pricing" className="hover:text-slate-100 hover:-translate-y-[1px] transition-all">Pricing</Link>
+          <Link href="/mission-control" className="hover:text-slate-100 hover:-translate-y-[1px] transition-all">Mission Control</Link>
+          <Link href="/marketplace" className="hover:text-slate-100 hover:-translate-y-[1px] transition-all">Marketplace</Link>
+          <Link href="/agents" className="hover:text-slate-100 hover:-translate-y-[1px] transition-all">Agents</Link>
+          <Link href="/dispatch" className="hover:text-slate-100 hover:-translate-y-[1px] transition-all">Dispatch</Link>
         </div>
         <div className="flex items-center gap-4">
           <Link href="/login" className="text-sm text-slate-400 hover:text-slate-100 transition-colors hidden sm:block">
             Sign In
           </Link>
           <Link
-            href="/signup"
+            href="/mission-control"
             className="group relative overflow-hidden rounded-full bg-slate-800 px-5 py-2 text-sm font-medium text-slate-100 transition-transform hover:scale-[1.03]"
           >
             <span className="absolute inset-0 bg-indigo-600 translate-y-full transition-transform duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:translate-y-0" />
@@ -148,7 +149,7 @@ function Hero() {
           
           <div className="flex flex-wrap items-center gap-4">
             <Link
-              href="/signup"
+              href="/mission-control"
               className="hero-cta group relative overflow-hidden rounded-full bg-indigo-600 px-8 py-4 font-semibold text-white transition-transform hover:scale-[1.03]"
             >
               <span className="absolute inset-0 bg-indigo-500 translate-y-full transition-transform duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:translate-y-0" />
@@ -556,7 +557,7 @@ function Pricing() {
             <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-400" /> Basic Models</li>
             <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-400" /> Community Support</li>
           </ul>
-          <Link href="/signup" className="mt-auto block w-full rounded-full border border-slate-700 bg-transparent py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">Start Free</Link>
+          <Link href="/mission-control" className="mt-auto block w-full rounded-full border border-slate-700 bg-transparent py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">Start Free</Link>
         </div>
 
         {/* Tier 2 (Pops) */}
@@ -570,7 +571,7 @@ function Pricing() {
             <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-400" /> Approval Workflows</li>
             <li className="flex items-center gap-2"><Check className="h-4 w-4 text-indigo-400" /> Metric Telemetry</li>
           </ul>
-          <Link href="/signup" className="mt-auto group relative overflow-hidden rounded-full bg-indigo-600 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.03]">
+          <Link href="/mission-control" className="mt-auto group relative overflow-hidden rounded-full bg-indigo-600 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.03]">
             <span className="absolute inset-0 bg-indigo-500 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0" />
             <span className="relative z-10">Get Pro</span>
           </Link>
