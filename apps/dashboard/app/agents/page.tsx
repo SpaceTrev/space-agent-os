@@ -29,10 +29,15 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Supabase client                                                    */
 /* ------------------------------------------------------------------ */
-const supabase: SupabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+let _supabase: SupabaseClient | null = null;
+function getSupabase(): SupabaseClient | null {
+  if (_supabase) return _supabase;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  _supabase = createClient(url, key);
+  return _supabase;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Agent definitions                                                  */
@@ -176,7 +181,7 @@ export default function AgentsPage() {
 
   /* ---- Supabase connection check ---- */
   useEffect(() => {
-    const channel = supabase
+    const channel = getSupabase()!
       .channel("connection-check")
       .on("presence", { event: "sync" }, () => setConnected(true))
       .subscribe((status) => {
@@ -184,14 +189,14 @@ export default function AgentsPage() {
       });
 
     return () => {
-      supabase.removeChannel(channel);
+      getSupabase()!.removeChannel(channel);
     };
   }, []);
 
   /* ---- Poll agent statuses from commands table ---- */
   useEffect(() => {
     const fetchStatuses = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()!
         .from("commands")
         .select("payload, status")
         .order("created_at", { ascending: false })
@@ -232,7 +237,7 @@ export default function AgentsPage() {
 
     const pollResults = async () => {
       const ids = Array.from(pendingCommands.current);
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()!
         .from("commands")
         .select("id, status, result, updated_at")
         .in("id", ids);
@@ -294,7 +299,7 @@ export default function AgentsPage() {
     setSending(true);
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()!
         .from("commands")
         .insert({
           type: "agent_chat",
