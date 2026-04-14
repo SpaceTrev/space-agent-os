@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   '/mission-control',
   '/marketplace',
   '/dispatch',
+  '/agents',
   '/api/auth/login',
   '/api/auth/signup',
   '/api/health',

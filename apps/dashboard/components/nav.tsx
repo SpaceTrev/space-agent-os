@@ -18,7 +18,8 @@ import {
 const navLinks = [
   { href: '/mission-control', label: 'Mission Control', icon: Radio },
   { href: '/marketplace', label: 'Marketplace', icon: Store },
-  { href: '/dispatch', label: 'Dispatch', icon: Send },
+  { href: '/agents', label: 'Agents', icon: 'Users' },
+    { href: '/dispatch', label: 'Dispatch', icon: Send },
 ];
 
 export default function Nav() {
