@@ -12,7 +12,7 @@ from .config import supabase
 logger = logging.getLogger("sync.poll_commands")
 
 POLL_INTERVAL = 2  # seconds
-CENTRAL_BRAIN_URL = "http://localhost:8000/command"
+CENTRAL_BRAIN_URL = "http://localhost:8000/dispatch"
 
 
 def _now_iso() -> str:
@@ -24,7 +24,7 @@ async def _dispatch(command: str, payload: dict) -> dict:
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             CENTRAL_BRAIN_URL,
-            json={"command": command, "payload": payload},
+            json={"goal": command, "channel": payload.get("agent") or "dashboard"},
             timeout=30.0,
         )
         resp.raise_for_status()
