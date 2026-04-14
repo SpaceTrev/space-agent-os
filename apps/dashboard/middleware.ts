@@ -19,7 +19,8 @@ const PUBLIC_PATHS = [
   '/api/billing/webhook',
   '/api/ops',
   '/api/webhooks',
-  '/api/marketplace',
+  '/api/marketplace
+  /dispatch',
 ]
 
 export async function middleware(req: NextRequest) {
