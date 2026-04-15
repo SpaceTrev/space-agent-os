@@ -22,6 +22,7 @@
 - [HIGH] Boot worker agent: `python -m agents.worker` and connect to event pipeline @space-claw #infra
 
 ## NORMAL
+- [NORMAL] [DONE 2026-04-14] youtube_ingest skill shipped — apps/core/skills/youtube_ingest.py + POST /ingest/youtube API endpoint. Tested on vIX6ztULs4U. brain/skills/youtube-vix6ztuls4u.md filed. #space-scribe #skills
 - [NORMAL] Add gemma4:31b as BRAIN_MODEL tier in role_spec.py + config/models.yml @agent #models
 - [NORMAL] Write docs/ directory: WORKFLOWS.md, AGENT_ROSTER.md, ROLESPEC.md, DISCORD.md, ARCHITECTURE.md, DEVELOPMENT.md @agent #docs
 - [NORMAL] Implement SkillExtractor: read audit.jsonl, write distilled skills to apps/core/skills/ after each run @agent #skills
@@ -36,7 +37,8 @@
 - [LOW] Add pytest smoke tests for heartbeat, worker, and MCP server tools
 - [LOW] Configure Playwright timesheet automation
 - [LOW] Add Dockerfile / compose.yml for containerised deployment
-- [LOW] Design space-scribe -> brains/research/ ingestion pipeline @agent #content
+- [LOW] Extend youtube_ingest to support Obsidian brains/ vault (currently targets brain/) @agent #content
+- [LOW] Add LLM auto-summarisation retry/backoff for rate-limited envs (in-session OAuth token contention) @agent #skills
 
 ---
 *Last heartbeat: 2026-04-14T03:08:28Z*
