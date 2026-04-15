@@ -56,7 +56,10 @@ async def search(
 
     GET /api/search?query=<q>&projects=<project>&limit=<n>
 
-    Returns a list of result dicts (may be empty), never raises.
+    The worker returns an MCP-style envelope:
+        {"content": [{"type": "text", "text": "<markdown table>"}]}
+    This function normalises that into a list[dict] so callers stay simple.
+    Returns a (possibly empty) list, never raises.
     """
     params = {"query": query, "projects": project, "limit": limit}
 
@@ -65,10 +68,27 @@ async def search(
             resp = await client.get("/api/search", params=params)
             resp.raise_for_status()
             data = resp.json()
-            # Worker may return {"results": [...]} or a bare list
+
+            # Bare list — already structured
             if isinstance(data, list):
                 return data
-            return data.get("results") or data.get("observations") or []
+
+            # Standard keys from hypothetical future JSON API
+            for key in ("results", "observations", "items"):
+                if data.get(key):
+                    return data[key]
+
+            # MCP envelope: {"content": [{"type": "text", "text": "..."}]}
+            content = data.get("content")
+            if content and isinstance(content, list):
+                text_parts = [
+                    c["text"] for c in content
+                    if isinstance(c, dict) and c.get("type") == "text" and c.get("text")
+                ]
+                if text_parts:
+                    return [{"text": "\n".join(text_parts), "title": f"search:{query}"}]
+
+            return []
     except Exception as exc:
         log.warning("claude_mem.search_failed query=%r project=%s error=%s", query, project, exc)
         return []
