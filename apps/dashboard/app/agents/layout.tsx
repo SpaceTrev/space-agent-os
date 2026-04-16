@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function AgentsLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#09090B] text-slate-100">
+    <div className="min-h-screen bg-[var(--surface)] text-[var(--on-surface)]">
       {children}
     </div>
   );

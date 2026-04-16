@@ -73,7 +73,7 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
           <CategoryIcon className="w-6 h-6 text-white" />
         </div>
         {!isFree && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 text-xs font-medium capitalize">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-brand-500/15 text-brand-400 text-xs font-medium capitalize">
             <Sparkles className="w-3 h-3" />
             Pro
           </span>

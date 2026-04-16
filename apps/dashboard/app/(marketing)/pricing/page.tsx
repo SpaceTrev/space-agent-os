@@ -128,14 +128,14 @@ export default function PricingPage() {
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="px-3 py-1 bg-brand-600 text-white text-xs font-semibold rounded-full">
+                  <span className="px-3 py-1 bg-brand-600 text-white text-xs font-semibold rounded-sm">
                     Most Popular
                   </span>
                 </div>
               )}
 
               <div className="mb-6">
-                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold mb-3 ${plan.badgeColor}`}>
+                <span className={`inline-block px-2.5 py-0.5 rounded-sm text-xs font-semibold mb-3 ${plan.badgeColor}`}>
                   {plan.name}
                 </span>
                 <div className="flex items-baseline gap-1 mb-2">
