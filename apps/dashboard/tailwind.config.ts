@@ -34,6 +34,7 @@ const config: Config = {
         secondary:          'var(--secondary)',
         'secondary-container': 'var(--secondary-container)',
         tertiary:           'var(--tertiary)',
+        'tertiary-container': 'var(--tertiary-container)',
 
         // ── Outline ─────────────────────────────────────────────
         'outline-variant':  'var(--outline-variant)',

@@ -26,6 +26,7 @@
   --secondary:          #b58900;
   --secondary-container: #f9e9b0;
   --tertiary:           #6c71c4;
+  --tertiary-container: #e0e2f4;
 
   /* ── Outline (ghost borders, accessibility only) ────────── */
   --outline-variant:    rgba(101, 123, 131, 0.20);
@@ -61,6 +62,7 @@
   --secondary:          #f2bf43;
   --secondary-container: #3a2d00;
   --tertiary:           #aab3e8;
+  --tertiary-container: #1e2048;
 
   /* ── Outline ────────────────────────────────────────────── */
   --outline-variant:    rgba(65, 72, 75, 0.20);
