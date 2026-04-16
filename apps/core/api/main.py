@@ -131,6 +131,18 @@ class DispatchResponse(BaseModel):
     error: str | None = None
 
 
+class MemorySaveRequest(BaseModel):
+    text: str
+    title: str | None = None
+    project: str = "fam-dispatch"
+
+
+class MemorySearchRequest(BaseModel):
+    query: str
+    project: str = "fam-dispatch"
+    limit: int = 5
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 async def _ollama_reachable() -> tuple[bool, list[str]]:
@@ -297,6 +309,32 @@ async def ingest_youtube(req: YoutubeIngestRequest) -> YoutubeIngestResponse:
     except Exception as exc:
         log.error("ingest_youtube.error", error=str(exc))
         return YoutubeIngestResponse(success=False, error=str(exc))
+
+
+# ── Memory (claude-mem) ───────────────────────────────────────────────────────
+
+@app.post("/memory/save")
+async def memory_save(req: MemorySaveRequest) -> dict[str, Any]:
+    """Save an observation to the claude-mem worker (http://localhost:37777)."""
+    sys.path.insert(0, str(CORE_ROOT))
+    from memory.claude_mem import save_memory  # type: ignore[import]
+    result = await save_memory(text=req.text, title=req.title, project=req.project)
+    if result is None:
+        return {"ok": False, "error": "claude-mem worker unreachable or returned error"}
+    return {"ok": True, "result": result}
+
+
+@app.get("/memory/search")
+async def memory_search(
+    query: str,
+    project: str = "fam-dispatch",
+    limit: int = 5,
+) -> dict[str, Any]:
+    """Search claude-mem observations. Query params: query, project, limit."""
+    sys.path.insert(0, str(CORE_ROOT))
+    from memory.claude_mem import search as claude_mem_search  # type: ignore[import]
+    results = await claude_mem_search(query=query, project=project, limit=limit)
+    return {"results": results, "count": len(results), "query": query, "project": project}
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

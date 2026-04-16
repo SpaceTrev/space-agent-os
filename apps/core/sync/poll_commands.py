@@ -2,12 +2,14 @@
 """Poll Supabase for pending commands and dispatch them to CentralBrain."""
 
 import asyncio
+import json
 import logging
 from datetime import datetime, timezone
 
 import httpx
 
 from .config import supabase
+from memory.claude_mem import save_memory
 
 logger = logging.getLogger("sync.poll_commands")
 
@@ -50,6 +52,18 @@ async def _process_command(row: dict) -> None:
             {"status": "completed", "result": result, "updated_at": _now_iso()}
         ).eq("id", cmd_id).execute()
         logger.info("Command %s completed", cmd_id)
+
+        # Persist result to claude-mem for future agent lookups.
+        # Fire-and-forget: memory failure must never block the poll loop.
+        try:
+            result_text = result.get("output") or json.dumps(result)
+            await save_memory(
+                text=result_text,
+                title=command[:120],
+                project="fam-dispatch",
+            )
+        except Exception as mem_exc:
+            logger.warning("claude_mem save skipped for cmd %s: %s", cmd_id, mem_exc)
 
     except Exception as exc:
         error_msg = f"{type(exc).__name__}: {exc}"

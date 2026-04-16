@@ -7,6 +7,10 @@
 - [URGENT] Wire discord_bot /ask -> CentralBrain.handle() @agent #discord #orchestration
 - [URGENT] Wire heartbeat.py dispatch -> CentralBrain.handle() @agent #orchestration
 
+## IN REVIEW
+- [HIGH] claude-mem agent memory layer — PR open on feat/claude-mem-agent-memory @space-claw #memory
+  memory/claude_mem.py (save + search), poll_commands.py hook, /memory/* API endpoints, CentralBrain CHAT enrichment
+
 ## HIGH
 - [HIGH] Wire Timescale DB into FastAPI backend for persistent storage @agent #infra #database
   Set TIMESCALE_URL (or DATABASE_URL) env var in Railway. Use asyncpg to write agent runs, task history,

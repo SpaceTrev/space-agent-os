@@ -204,6 +204,7 @@ class CentralBrain:
             # Fast path: direct LLM call with Space-Claw persona + conversation history
             from agents.role_spec import _resolve_model, _call_openai_compat, _call_anthropic, _call_ollama, RoleSpec, ModelTier
             from agents.role_spec import CLAUDE_MAX_PROXY_URL, CLAUDE_MAX_MODEL, PRIMARY_BACKEND, ANTHROPIC_API_KEY, OLLAMA_ENABLED, ORCHESTRATOR_MODEL
+            from memory.claude_mem import search as claude_mem_search
 
             system = (
                 "You are Space-Claw — an autonomous AI operating system built by Trev Benavides and Pablo Strada. "
@@ -212,6 +213,19 @@ class CentralBrain:
                 "Answer concisely. For build tasks, confirm and act. For questions, be factual. "
                 "You run on Claude Max via a local proxy on Trev's MacBook."
             )
+
+            # Enrich system prompt with relevant past lessons from claude-mem.
+            # Failures are silently swallowed — memory is advisory, not load-bearing.
+            try:
+                past = await claude_mem_search(query=req.goal, project="fam-dispatch", limit=3)
+                if past:
+                    snippets = "\n".join(
+                        f"- {r.get('title') or r.get('text', '')[:120]}"
+                        for r in past
+                    )
+                    system += f"\n\nRelevant past dispatch results:\n{snippets}"
+            except Exception:
+                pass
 
             # Build messages with history
             messages: list[dict[str, str]] = [{"role": "system", "content": system}]
