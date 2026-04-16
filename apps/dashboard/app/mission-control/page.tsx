@@ -379,7 +379,7 @@ export default function MissionControlPage() {
         </section>
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <footer className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <footer className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
           <p className="text-[11px] font-mono text-on-surface-variant">
             Space-Agent-OS · Built on Vercel + Supabase
           </p>

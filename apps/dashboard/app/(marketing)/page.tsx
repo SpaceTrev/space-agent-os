@@ -130,7 +130,7 @@ function Hero() {
           <div className="hero-badge mb-8 inline-flex items-center gap-2 rounded-md bg-[var(--primary)]/10 px-3 py-1 text-xs font-medium text-[var(--primary)]">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--primary)] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--primary)]"></span>
+              <span className="relative inline-flex rounded-lg h-2 w-2 bg-[var(--primary)]"></span>
             </span>
             Now in public beta
           </div>

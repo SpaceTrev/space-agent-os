@@ -124,7 +124,7 @@ function DetailModal({
   const agentItem = isAgentTemplate ? (item as AgentTemplate) : null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--surface)]/70 backdrop-blur-sm" role="dialog" aria-modal>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-[var(--surface)]/70 backdrop-blur-sm"
