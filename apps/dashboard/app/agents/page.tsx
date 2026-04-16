@@ -180,7 +180,10 @@ export default function AgentsPage() {
 
   /* ---- Supabase connection check ---- */
   useEffect(() => {
-    const channel = getSupabase()!
+    const client = getSupabase();
+    if (!client) { setConnected(false); return; }
+
+    const channel = client
       .channel("connection-check")
       .on("presence", { event: "sync" }, () => setConnected(true))
       .subscribe((status) => {
@@ -188,14 +191,16 @@ export default function AgentsPage() {
       });
 
     return () => {
-      getSupabase()!.removeChannel(channel);
+      client.removeChannel(channel);
     };
   }, []);
 
   /* ---- Poll agent statuses from commands table ---- */
   useEffect(() => {
     const fetchStatuses = async () => {
-      const { data, error } = await getSupabase()!
+      const client = getSupabase();
+      if (!client) return;
+      const { data, error } = await client
         .from("commands")
         .select("payload, status")
         .order("created_at", { ascending: false })
@@ -235,8 +240,10 @@ export default function AgentsPage() {
     if (pendingCommands.current.size === 0) return;
 
     const pollResults = async () => {
+      const client = getSupabase();
+      if (!client) return;
       const ids = Array.from(pendingCommands.current);
-      const { data, error } = await getSupabase()!
+      const { data, error } = await client
         .from("commands")
         .select("id, status, result, updated_at")
         .in("id", ids);
@@ -298,7 +305,9 @@ export default function AgentsPage() {
     setSending(true);
 
     try {
-      const { data, error } = await getSupabase()!
+      const client = getSupabase();
+      if (!client) throw new Error("Supabase not configured");
+      const { data, error } = await client
         .from("commands")
         .insert({
           type: "agent_chat",
