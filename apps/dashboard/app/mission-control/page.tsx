@@ -111,20 +111,20 @@ function formatTime(d: Date): string {
 }
 
 const TIER_STYLES: Record<string, { dot: string; badge: string; label: string }> = {
-  orchestrator: { dot: 'bg-purple-400', badge: 'text-purple-400 bg-purple-400/10 border-purple-400/20', label: 'ORCH' },
-  primary:      { dot: 'bg-sky-400',    badge: 'text-sky-400 bg-sky-400/10 border-sky-400/20',       label: 'PRIMARY' },
-  secondary:    { dot: 'bg-amber-400',  badge: 'text-amber-400 bg-amber-400/10 border-amber-400/20', label: 'SECONDARY' },
-  local:        { dot: 'bg-green-400',  badge: 'text-green-400 bg-green-400/10 border-green-400/20', label: 'LOCAL' },
-  tooling:      { dot: 'bg-rose-400',   badge: 'text-rose-400 bg-rose-400/10 border-rose-400/20',    label: 'TOOLING' },
+  orchestrator: { dot: 'bg-primary',   badge: 'text-on-surface bg-primary-container',   label: 'ORCH' },
+  primary:      { dot: 'bg-primary',   badge: 'text-on-surface bg-primary-container',   label: 'PRIMARY' },
+  secondary:    { dot: 'bg-secondary', badge: 'text-on-surface bg-secondary-container', label: 'SECONDARY' },
+  local:        { dot: 'bg-primary',   badge: 'text-on-surface bg-tertiary-container',  label: 'LOCAL' },
+  tooling:      { dot: 'bg-secondary', badge: 'text-on-surface bg-secondary-container', label: 'TOOLING' },
 }
 
 const BRAIN_ICON_MAP: Record<string, React.ElementType> = {
-  building:   Building2,
-  layers:     Layers,
-  folder:     FolderOpen,
-  users:      Users,
+  building:     Building2,
+  layers:       Layers,
+  folder:       FolderOpen,
+  users:        Users,
   'git-branch': GitBranch,
-  calendar:   Calendar,
+  calendar:     Calendar,
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -132,8 +132,8 @@ const BRAIN_ICON_MAP: Record<string, React.ElementType> = {
 function TierBadge({ tier }: { tier: string }) {
   const s = TIER_STYLES[tier] ?? TIER_STYLES.primary
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border ${s.badge}`}>
-      <span className={`w-1 h-1 rounded-full ${s.dot}`} />
+    <span className={`label-sm inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm ${s.badge}`}>
+      <span className={`w-1 h-1 rounded-sm ${s.dot}`} />
       {s.label}
     </span>
   )
@@ -141,24 +141,24 @@ function TierBadge({ tier }: { tier: string }) {
 
 function AgentCard({ agent }: { agent: Agent }) {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex flex-col gap-2 hover:bg-white/[0.06] transition-colors">
+    <div className="rounded-md bg-surface-base p-4 flex flex-col gap-2 hover:bg-surface-bright transition-colors">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-            <Bot className="w-3.5 h-3.5 text-sky-400" />
+          <div className="w-7 h-7 rounded-md bg-surface-low flex items-center justify-center flex-shrink-0">
+            <Bot className="w-3.5 h-3.5 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-white truncate leading-tight">{agent.name}</p>
-            <p className="text-[10px] text-white/40 font-mono truncate">{agent.role}</p>
+            <p className="text-[13px] font-semibold font-display text-on-surface truncate leading-tight">{agent.name}</p>
+            <p className="text-[10px] text-on-surface-variant font-data truncate">{agent.role}</p>
           </div>
         </div>
         <TierBadge tier={agent.tier} />
       </div>
-      <p className="text-[11px] text-white/50 leading-relaxed line-clamp-2">{agent.description}</p>
+      <p className="text-[11px] text-on-surface-variant font-body leading-relaxed line-clamp-2">{agent.description}</p>
       <div className="flex items-center gap-2 pt-0.5">
-        <span className="text-[10px] font-mono text-white/30 truncate">{agent.model}</span>
-        <span className="text-white/20">·</span>
-        <span className="text-[10px] text-white/30">{agent.provider}</span>
+        <span className="text-[10px] font-mono text-on-surface-variant truncate">{agent.model}</span>
+        <span className="text-on-surface-variant/30">·</span>
+        <span className="text-[10px] font-data text-on-surface-variant">{agent.provider}</span>
       </div>
     </div>
   )
@@ -168,31 +168,31 @@ function ModelCard({ model }: { model: ModelConfig }) {
   const s = TIER_STYLES[model.tier] ?? TIER_STYLES.primary
   const isOnline = model.status === 'online'
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex flex-col gap-3 hover:bg-white/[0.06] transition-colors">
+    <div className="rounded-md bg-surface-base p-4 flex flex-col gap-3 hover:bg-surface-bright transition-colors">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-            <Cpu className="w-3.5 h-3.5 text-purple-400" />
+          <div className="w-7 h-7 rounded-md bg-surface-low flex items-center justify-center flex-shrink-0">
+            <Cpu className="w-3.5 h-3.5 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-white truncate">{model.name}</p>
-            <p className="text-[10px] text-white/40 font-mono">{model.provider}</p>
+            <p className="text-[13px] font-semibold font-display text-on-surface truncate">{model.name}</p>
+            <p className="text-[10px] text-on-surface-variant font-data">{model.provider}</p>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
           <TierBadge tier={model.tier} />
-          <span className={`flex items-center gap-1 text-[9px] font-mono ${isOnline ? 'text-green-400' : 'text-white/30'}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-400 animate-pulse' : 'bg-white/20'}`} />
+          <span className={`flex items-center gap-1 text-[9px] font-mono ${isOnline ? 'text-primary' : 'text-on-surface-variant/50'}`}>
+            <span className={`w-1.5 h-1.5 rounded-sm ${isOnline ? 'bg-primary animate-pulse' : 'bg-on-surface-variant/30'}`} />
             {isOnline ? 'ONLINE' : 'OFFLINE'}
           </span>
         </div>
       </div>
-      <p className="text-[11px] text-white/50 leading-relaxed">{model.use_case}</p>
+      <p className="text-[11px] text-on-surface-variant font-body leading-relaxed">{model.use_case}</p>
       <div className="flex items-center gap-3 pt-0.5">
-        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${s.badge}`}>{model.mode}</span>
-        <span className="text-[10px] font-mono text-white/30">{formatCtx(model.context_window)} ctx</span>
+        <span className={`label-sm px-1.5 py-0.5 rounded-sm ${s.badge}`}>{model.mode}</span>
+        <span className="text-[10px] font-mono text-on-surface-variant">{formatCtx(model.context_window)} ctx</span>
       </div>
-      <p className="text-[10px] text-white/25 font-mono leading-snug border-t border-white/5 pt-2">{model.routing_rule}</p>
+      <p className="text-[10px] text-on-surface-variant/60 font-mono leading-snug pt-2">{model.routing_rule}</p>
     </div>
   )
 }
@@ -201,21 +201,21 @@ function BrainCard({ domain, total }: { domain: BrainDomain; total: number }) {
   const IconComponent = BRAIN_ICON_MAP[domain.icon] ?? FolderOpen
   const pct = Math.round((domain.doc_count / total) * 100)
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex flex-col gap-2 hover:bg-white/[0.06] transition-colors">
+    <div className="rounded-md bg-surface-base p-4 flex flex-col gap-2 hover:bg-surface-bright transition-colors">
       <div className="flex items-center gap-2.5">
-        <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-          <IconComponent className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="w-7 h-7 rounded-md bg-primary-container flex items-center justify-center flex-shrink-0">
+          <IconComponent className="w-3.5 h-3.5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-semibold text-white truncate">{domain.name}</p>
-          <p className="text-[9px] text-white/30 font-mono truncate">{domain.path}</p>
+          <p className="text-[12px] font-semibold font-display text-on-surface truncate">{domain.name}</p>
+          <p className="text-[9px] text-on-surface-variant font-mono truncate">{domain.path}</p>
         </div>
-        <span className="text-[18px] font-bold text-white/70 tabular-nums">{domain.doc_count}</span>
+        <span className="text-[18px] font-mono font-bold text-on-surface tabular-nums text-right">{domain.doc_count}</span>
       </div>
-      <p className="text-[10px] text-white/40 leading-relaxed">{domain.description}</p>
-      <div className="h-0.5 rounded-full bg-white/5 overflow-hidden">
+      <p className="text-[10px] text-on-surface-variant font-body leading-relaxed">{domain.description}</p>
+      <div className="h-0.5 rounded-sm bg-surface-low overflow-hidden">
         <div
-          className="h-full rounded-full bg-emerald-500/60 transition-all"
+          className="h-full rounded-sm bg-primary/60 transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -249,27 +249,27 @@ export default function MissionControlPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#080a0e] text-white font-sans">
+    <div className="min-h-screen bg-surface text-on-surface font-body">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 sm:px-6 py-3 bg-[#080a0e]/90 backdrop-blur border-b border-white/[0.06]">
+      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 sm:px-6 py-3 bg-surface/90 backdrop-blur-xl">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-sky-600 flex items-center justify-center">
-            <Terminal className="w-3.5 h-3.5 text-white" />
+          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+            <Terminal className="w-3.5 h-3.5 text-on-surface" />
           </div>
-          <span className="text-sm font-bold tracking-tight text-white font-mono">SPACE-AGENT-OS</span>
+          <span className="text-sm font-bold tracking-tight text-on-surface font-mono">SPACE-AGENT-OS</span>
         </div>
 
-        <div className="w-px h-4 bg-white/10" />
+        <div className="w-px h-4 bg-outline-variant/20" />
 
-        {/* System status pill */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-[10px] font-mono font-semibold text-green-400">ONLINE</span>
+        {/* System status chip */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-primary-container">
+          <span className="w-1.5 h-1.5 rounded-sm bg-primary animate-pulse" />
+          <span className="label-sm text-on-surface">ONLINE</span>
         </div>
 
         {/* API status */}
         {apiOnline !== null && (
-          <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-semibold ${apiOnline ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+          <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-sm label-sm ${apiOnline ? 'bg-primary-container text-on-surface' : 'bg-secondary-container text-on-surface'}`}>
             <Globe className="w-2.5 h-2.5" />
             API {apiOnline ? 'OK' : 'ERR'}
           </div>
@@ -278,23 +278,23 @@ export default function MissionControlPage() {
         <div className="flex-1" />
 
         {/* Version */}
-        <span className="hidden sm:block text-[10px] font-mono text-white/30">
+        <span className="hidden sm:block text-[10px] font-mono text-on-surface-variant">
           {health?.version ?? 'v1.0.0'}
         </span>
 
-        <div className="hidden sm:block w-px h-4 bg-white/10" />
+        <div className="hidden sm:block w-px h-4 bg-outline-variant/20" />
 
         {/* Clock */}
-        <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/40">
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-on-surface-variant">
           <Clock className="w-3 h-3" />
           {formatTime(now)}
         </div>
 
-        <div className="w-px h-4 bg-white/10" />
+        <div className="w-px h-4 bg-outline-variant/20" />
 
         <Link
           href="/login"
-          className="flex items-center gap-1.5 text-[11px] font-medium text-white/50 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-[11px] font-medium text-on-surface-variant hover:text-on-surface transition-colors"
         >
           <LogIn className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Sign in</span>
@@ -306,24 +306,24 @@ export default function MissionControlPage() {
         {/* ── Hero ────────────────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-8">
           <div>
-            <p className="text-[11px] font-mono text-sky-400/80 uppercase tracking-widest mb-2">Mission Control</p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+            <p className="label-sm text-primary mb-2">Mission Control</p>
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-on-surface leading-tight">
               Space-Claw
             </h1>
-            <p className="text-white/40 text-sm mt-1">Your personal AI operating system</p>
+            <p className="text-on-surface-variant font-body text-sm mt-1">Your personal AI operating system</p>
           </div>
           <div className="flex flex-wrap gap-3 sm:ml-auto">
-            <Stat icon={Bot} value={String(AGENTS.length)} label="Agents" color="text-sky-400" />
-            <Stat icon={Cpu} value={String(MODELS.length)} label="Models" color="text-purple-400" />
-            <Stat icon={Brain} value={String(totalDocs)} label="Brain docs" color="text-emerald-400" />
-            <Stat icon={Zap} value={String(BRAIN_DOMAINS.length)} label="Domains" color="text-amber-400" />
+            <Stat icon={Bot} value={String(AGENTS.length)} label="Agents" colorClass="text-primary" />
+            <Stat icon={Cpu} value={String(MODELS.length)} label="Models" colorClass="text-primary" />
+            <Stat icon={Brain} value={String(totalDocs)} label="Brain docs" colorClass="text-primary" />
+            <Stat icon={Zap} value={String(BRAIN_DOMAINS.length)} label="Domains" colorClass="text-secondary" />
           </div>
         </div>
 
         {/* ── Agent Roster ────────────────────────────────────────────────── */}
-        <section>
-          <SectionHeader icon={Bot} title="Agent Roster" count={AGENTS.length} color="text-sky-400" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+        <section className="rounded-md bg-surface-low p-6">
+          <SectionHeader icon={Bot} title="Agent Roster" count={AGENTS.length} colorClass="text-primary" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
             {AGENTS.map((agent) => (
               <AgentCard key={agent.id} agent={agent} />
             ))}
@@ -331,9 +331,9 @@ export default function MissionControlPage() {
         </section>
 
         {/* ── Model Tiers ─────────────────────────────────────────────────── */}
-        <section>
-          <SectionHeader icon={Cpu} title="Model Tiers" count={MODELS.length} color="text-purple-400" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+        <section className="rounded-md bg-surface-low p-6">
+          <SectionHeader icon={Cpu} title="Model Tiers" count={MODELS.length} colorClass="text-primary" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
             {MODELS.map((model) => (
               <ModelCard key={model.id} model={model} />
             ))}
@@ -341,10 +341,10 @@ export default function MissionControlPage() {
         </section>
 
         {/* ── Brain Vault ─────────────────────────────────────────────────── */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <SectionHeader icon={Brain} title="Brain Vault" count={totalDocs} countLabel="docs" color="text-emerald-400" />
-            <div className="flex items-center gap-2 text-[10px] font-mono text-white/30">
+        <section className="rounded-md bg-surface-low p-6">
+          <div className="flex items-center justify-between mb-6">
+            <SectionHeader icon={Brain} title="Brain Vault" count={totalDocs} countLabel="docs" colorClass="text-primary" />
+            <div className="flex items-center gap-2 text-[10px] font-mono text-on-surface-variant">
               <Server className="w-3 h-3" />
               Obsidian · Space-Brain
             </div>
@@ -357,21 +357,21 @@ export default function MissionControlPage() {
         </section>
 
         {/* ── Routing Rules ────────────────────────────────────────────────── */}
-        <section>
-          <SectionHeader icon={Code2} title="Routing Logic" color="text-amber-400" />
-          <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] divide-y divide-white/[0.05]">
+        <section className="rounded-md bg-surface-low p-6">
+          <SectionHeader icon={Code2} title="Routing Logic" colorClass="text-secondary" />
+          <div className="mt-6 rounded-md bg-surface-base divide-y divide-outline-variant/10">
             {[
               { rule: 'Default', desc: 'All tasks route to Claude Opus 4.6 via OpenClaw', tier: 'orchestrator' },
               { rule: 'Long context (>100k)', desc: 'Route to Gemma 4 async pipeline', tier: 'secondary' },
               { rule: 'Offline / privacy', desc: 'Route to Qwen3-Coder 30B on Ollama', tier: 'local' },
               { rule: 'Agent coding session', desc: 'Codex via Claude Code Harness', tier: 'tooling' },
             ].map(({ rule, desc, tier }) => (
-              <div key={rule} className="flex items-start gap-4 px-4 py-3 hover:bg-white/[0.02] transition-colors">
+              <div key={rule} className="flex items-start gap-4 px-4 py-3 hover:bg-surface-bright transition-colors">
                 <TierBadge tier={tier} />
                 <div className="flex-1 min-w-0">
-                  <span className="text-[12px] font-mono text-white/70">{rule}</span>
-                  <span className="text-white/20 mx-2">→</span>
-                  <span className="text-[12px] text-white/40">{desc}</span>
+                  <span className="text-[12px] font-mono text-on-surface">{rule}</span>
+                  <span className="text-on-surface-variant/40 mx-2">→</span>
+                  <span className="text-[12px] font-body text-on-surface-variant">{desc}</span>
                 </div>
               </div>
             ))}
@@ -379,13 +379,13 @@ export default function MissionControlPage() {
         </section>
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <footer className="border-t border-white/[0.06] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[11px] font-mono text-white/20">
+        <footer className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-[11px] font-mono text-on-surface-variant">
             Space-Agent-OS · Built on Vercel + Supabase
           </p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary hover:bg-primary/90 text-on-surface text-sm font-medium transition-colors"
           >
             <LogIn className="w-4 h-4" />
             Open Dashboard
@@ -398,13 +398,13 @@ export default function MissionControlPage() {
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
-function Stat({ icon: Icon, value, label, color }: { icon: React.ElementType; value: string; label: string; color: string }) {
+function Stat({ icon: Icon, value, label, colorClass }: { icon: React.ElementType; value: string; label: string; colorClass: string }) {
   return (
-    <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.03]">
-      <Icon className={`w-4 h-4 flex-shrink-0 ${color}`} />
+    <div className="flex items-center gap-2.5 px-3 py-2 rounded-md bg-surface-base">
+      <Icon className={`w-4 h-4 flex-shrink-0 ${colorClass}`} />
       <div>
-        <p className={`text-lg font-bold leading-none ${color}`}>{value}</p>
-        <p className="text-[10px] text-white/40 mt-0.5">{label}</p>
+        <p className={`text-lg font-mono font-bold leading-none text-right ${colorClass}`}>{value}</p>
+        <p className="text-[10px] font-data text-on-surface-variant mt-0.5">{label}</p>
       </div>
     </div>
   )
@@ -415,20 +415,20 @@ function SectionHeader({
   title,
   count,
   countLabel = 'total',
-  color,
+  colorClass,
 }: {
   icon: React.ElementType
   title: string
   count?: number
   countLabel?: string
-  color: string
+  colorClass: string
 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Icon className={`w-4 h-4 ${color}`} />
-      <h2 className="text-sm font-semibold text-white">{title}</h2>
+      <Icon className={`w-4 h-4 ${colorClass}`} />
+      <h2 className="text-sm font-semibold font-display text-on-surface">{title}</h2>
       {count !== undefined && (
-        <span className="text-[11px] font-mono text-white/30">
+        <span className="text-[11px] font-mono text-on-surface-variant">
           {count} {countLabel}
         </span>
       )}
