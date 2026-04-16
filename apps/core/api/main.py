@@ -103,6 +103,25 @@ class DispatchRequest(BaseModel):
     history: list[dict[str, str]] = []
 
 
+class YoutubeIngestRequest(BaseModel):
+    url: str
+    vault: str = "skills"
+    title_override: str | None = None
+    tags: list[str] = []
+
+
+class YoutubeIngestResponse(BaseModel):
+    success: bool
+    vault_path: str | None = None
+    video_id: str | None = None
+    title: str | None = None
+    channel: str | None = None
+    tldr: str = ""
+    key_takeaways: list[str] = []
+    transcript_chars: int = 0
+    error: str = ""
+
+
 class DispatchResponse(BaseModel):
     request_id: str
     route: str
@@ -272,6 +291,24 @@ async def dispatch(req: DispatchRequest) -> DispatchResponse:
             elapsed_s=elapsed,
             error=str(exc),
         )
+
+
+@app.post("/ingest/youtube")
+async def ingest_youtube(req: YoutubeIngestRequest) -> YoutubeIngestResponse:
+    """Ingest a YouTube video transcript into the Space Scribe brain vault."""
+    sys.path.insert(0, str(CORE_ROOT))
+    try:
+        from skills.youtube_ingest import run_ingest  # type: ignore[import]
+        result = await run_ingest(
+            url_or_id=req.url,
+            vault=req.vault,
+            title_override=req.title_override,
+            extra_tags=req.tags,
+        )
+        return YoutubeIngestResponse(**result.to_dict())
+    except Exception as exc:
+        log.error("ingest_youtube.error", error=str(exc))
+        return YoutubeIngestResponse(success=False, error=str(exc))
 
 
 # ── Memory (claude-mem) ───────────────────────────────────────────────────────
