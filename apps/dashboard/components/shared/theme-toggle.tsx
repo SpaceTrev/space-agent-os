@@ -6,7 +6,7 @@ import { Moon, Sun } from 'lucide-react'
 type Theme = 'light' | 'dark'
 
 function getSystemTheme(): Theme {
-  if (typeof window === 'undefined') return 'dark'
+  if (typeof window === 'undefined') return 'light'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
@@ -22,7 +22,7 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -40,28 +40,21 @@ export function ThemeToggle() {
     applyTheme(next)
   }
 
-  // Avoid hydration mismatch — don't render until mounted
   if (!mounted) {
-    return (
-      <button
-        className="p-2 rounded-lg w-8 h-8"
-        aria-label="Toggle theme"
-        disabled
-      />
-    )
+    return <button className="p-2 rounded-md w-8 h-8" aria-label="Toggle theme" disabled />
   }
 
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+      className="p-2 rounded-md hover:bg-surface-low transition-colors text-on-surface-variant hover:text-on-surface"
       aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={theme === 'dark' ? 'Switch to light mode (Solarized)' : 'Switch to dark mode'}
+      title={theme === 'dark' ? 'Solarized Light' : 'Deep Navy'}
     >
       {theme === 'dark' ? (
-        <Sun className="w-4 h-4 text-gray-400 hover:text-yellow-400 transition-colors" />
+        <Sun className="w-4 h-4" />
       ) : (
-        <Moon className="w-4 h-4 text-[#586e75] hover:text-[#073642] transition-colors" />
+        <Moon className="w-4 h-4" />
       )}
     </button>
   )

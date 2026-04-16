@@ -12,8 +12,6 @@ import {
   ChevronLeft,
   Menu,
   Circle,
-  Wifi,
-  WifiOff,
   Loader2,
   X,
   Sparkles,
@@ -129,10 +127,11 @@ const AGENTS: AgentDef[] = [
   },
 ];
 
+// Tonal tier badges — no border classes
 const TIER_COLORS: Record<Tier, string> = {
-  orchestrator: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
-  specialist: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  worker: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+  orchestrator: "bg-indigo-500/15 text-indigo-400",
+  specialist: "bg-purple-500/15 text-purple-400",
+  worker: "bg-slate-500/15 text-slate-400",
 };
 
 const STATUS_COLORS: Record<AgentStatus, string> = {
@@ -366,15 +365,15 @@ export default function AgentsPage() {
         }}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left group ${
           isSelected
-            ? "bg-indigo-500/15 border border-indigo-500/30"
-            : "hover:bg-slate-800/60 border border-transparent"
+            ? "bg-[var(--surface-container-high)] text-[var(--primary)]"
+            : "hover:bg-[var(--surface-container)]"
         }`}
       >
         <div
           className={`flex items-center justify-center w-8 h-8 rounded-lg ${
             isSelected
-              ? "bg-indigo-500/20 text-indigo-400"
-              : "bg-slate-800 text-slate-400 group-hover:text-slate-300"
+              ? "bg-[var(--primary-container)] text-[var(--primary)]"
+              : "bg-[var(--surface-container)] text-[var(--on-surface-variant)] group-hover:text-[var(--on-surface)]"
           }`}
         >
           {agent.icon}
@@ -383,7 +382,7 @@ export default function AgentsPage() {
           <div className="flex items-center gap-2">
             <span
               className={`text-sm font-medium truncate ${
-                isSelected ? "text-indigo-300" : "text-slate-300"
+                isSelected ? "text-[var(--primary)]" : "text-[var(--on-surface)]"
               }`}
             >
               {agent.name}
@@ -392,7 +391,7 @@ export default function AgentsPage() {
               className={`w-2 h-2 flex-shrink-0 fill-current ${STATUS_COLORS[status]}`}
             />
           </div>
-          <p className="text-xs text-slate-500 truncate">{agent.role}</p>
+          <p className="text-xs text-[var(--on-surface-variant)] truncate">{agent.role}</p>
         </div>
       </button>
     );
@@ -402,46 +401,48 @@ export default function AgentsPage() {
   /*  RENDER                                                           */
   /* ================================================================ */
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[var(--surface)]">
       {/* ---- Mobile overlay ---- */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          className="fixed inset-0 bg-[var(--surface)]/60 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* ---- Sidebar ---- */}
+      {/* ---- Sidebar — no explicit border ---- */}
       <aside
         className={`
           fixed md:static inset-y-0 left-0 z-40
-          w-72 bg-[#0C0C0F] border-r border-slate-800/60
+          w-72 bg-[var(--surface-container-low)]
           flex flex-col transition-transform duration-200
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        {/* Sidebar header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-slate-800/60">
+        {/* Sidebar header — no border, tonal elevation */}
+        <div className="flex items-center justify-between px-4 py-4 bg-[var(--surface-container)]">
           <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-sm font-semibold text-slate-200">
+            <Bot className="w-5 h-5 text-[var(--primary)]" />
+            <h2 className="text-sm font-semibold text-[var(--on-surface)]">
               Agent Swarm
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            {connected ? (
-              <span className="flex items-center gap-1.5 text-xs text-emerald-400">
-                <Wifi className="w-3 h-3" />
-                Live
+            {/* Connection status — inline dot + text, no pill */}
+            <span className="flex items-center gap-1.5 text-xs">
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  connected ? "bg-emerald-400" : "bg-red-400"
+                }`}
+              />
+              <span
+                className={connected ? "text-emerald-400" : "text-red-400"}
+              >
+                {connected ? "Live" : "Offline"}
               </span>
-            ) : (
-              <span className="flex items-center gap-1.5 text-xs text-red-400">
-                <WifiOff className="w-3 h-3" />
-                Offline
-              </span>
-            )}
+            </span>
             <button
-              className="md:hidden p-1 text-slate-400 hover:text-slate-200"
+              className="md:hidden p-1 text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="w-4 h-4" />
@@ -451,21 +452,21 @@ export default function AgentsPage() {
 
         {/* Agent list */}
         <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-          <p className="px-3 py-2 text-[10px] uppercase tracking-widest text-slate-600 font-semibold">
+          <p className="px-3 py-2 text-[10px] uppercase tracking-widest text-[var(--primary)] font-semibold">
             Orchestrators
           </p>
           {AGENTS.filter((a) => a.tier === "orchestrator").map((agent) => (
             <AgentListItem key={agent.id} agent={agent} />
           ))}
 
-          <p className="px-3 pt-4 py-2 text-[10px] uppercase tracking-widest text-slate-600 font-semibold">
+          <p className="px-3 pt-4 py-2 text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] font-semibold">
             Specialists
           </p>
           {AGENTS.filter((a) => a.tier === "specialist").map((agent) => (
             <AgentListItem key={agent.id} agent={agent} />
           ))}
 
-          <p className="px-3 pt-4 py-2 text-[10px] uppercase tracking-widest text-slate-600 font-semibold">
+          <p className="px-3 pt-4 py-2 text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] font-semibold">
             Workers
           </p>
           {AGENTS.filter((a) => a.tier === "worker").map((agent) => (
@@ -473,9 +474,9 @@ export default function AgentsPage() {
           ))}
         </div>
 
-        {/* Sidebar footer */}
-        <div className="px-4 py-3 border-t border-slate-800/60">
-          <p className="text-[10px] text-slate-600">
+        {/* Sidebar footer — no border-t, tonal bg */}
+        <div className="px-4 py-3 bg-[var(--surface-container)]">
+          <p className="text-[10px] text-[var(--on-surface-variant)] opacity-60">
             {AGENTS.length} agents registered
           </p>
         </div>
@@ -485,26 +486,26 @@ export default function AgentsPage() {
       <main className="flex-1 flex flex-col min-w-0">
         {selectedAgent ? (
           <>
-            {/* Chat header */}
-            <header className="flex items-center gap-3 px-4 py-3 border-b border-slate-800/60 bg-[#0C0C0F]/80 backdrop-blur-sm">
+            {/* Chat header — frosted, no border */}
+            <header className="flex items-center gap-3 px-4 py-3 bg-[var(--surface-container-low)] [backdrop-filter:blur(8px)]">
               <button
-                className="md:hidden p-1.5 -ml-1 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800"
+                className="md:hidden p-1.5 -ml-1 text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] rounded-lg hover:bg-[var(--surface-container)]"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-400">
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--primary-container)] text-[var(--primary)]">
                 {selectedAgent.icon}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-sm font-semibold text-slate-100">
+                  <h1 className="text-sm font-semibold text-[var(--on-surface)]">
                     {selectedAgent.name}
                   </h1>
                   <span
-                    className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded border ${
+                    className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-md ${
                       TIER_COLORS[selectedAgent.tier]
                     }`}
                   >
@@ -516,9 +517,9 @@ export default function AgentsPage() {
                     }`}
                   />
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--on-surface-variant)]">
                   {selectedAgent.role} &middot;{" "}
-                  <span className="text-slate-600">{selectedAgent.model}</span>
+                  <span className="opacity-60">{selectedAgent.model}</span>
                 </p>
               </div>
             </header>
@@ -527,12 +528,12 @@ export default function AgentsPage() {
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
               {currentMessages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center gap-3 opacity-50">
-                  <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-slate-500">
+                  <div className="w-12 h-12 rounded-xl bg-[var(--surface-container-high)] flex items-center justify-center text-[var(--on-surface-variant)]">
                     {selectedAgent.icon}
                   </div>
-                  <p className="text-sm text-slate-500 max-w-xs">
+                  <p className="text-sm text-[var(--on-surface-variant)] max-w-xs">
                     Send a message to start a conversation with{" "}
-                    <span className="text-slate-400">
+                    <span className="text-[var(--on-surface)]">
                       {selectedAgent.name}
                     </span>
                   </p>
@@ -555,8 +556,8 @@ export default function AgentsPage() {
                     <div
                       className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5 ${
                         msg.role === "user"
-                          ? "bg-indigo-500/20 text-indigo-400"
-                          : "bg-slate-800 text-slate-400"
+                          ? "bg-[var(--primary-container)] text-[var(--primary)]"
+                          : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)]"
                       }`}
                     >
                       {msg.role === "user" ? (
@@ -566,14 +567,14 @@ export default function AgentsPage() {
                       )}
                     </div>
 
-                    {/* Bubble */}
+                    {/* Bubble — no border */}
                     <div
                       className={`rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
                         msg.role === "user"
-                          ? "bg-indigo-600 text-white"
+                          ? "bg-[var(--primary-container)] text-[var(--on-surface)]"
                           : msg.status === "error"
-                          ? "bg-red-500/10 border border-red-500/20 text-red-300"
-                          : "bg-slate-800/80 text-slate-200 border border-slate-700/50"
+                          ? "bg-red-500/10 text-red-300"
+                          : "bg-[var(--surface-container-high)] text-[var(--on-surface)]"
                       }`}
                     >
                       <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -581,8 +582,8 @@ export default function AgentsPage() {
                       <div
                         className={`flex items-center gap-1.5 mt-1.5 text-[10px] ${
                           msg.role === "user"
-                            ? "text-indigo-300/60 justify-end"
-                            : "text-slate-500"
+                            ? "text-[var(--on-surface-variant)] opacity-60 justify-end"
+                            : "text-[var(--on-surface-variant)] opacity-60"
                         }`}
                       >
                         {msg.status === "pending" && (
@@ -611,8 +612,8 @@ export default function AgentsPage() {
               <div ref={chatEndRef} />
             </div>
 
-            {/* Input */}
-            <div className="px-4 py-3 border-t border-slate-800/60 bg-[#0C0C0F]/80 backdrop-blur-sm">
+            {/* Input — no border, tonal bg */}
+            <div className="px-4 py-3 bg-[var(--surface-container-low)] [backdrop-filter:blur(8px)]">
               <div className="flex items-end gap-2 max-w-3xl mx-auto">
                 <div className="flex-1 relative">
                   <textarea
@@ -626,7 +627,7 @@ export default function AgentsPage() {
                     }}
                     placeholder={`Message ${selectedAgent.name}...`}
                     rows={1}
-                    className="w-full resize-none rounded-xl bg-slate-800/60 border border-slate-700/50 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 max-h-32"
+                    className="w-full resize-none rounded-lg bg-[var(--surface-container)] text-[var(--on-surface)] placeholder:text-[var(--on-surface-variant)] px-4 py-2.5 text-sm focus:ring-2 focus:ring-[var(--primary)]/40 outline-none max-h-32"
                     style={{
                       minHeight: "42px",
                       height: "auto",
@@ -642,7 +643,7 @@ export default function AgentsPage() {
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || sending}
-                  className="flex-shrink-0 p-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="flex-shrink-0 p-2.5 rounded-lg bg-[var(--primary)] text-[var(--surface)] hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
                 >
                   {sending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -651,7 +652,7 @@ export default function AgentsPage() {
                   )}
                 </button>
               </div>
-              <p className="text-center text-[10px] text-slate-600 mt-2">
+              <p className="text-center text-[10px] text-[var(--on-surface-variant)] opacity-50 mt-2">
                 Commands are sent via Supabase &middot; Shift+Enter for new line
               </p>
             </div>
@@ -660,35 +661,35 @@ export default function AgentsPage() {
           /* No agent selected */
           <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4">
             <button
-              className="md:hidden p-2 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 absolute top-4 left-4"
+              className="md:hidden p-2 text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] rounded-lg hover:bg-[var(--surface-container)] absolute top-4 left-4"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="w-16 h-16 rounded-2xl bg-slate-800/60 flex items-center justify-center">
-              <Bot className="w-8 h-8 text-slate-600" />
+            <div className="w-16 h-16 rounded-xl bg-[var(--surface-container-high)] flex items-center justify-center">
+              <Bot className="w-8 h-8 text-[var(--on-surface-variant)]" />
             </div>
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-slate-300">
+              <h2 className="text-lg font-semibold text-[var(--on-surface)]">
                 Agent Chat
               </h2>
-              <p className="text-sm text-slate-500 mt-1 max-w-sm">
+              <p className="text-sm text-[var(--on-surface-variant)] mt-1 max-w-sm">
                 Select an agent from the sidebar to start a conversation.
                 Commands are executed through the Supabase pipeline.
               </p>
             </div>
-            {/* Quick grid on mobile */}
+            {/* Quick grid on mobile — no border */}
             <div className="grid grid-cols-3 gap-2 mt-4 md:hidden">
               {AGENTS.map((agent) => (
                 <button
                   key={agent.id}
                   onClick={() => setSelectedAgent(agent)}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-slate-800/40 border border-slate-700/30 hover:border-indigo-500/30 transition-colors"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[var(--surface-container)] hover:bg-[var(--surface-container-high)] transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-container-high)] flex items-center justify-center text-[var(--on-surface-variant)]">
                     {agent.icon}
                   </div>
-                  <span className="text-[10px] text-slate-400 text-center leading-tight">
+                  <span className="text-[10px] text-[var(--on-surface-variant)] text-center leading-tight">
                     {agent.name.replace("Agent", "")}
                   </span>
                 </button>
