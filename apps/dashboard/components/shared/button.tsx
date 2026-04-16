@@ -15,15 +15,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   default:
-    'bg-gray-700 light:bg-gray-200 text-gray-100 light:text-gray-900 hover:bg-gray-600 light:hover:bg-gray-300 border border-gray-600 light:border-gray-300 hover:border-gray-500 light:hover:border-gray-400',
+    'bg-[var(--surface-container-highest)] text-[var(--on-surface)] hover:bg-[var(--surface-bright)]',
   primary:
-    'bg-brand-600 text-white hover:bg-brand-500 border border-brand-500 hover:border-brand-400 shadow-sm shadow-brand-900/50 light:shadow-brand-200/50',
+    'bg-[var(--primary)] text-[var(--surface)] hover:opacity-90',
   destructive:
-    'bg-red-700 light:bg-red-600 text-white hover:bg-red-600 light:hover:bg-red-500 border border-red-600 light:border-red-500 hover:border-red-500 light:hover:border-red-400',
+    'bg-red-700 light:bg-red-600 text-white hover:bg-red-600 light:hover:bg-red-500',
   ghost:
-    'bg-transparent text-gray-300 light:text-gray-700 hover:bg-gray-800 light:hover:bg-gray-100 hover:text-white light:hover:text-gray-900 border border-transparent',
+    'bg-transparent text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)] hover:text-[var(--on-surface)]',
   outline:
-    'bg-transparent text-gray-200 light:text-gray-700 hover:bg-gray-800 light:hover:bg-gray-100 border border-gray-600 light:border-gray-300 hover:border-gray-400 light:hover:border-gray-400',
+    'bg-transparent text-[var(--on-surface)] hover:bg-[var(--surface-container-high)] border border-[var(--outline-variant)]',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {

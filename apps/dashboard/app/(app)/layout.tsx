@@ -43,7 +43,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 flex flex-col bg-surface border-r border-border-base">
         {/* Logo / Org */}
-        <div className="px-4 py-4 border-b border-border-base">
+        <div className="px-4 py-4 ">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
               <Bot className="w-4 h-4 text-white" />
@@ -167,11 +167,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
 
             {userMenuOpen && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border-base rounded-xl shadow-2xl overflow-hidden z-50">
-                <div className="px-3 py-2 border-b border-border-base">
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-[var(--surface-container-highest)] [backdrop-filter:blur(10px)] rounded-xl overflow-hidden z-50">
+                <div className="px-3 py-2 ">
                   <p className="text-xs text-text-secondary truncate">{user?.email ?? ''}</p>
                 </div>
-                <div className="flex items-center justify-between px-3 py-2 border-b border-border-base">
+                <div className="flex items-center justify-between px-3 py-2 ">
                   <span className="text-xs text-text-secondary">Theme</span>
                   <ThemeToggle />
                 </div>
@@ -198,7 +198,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="h-12 flex items-center px-6 border-b border-border-base bg-surface flex-shrink-0">
+        <header className="h-12 flex items-center px-6  bg-surface flex-shrink-0">
           <div className="flex-1" />
           <div className="flex items-center gap-3">
             <span className="text-xs text-text-muted">{orgName}</span>

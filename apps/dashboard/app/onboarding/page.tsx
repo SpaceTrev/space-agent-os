@@ -128,7 +128,7 @@ function TierBadge({ tier }: { tier: AgentCard['tier'] }) {
   return (
     <span
       className={clsx(
-        'text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full',
+        'text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-sm',
         tier === 'Primary' && 'bg-brand-500/15 text-brand-400 border border-brand-500/20',
         tier === 'Worker' && 'bg-purple-500/15 text-purple-400 border border-purple-500/20',
         tier === 'Local' && 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'

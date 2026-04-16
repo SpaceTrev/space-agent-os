@@ -10,13 +10,13 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  green: 'bg-green-500/15 light:bg-green-100 text-green-400 light:text-green-700 ring-1 ring-inset ring-green-500/30 light:ring-green-300',
-  yellow: 'bg-yellow-500/15 light:bg-yellow-100 text-yellow-400 light:text-yellow-700 ring-1 ring-inset ring-yellow-500/30 light:ring-yellow-300',
-  red: 'bg-red-500/15 light:bg-red-100 text-red-400 light:text-red-700 ring-1 ring-inset ring-red-500/30 light:ring-red-300',
-  gray: 'bg-gray-500/15 light:bg-gray-100 text-gray-400 light:text-gray-700 ring-1 ring-inset ring-gray-500/30 light:ring-gray-300',
-  blue: 'bg-blue-500/15 light:bg-blue-100 text-blue-400 light:text-blue-700 ring-1 ring-inset ring-blue-500/30 light:ring-blue-300',
-  purple: 'bg-purple-500/15 light:bg-purple-100 text-purple-400 light:text-purple-700 ring-1 ring-inset ring-purple-500/30 light:ring-purple-300',
-  orange: 'bg-orange-500/15 light:bg-orange-100 text-orange-400 light:text-orange-700 ring-1 ring-inset ring-orange-500/30 light:ring-orange-300',
+  green: 'bg-green-500/15 light:bg-green-100 text-green-400 light:text-green-700',
+  yellow: 'bg-yellow-500/15 light:bg-yellow-100 text-yellow-400 light:text-yellow-700',
+  red: 'bg-red-500/15 light:bg-red-100 text-red-400 light:text-red-700',
+  gray: 'bg-gray-500/15 light:bg-gray-100 text-gray-400 light:text-gray-700',
+  blue: 'bg-blue-500/15 light:bg-blue-100 text-blue-400 light:text-blue-700',
+  purple: 'bg-purple-500/15 light:bg-purple-100 text-purple-400 light:text-purple-700',
+  orange: 'bg-orange-500/15 light:bg-orange-100 text-orange-400 light:text-orange-700',
 }
 
 const dotColors: Record<BadgeVariant, string> = {
@@ -45,7 +45,7 @@ export function Badge({
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1.5 font-medium rounded-full',
+        'inline-flex items-center gap-1.5 font-medium rounded-sm',
         variantClasses[variant],
         sizeClasses[size],
         className
