@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { clsx } from 'clsx'
-import { Search, Star, Download, X, Tag, Package } from 'lucide-react'
+import { Search, Star, Download, X, Tag, Package, Sparkles } from 'lucide-react'
 import type { MarketplaceItem, AgentTemplate } from '@/lib/marketplace-types'
 import { FILTER_TABS, formatPrice, categoryLabel } from '@/lib/marketplace-types'
 import { MARKETPLACE_ITEMS, filterByCategory, searchItems } from '@/lib/marketplace-data'
@@ -77,9 +77,17 @@ function MarketplaceCard({
       </div>
 
       {/* Name & description */}
-      <h3 className="text-sm font-semibold text-[var(--on-surface)] group-hover:text-[var(--primary)] transition-colors mb-1.5 leading-snug">
-        {item.name}
-      </h3>
+      <div className="flex items-start gap-2 mb-1.5">
+        <h3 className="text-sm font-semibold text-[var(--on-surface)] group-hover:text-[var(--primary)] transition-colors leading-snug flex-1">
+          {item.name}
+        </h3>
+        {item.author === 'FAM Core' && (
+          <span className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-primary-container label-sm text-on-surface">
+            <Sparkles className="w-2.5 h-2.5" />
+            FAM
+          </span>
+        )}
+      </div>
       <p className="text-xs text-[var(--on-surface-variant)] leading-relaxed line-clamp-2 mb-4">
         {item.description}
       </p>
@@ -284,14 +292,15 @@ function DetailModal({
 // Main Page
 // ──────────────────────────────────────────────────────────────
 export default function MarketplacePage() {
-  const [activeTab, setActiveTab] = useState('all')
+  const [activeTab, setActiveTab] = useState('fam')
   const [query, setQuery] = useState('')
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | AgentTemplate | null>(null)
 
   const filteredItems = useMemo(() => {
     const tab = FILTER_TABS.find((t) => t.id === activeTab) ?? FILTER_TABS[0]
     const byCat = filterByCategory(MARKETPLACE_ITEMS, tab.categories)
-    return searchItems(byCat, query)
+    const byAuthor = activeTab === 'fam' ? byCat.filter((i) => i.author === 'FAM Core') : byCat
+    return searchItems(byAuthor, query)
   }, [activeTab, query])
 
   const handleCardClick = useCallback((item: MarketplaceItem | AgentTemplate) => {
@@ -308,8 +317,8 @@ export default function MarketplacePage() {
       <section className="bg-[var(--surface-container-low)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[var(--primary-container)] text-xs text-[var(--primary)] font-medium mb-5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
-            {MARKETPLACE_ITEMS.length} automations available
+            <span className="w-1.5 h-1.5 rounded-sm bg-[var(--primary)] animate-pulse" />
+            {MARKETPLACE_ITEMS.length} automations · {MARKETPLACE_ITEMS.filter(i => i.author === 'FAM Core').length} FAM Core
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-[var(--on-surface)] mb-4">
             Automation Marketplace

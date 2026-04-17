@@ -108,6 +108,7 @@ export interface FilterTab {
 
 export const FILTER_TABS: FilterTab[] = [
   { id: 'all', label: 'All', categories: ['all'] },
+  { id: 'fam', label: 'FAM Core', categories: ['all'] },
   { id: 'agents', label: 'Agent Teams', categories: ['agent-template'] },
   { id: 'skills', label: 'Skills', categories: ['skill'] },
   {

@@ -3,8 +3,9 @@
 // ============================================================
 
 import type { MarketplaceItem, AgentTemplate } from './marketplace-types'
+import { FAM_ITEMS } from './marketplace-fam'
 
-export const MARKETPLACE_ITEMS: (MarketplaceItem | AgentTemplate)[] = [
+const COMMUNITY_ITEMS: (MarketplaceItem | AgentTemplate)[] = [
   // ── Agent Templates ────────────────────────────────────────
   {
     id: 'agent-marketing-manager',
@@ -414,6 +415,12 @@ export const MARKETPLACE_ITEMS: (MarketplaceItem | AgentTemplate)[] = [
     ],
     requirements: ['GitHub repository', 'Railway or Fly.io account', 'Docker registry'],
   },
+]
+
+// FAM Core items appear first — they are the native swarm
+export const MARKETPLACE_ITEMS: (MarketplaceItem | AgentTemplate)[] = [
+  ...FAM_ITEMS,
+  ...COMMUNITY_ITEMS,
 ]
 
 // Lookup by ID
