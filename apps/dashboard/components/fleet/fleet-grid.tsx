@@ -39,11 +39,11 @@ export function FleetGrid({ agents, onAgentClick }: FleetGridProps) {
   if (agents.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center mb-4">
+        <div className="w-16 h-16 rounded-2xl bg-surface-high border border-outline-variant flex items-center justify-center mb-4">
           <span className="text-3xl">🤖</span>
         </div>
-        <p className="text-sm font-medium text-gray-300">No agents yet</p>
-        <p className="text-xs text-gray-500 mt-1">Create your first agent to get started</p>
+        <p className="text-sm font-medium text-on-surface">No agents yet</p>
+        <p className="text-xs text-on-surface-variant mt-1">Create your first agent to get started</p>
       </div>
     )
   }
@@ -53,11 +53,11 @@ export function FleetGrid({ agents, onAgentClick }: FleetGridProps) {
       {groups.map((group) => (
         <section key={group.department}>
           <div className="flex items-center gap-3 mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
               {group.department}
             </h2>
-            <div className="flex-1 h-px bg-gray-800" />
-            <span className="text-xs text-gray-600">{group.agents.length} agents</span>
+            <div className="flex-1 h-px bg-surface-high" />
+            <span className="text-xs text-on-surface-variant">{group.agents.length} agents</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {group.agents.map((agent) => (

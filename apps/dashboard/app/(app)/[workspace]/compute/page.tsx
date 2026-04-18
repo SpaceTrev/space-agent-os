@@ -123,7 +123,7 @@ export default function ComputePage({ params }: { params: Promise<{ workspace: s
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Compute</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-on-surface-variant mt-0.5">
             {runningServers.length} servers running &middot; ${totalCostPerHour.toFixed(3)}/hr current spend
           </p>
         </div>
@@ -142,12 +142,12 @@ export default function ComputePage({ params }: { params: Promise<{ workspace: s
         ].map((stat) => {
           const Icon = stat.icon
           return (
-            <div key={stat.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div key={stat.label} className="bg-surface-base border border-outline-variant rounded-xl p-4">
               <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center mb-3', stat.bg)}>
                 <Icon className={clsx('w-4 h-4', stat.color)} />
               </div>
               <p className="text-xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
+              <p className="text-xs text-on-surface-variant mt-0.5">{stat.label}</p>
             </div>
           )
         })}
@@ -156,22 +156,22 @@ export default function ComputePage({ params }: { params: Promise<{ workspace: s
       {/* Server list */}
       {servers.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center mb-4">
-            <Server className="w-8 h-8 text-gray-600" />
+          <div className="w-16 h-16 rounded-2xl bg-surface-high border border-outline-variant flex items-center justify-center mb-4">
+            <Server className="w-8 h-8 text-on-surface-variant" />
           </div>
-          <p className="text-sm font-medium text-gray-300">No compute servers</p>
-          <p className="text-xs text-gray-500 mt-1">Provision a server to run your agents</p>
+          <p className="text-sm font-medium text-on-surface">No compute servers</p>
+          <p className="text-xs text-on-surface-variant mt-1">Provision a server to run your agents</p>
         </div>
       ) : (
         <div className="space-y-4">
           {servers.map((server) => {
             const config = statusConfig[server.status] ?? statusConfig.stopped
             return (
-              <div key={server.id} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              <div key={server.id} className="bg-surface-base border border-outline-variant rounded-xl p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
-                      <Server className="w-5 h-5 text-gray-500" />
+                    <div className="relative w-10 h-10 rounded-xl bg-surface-high border border-outline-variant flex items-center justify-center flex-shrink-0">
+                      <Server className="w-5 h-5 text-on-surface-variant" />
                       <span className={clsx(
                         'absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-gray-900',
                         config.dot
@@ -182,7 +182,7 @@ export default function ComputePage({ params }: { params: Promise<{ workspace: s
                         <p className="text-sm font-semibold text-white">{server.name}</p>
                         <Badge variant={config.variant} size="sm" dot>{config.label}</Badge>
                       </div>
-                      <p className="text-xs text-gray-500">{server.provider} {server.region ? `· ${server.region}` : ''}</p>
+                      <p className="text-xs text-on-surface-variant">{server.provider} {server.region ? `· ${server.region}` : ''}</p>
                     </div>
                   </div>
 
@@ -204,15 +204,15 @@ export default function ComputePage({ params }: { params: Promise<{ workspace: s
 
                 {/* Specs */}
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 text-xs text-on-surface-variant">
                     <Cpu className="w-3.5 h-3.5" />
                     {server.cpu} vCPU
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 text-xs text-on-surface-variant">
                     <Database className="w-3.5 h-3.5" />
                     {(server.memory_mb / 1024).toFixed(0)} GB RAM
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 text-xs text-on-surface-variant">
                     <HardDrive className="w-3.5 h-3.5" />
                     {server.disk_gb} GB disk
                   </div>
@@ -223,7 +223,7 @@ export default function ComputePage({ params }: { params: Promise<{ workspace: s
                 </div>
 
                 {/* Footer info */}
-                <div className="mt-3 flex items-center gap-4 text-xs text-gray-600">
+                <div className="mt-3 flex items-center gap-4 text-xs text-on-surface-variant">
                   {server.started_at && (
                     <span>Uptime: {formatUptime(server.started_at)}</span>
                   )}
@@ -282,7 +282,7 @@ export default function ComputePage({ params }: { params: Promise<{ workspace: s
             value={size}
             onChange={(e) => setSize(e.target.value)}
           />
-          <div className="p-3 bg-gray-800 rounded-lg text-xs text-gray-500">
+          <div className="p-3 bg-surface-high rounded-lg text-xs text-on-surface-variant">
             Estimated cost: <span className="text-yellow-400 font-mono">
               {size === 'small' ? '$0.06' : size === 'medium' ? '$0.12' : '$0.24'}/hr
             </span>

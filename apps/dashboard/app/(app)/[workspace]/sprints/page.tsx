@@ -173,7 +173,7 @@ export default function SprintsPage({ params }: { params: Promise<{ workspace: s
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Sprints</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{sprints.length} sprints total</p>
+          <p className="text-sm text-on-surface-variant mt-0.5">{sprints.length} sprints total</p>
         </div>
         <Button variant="primary" onClick={() => setNewSprintOpen(true)}>
           <Plus className="w-4 h-4" />
@@ -183,11 +183,11 @@ export default function SprintsPage({ params }: { params: Promise<{ workspace: s
 
       {sprints.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center mb-4">
-            <GitBranch className="w-8 h-8 text-gray-600" />
+          <div className="w-16 h-16 rounded-2xl bg-surface-high border border-outline-variant flex items-center justify-center mb-4">
+            <GitBranch className="w-8 h-8 text-on-surface-variant" />
           </div>
-          <p className="text-sm font-medium text-gray-300">No sprints yet</p>
-          <p className="text-xs text-gray-500 mt-1">Create a sprint to organize your agent tasks</p>
+          <p className="text-sm font-medium text-on-surface">No sprints yet</p>
+          <p className="text-xs text-on-surface-variant mt-1">Create a sprint to organize your agent tasks</p>
         </div>
       )}
 
@@ -196,7 +196,7 @@ export default function SprintsPage({ params }: { params: Promise<{ workspace: s
         <div className="mb-8 group">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Sprint</span>
+            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Active Sprint</span>
           </div>
           <Link href={`/${workspace}/sprints/${activeSprint.id}`} className="block transition-transform group-hover:-translate-y-1 duration-300">
             <SprintBoard {...activeSprint} />
@@ -207,7 +207,7 @@ export default function SprintsPage({ params }: { params: Promise<{ workspace: s
       {/* Other sprints */}
       {otherSprints.length > 0 && (
         <div>
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">All Sprints</h2>
+          <h2 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-4">All Sprints</h2>
           <div className="space-y-4">
             {otherSprints.map((sprint) => (
               <Link key={sprint.id} href={`/${workspace}/sprints/${sprint.id}`} className="block transition-transform hover:-translate-y-1 duration-300">

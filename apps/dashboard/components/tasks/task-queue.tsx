@@ -53,8 +53,8 @@ export function TaskQueue({ tasks, onTaskClick, loading }: TaskQueueProps) {
               className={clsx(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap',
                 activeFilter === tab.value
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                  ? 'bg-surface-highest text-white'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-high'
               )}
             >
               {tab.label}
@@ -63,8 +63,8 @@ export function TaskQueue({ tasks, onTaskClick, loading }: TaskQueueProps) {
                   className={clsx(
                     'inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-semibold px-1',
                     activeFilter === tab.value
-                      ? 'bg-gray-600 text-gray-200'
-                      : 'bg-gray-800 text-gray-500'
+                      ? 'bg-on-surface-variant/40 text-on-surface'
+                      : 'bg-surface-high text-on-surface-variant'
                   )}
                 >
                   {count}
@@ -79,13 +79,13 @@ export function TaskQueue({ tasks, onTaskClick, loading }: TaskQueueProps) {
       {loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-28 bg-gray-800 rounded-xl animate-pulse border border-gray-700" />
+            <div key={i} className="h-28 bg-surface-high rounded-xl animate-pulse border border-outline-variant" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-sm text-gray-400">No tasks found</p>
-          <p className="text-xs text-gray-600 mt-1">
+          <p className="text-sm text-on-surface-variant">No tasks found</p>
+          <p className="text-xs text-on-surface-variant mt-1">
             {activeFilter !== 'all' ? `No ${activeFilter} tasks` : 'Dispatch a task to get started'}
           </p>
         </div>

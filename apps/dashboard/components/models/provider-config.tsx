@@ -29,7 +29,7 @@ const providerColors: Record<ModelProviderType, string> = {
   groq: 'text-green-400',
   mistral: 'text-yellow-400',
   openrouter: 'text-pink-400',
-  ollama: 'text-gray-400',
+  ollama: 'text-on-surface-variant',
 }
 
 export function ProviderConfig({
@@ -53,7 +53,7 @@ export function ProviderConfig({
   const [error, setError] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(!isVerified)
 
-  const colorClass = providerColors[providerType] || 'text-gray-400'
+  const colorClass = providerColors[providerType] || 'text-on-surface-variant'
 
   const handleSave = async () => {
     setError(null)
@@ -75,14 +75,14 @@ export function ProviderConfig({
   }
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+    <div className="bg-surface-high border border-outline-variant rounded-xl overflow-hidden">
       {/* Header */}
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-750 transition-colors text-left"
+        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-surface-base transition-colors text-left"
       >
-        <div className={clsx('w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center text-sm font-bold', colorClass)}>
+        <div className={clsx('w-9 h-9 rounded-lg bg-surface-highest flex items-center justify-center text-sm font-bold', colorClass)}>
           {logoChar || displayName[0]}
         </div>
         <div className="flex-1 min-w-0">
@@ -97,7 +97,7 @@ export function ProviderConfig({
             )}
           </div>
           {defaultModel && (
-            <p className="text-xs text-gray-500 mt-0.5 truncate">Default: {defaultModel}</p>
+            <p className="text-xs text-on-surface-variant mt-0.5 truncate">Default: {defaultModel}</p>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -111,7 +111,7 @@ export function ProviderConfig({
             }}
             className={clsx(
               'relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer',
-              active ? 'bg-brand-600' : 'bg-gray-700'
+              active ? 'bg-brand-600' : 'bg-surface-highest'
             )}
           >
             <span
@@ -122,7 +122,7 @@ export function ProviderConfig({
             />
           </div>
           <div className={clsx('transition-transform', expanded ? 'rotate-180' : '')}>
-            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
@@ -131,11 +131,11 @@ export function ProviderConfig({
 
       {/* Expanded body */}
       {expanded && (
-        <div className="px-5 pb-5 border-t border-gray-700 pt-4 flex flex-col gap-4">
+        <div className="px-5 pb-5 border-t border-outline-variant pt-4 flex flex-col gap-4">
           {/* API Key */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-gray-300">
+              <label className="text-sm font-medium text-on-surface">
                 API Key {hasApiKey && <span className="text-green-400 text-xs ml-1">(saved)</span>}
               </label>
               {docsUrl && (
@@ -157,8 +157,8 @@ export function ProviderConfig({
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={hasApiKey ? '••••••••••••••••' : 'sk-...'}
                 className={clsx(
-                  'block w-full rounded-lg border bg-gray-900 text-sm text-white placeholder-gray-600',
-                  'border-gray-600 hover:border-gray-500',
+                  'block w-full rounded-lg border bg-surface-base text-sm text-white placeholder-on-surface-variant/50',
+                  'border-outline-variant hover:border-primary/50',
                   'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
                   'px-3 py-2 pr-10'
                 )}
@@ -166,7 +166,7 @@ export function ProviderConfig({
               <button
                 type="button"
                 onClick={() => setShowKey((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
               >
                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -176,13 +176,13 @@ export function ProviderConfig({
           {/* Default model */}
           {availableModels.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Default Model</label>
+              <label className="block text-sm font-medium text-on-surface mb-1.5">Default Model</label>
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className={clsx(
-                  'block w-full rounded-lg border bg-gray-900 text-sm text-white',
-                  'border-gray-600 hover:border-gray-500',
+                  'block w-full rounded-lg border bg-surface-base text-sm text-white',
+                  'border-outline-variant hover:border-primary/50',
                   'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
                   'px-3 py-2'
                 )}

@@ -47,18 +47,18 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-full">
       {/* Workspace sidebar */}
-      <aside className="w-48 flex-shrink-0 flex flex-col bg-gray-900 light:bg-gray-50 border-r border-gray-800 light:border-gray-200">
+      <aside className="w-48 flex-shrink-0 flex flex-col bg-surface-base light:bg-gray-50 border-r border-outline-variant light:border-gray-200">
         {/* Workspace header */}
-        <div className="px-3 py-3 border-b border-gray-800 light:border-gray-200">
+        <div className="px-3 py-3 border-b border-outline-variant light:border-gray-200">
           <Link
             href="/dashboard"
-            className="flex items-center gap-1.5 text-xs text-gray-500 light:text-gray-600 hover:text-gray-300 light:hover:text-gray-800 transition-colors mb-2"
+            className="flex items-center gap-1.5 text-xs text-on-surface-variant light:text-on-surface-variant hover:text-on-surface light:hover:text-gray-800 transition-colors mb-2"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             All workspaces
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-gray-700 light:bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-300 light:text-gray-700">
+            <div className="w-6 h-6 rounded bg-surface-highest light:bg-gray-300 flex items-center justify-center text-xs font-bold text-on-surface light:text-on-surface-variant">
               {displayName.charAt(0).toUpperCase()}
             </div>
             <span className="text-sm font-semibold text-white light:text-gray-900 truncate">
@@ -83,8 +83,8 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                 className={clsx(
                   'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
                   isActive
-                    ? 'bg-gray-800 light:bg-gray-200 text-white light:text-gray-900 font-medium'
-                    : 'text-gray-400 light:text-gray-600 hover:text-white light:hover:text-gray-900 hover:bg-gray-800 light:hover:bg-gray-100'
+                    ? 'bg-surface-high light:bg-gray-200 text-white light:text-gray-900 font-medium'
+                    : 'text-on-surface-variant light:text-on-surface-variant hover:text-white light:hover:text-gray-900 hover:bg-surface-high light:hover:bg-gray-100'
                 )}
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />

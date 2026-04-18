@@ -255,7 +255,7 @@ export default function OnboardingPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col items-center px-4 py-8 md:py-16">
+    <div className="min-h-screen bg-surface flex flex-col items-center px-4 py-8 md:py-16">
       {/* Logo */}
       <div className="flex items-center gap-2.5 mb-10 md:mb-14 self-start md:self-center">
         <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-900/50">
@@ -267,10 +267,10 @@ export default function OnboardingPage() {
       {/* Progress bar */}
       <div className="w-full max-w-xl mb-8 md:mb-10">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-600 font-medium">Step {Math.min(step, 5)} of 5</span>
-          <span className="text-xs text-gray-700">{Math.round(progress)}%</span>
+          <span className="text-xs text-on-surface-variant font-medium">Step {Math.min(step, 5)} of 5</span>
+          <span className="text-xs text-on-surface-variant">{Math.round(progress)}%</span>
         </div>
-        <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+        <div className="h-1 bg-surface-high rounded-full overflow-hidden">
           <div
             className="h-full bg-brand-500 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
@@ -293,7 +293,7 @@ export default function OnboardingPage() {
               <h1 className="text-2xl md:text-3xl font-bold text-white leading-snug">
                 Hey. I&apos;m Space-Claw.
               </h1>
-              <p className="text-gray-400 mt-2 text-base md:text-lg leading-relaxed">
+              <p className="text-on-surface-variant mt-2 text-base md:text-lg leading-relaxed">
                 Before we set up your team, tell me about your business.
               </p>
             </div>
@@ -303,7 +303,7 @@ export default function OnboardingPage() {
               value={businessDesc}
               onChange={(e) => setBusinessDesc(e.target.value)}
               placeholder="e.g. We run a Mexican e-commerce store selling handmade crafts..."
-              className="w-full rounded-xl border border-gray-800 bg-gray-900 text-white placeholder-gray-600 text-sm md:text-base px-4 py-3.5 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent hover:border-gray-700 transition-colors"
+              className="w-full rounded-xl border border-outline-variant bg-surface-base text-white placeholder-on-surface-variant/50 text-sm md:text-base px-4 py-3.5 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent hover:border-outline-variant transition-colors"
             />
             <button
               onClick={handleStep1}
@@ -318,7 +318,7 @@ export default function OnboardingPage() {
         {/* ── STEP 2 ── */}
         {step === 2 && (
           <div>
-            <button onClick={() => goTo(1)} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+            <button onClick={() => goTo(1)} className="flex items-center gap-1.5 text-on-surface-variant hover:text-on-surface text-sm mb-6 transition-colors">
               <ArrowLeft className="w-3.5 h-3.5" /> Back
             </button>
             <div className="mb-8">
@@ -330,7 +330,7 @@ export default function OnboardingPage() {
               <h2 className="text-2xl md:text-3xl font-bold text-white leading-snug">
                 How big is the team?
               </h2>
-              <p className="text-gray-400 mt-2 text-sm md:text-base">
+              <p className="text-on-surface-variant mt-2 text-sm md:text-base">
                 Human employees this will replace or assist.
               </p>
             </div>
@@ -343,12 +343,12 @@ export default function OnboardingPage() {
                     'flex items-center gap-3 px-4 py-4 rounded-xl border text-left transition-all',
                     teamSize === size
                       ? 'border-brand-500 bg-brand-500/10 text-white'
-                      : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-gray-200'
+                      : 'border-outline-variant bg-surface-base text-on-surface-variant hover:border-outline-variant hover:text-on-surface'
                   )}
                 >
                   <div className={clsx(
                     'w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all',
-                    teamSize === size ? 'border-brand-500 bg-brand-500' : 'border-gray-600'
+                    teamSize === size ? 'border-brand-500 bg-brand-500' : 'border-outline-variant'
                   )}>
                     {teamSize === size && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
@@ -369,7 +369,7 @@ export default function OnboardingPage() {
         {/* ── STEP 3 ── */}
         {step === 3 && (
           <div>
-            <button onClick={() => goTo(2)} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+            <button onClick={() => goTo(2)} className="flex items-center gap-1.5 text-on-surface-variant hover:text-on-surface text-sm mb-6 transition-colors">
               <ArrowLeft className="w-3.5 h-3.5" /> Back
             </button>
             <div className="mb-8">
@@ -377,7 +377,7 @@ export default function OnboardingPage() {
               <h2 className="text-2xl md:text-3xl font-bold text-white leading-snug">
                 What takes up most of your team&apos;s time?
               </h2>
-              <p className="text-gray-400 mt-2 text-sm md:text-base">
+              <p className="text-on-surface-variant mt-2 text-sm md:text-base">
                 Pick up to 3 — these become your first agent workflows.
               </p>
             </div>
@@ -406,8 +406,8 @@ export default function OnboardingPage() {
                       selected
                         ? 'border-brand-500 bg-brand-500/15 text-brand-300'
                         : maxed
-                        ? 'border-gray-800 bg-gray-900/50 text-gray-700 cursor-not-allowed'
-                        : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-600 hover:text-gray-200'
+                        ? 'border-outline-variant bg-surface-base/50 text-on-surface-variant cursor-not-allowed'
+                        : 'border-outline-variant bg-surface-base text-on-surface-variant hover:border-outline-variant hover:text-on-surface'
                     )}
                   >
                     {selected && <Check className="w-3 h-3" />}
@@ -417,7 +417,7 @@ export default function OnboardingPage() {
               })}
             </div>
             {workflows.length > 0 && (
-              <p className="mt-3 text-xs text-gray-600">{workflows.length}/3 selected</p>
+              <p className="mt-3 text-xs text-on-surface-variant">{workflows.length}/3 selected</p>
             )}
             <button
               onClick={handleStep3}
@@ -432,7 +432,7 @@ export default function OnboardingPage() {
         {/* ── STEP 4 ── */}
         {step === 4 && (
           <div>
-            <button onClick={() => goTo(3)} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-300 text-sm mb-6 transition-colors">
+            <button onClick={() => goTo(3)} className="flex items-center gap-1.5 text-on-surface-variant hover:text-on-surface text-sm mb-6 transition-colors">
               <ArrowLeft className="w-3.5 h-3.5" /> Back
             </button>
             <div className="mb-8">
@@ -440,7 +440,7 @@ export default function OnboardingPage() {
               <h2 className="text-2xl md:text-3xl font-bold text-white leading-snug">
                 What tools are you already using?
               </h2>
-              <p className="text-gray-400 mt-2 text-sm md:text-base">
+              <p className="text-on-surface-variant mt-2 text-sm md:text-base">
                 We&apos;ll pre-configure integrations for your team.
               </p>
             </div>
@@ -469,7 +469,7 @@ export default function OnboardingPage() {
                       'flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-medium transition-all',
                       selected
                         ? 'border-brand-500 bg-brand-500/15 text-brand-300'
-                        : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-600 hover:text-gray-200'
+                        : 'border-outline-variant bg-surface-base text-on-surface-variant hover:border-outline-variant hover:text-on-surface'
                     )}
                   >
                     {selected && <Check className="w-3 h-3" />}
@@ -499,18 +499,18 @@ export default function OnboardingPage() {
                     Configuring your agent team...
                   </h2>
                 </div>
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 font-mono text-sm">
-                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-800">
+                <div className="bg-surface-base border border-outline-variant rounded-xl p-5 font-mono text-sm">
+                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-outline-variant">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
                     <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-                    <span className="text-gray-600 text-xs ml-2">space-claw — agent-config</span>
+                    <span className="text-on-surface-variant text-xs ml-2">space-claw — agent-config</span>
                   </div>
                   <div className="space-y-2 min-h-[120px]">
                     {terminalLines.map((line, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <span className="text-brand-500">›</span>
-                        <span className="text-gray-300">{line}</span>
+                        <span className="text-on-surface">{line}</span>
                       </div>
                     ))}
                     <div className="flex items-center gap-2">
@@ -530,7 +530,7 @@ export default function OnboardingPage() {
                   <h2 className="text-2xl md:text-3xl font-bold text-white leading-snug">
                     Meet your agent team.
                   </h2>
-                  <p className="text-gray-400 mt-2 text-sm md:text-base">
+                  <p className="text-on-surface-variant mt-2 text-sm md:text-base">
                     {agentTeam.length} agents configured and ready to deploy.
                   </p>
                 </div>
@@ -538,7 +538,7 @@ export default function OnboardingPage() {
                   {agentTeam.map((agent, i) => (
                     <div
                       key={agent.name}
-                      className="flex items-center gap-4 p-4 bg-gray-900 border border-gray-800 rounded-xl transition-all hover:border-gray-700"
+                      className="flex items-center gap-4 p-4 bg-surface-base border border-outline-variant rounded-xl transition-all hover:border-outline-variant"
                       style={{
                         animationDelay: `${i * 80}ms`,
                         animation: 'slideIn 0.3s ease-out both',
@@ -552,7 +552,7 @@ export default function OnboardingPage() {
                           <span className="text-sm font-semibold text-white">{agent.name}</span>
                           <TierBadge tier={agent.tier} />
                         </div>
-                        <p className="text-xs text-gray-500 leading-snug">{agent.description}</p>
+                        <p className="text-xs text-on-surface-variant leading-snug">{agent.description}</p>
                       </div>
                     </div>
                   ))}
@@ -564,7 +564,7 @@ export default function OnboardingPage() {
                   <Zap className="w-4 h-4" />
                   Launch your team →
                 </button>
-                <p className="text-center text-xs text-gray-700 mt-3">
+                <p className="text-center text-xs text-on-surface-variant mt-3">
                   You can edit and add agents anytime from your dashboard.
                 </p>
               </div>

@@ -27,20 +27,20 @@ export function Card({
   return (
     <div
       className={clsx(
-        'bg-gray-800 border border-gray-700 rounded-xl',
-        hoverable && 'hover:border-gray-600 hover:bg-gray-750 transition-all duration-150 cursor-pointer',
+        'bg-surface-high border border-outline-variant rounded-xl',
+        hoverable && 'hover:border-outline-variant hover:bg-surface-base transition-all duration-150 cursor-pointer',
         className
       )}
       {...props}
     >
       {header && (
-        <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
           {header}
         </div>
       )}
       <div className={clsx(padding !== 'none' ? paddingClasses[padding] : '')}>{children}</div>
       {footer && (
-        <div className="px-5 py-4 border-t border-gray-700 bg-gray-800/60 rounded-b-xl">
+        <div className="px-5 py-4 border-t border-outline-variant bg-surface-high/60 rounded-b-xl">
           {footer}
         </div>
       )}
@@ -62,7 +62,7 @@ interface CardDescriptionProps extends HTMLAttributes<HTMLParagraphElement> {}
 
 export function CardDescription({ className, children, ...props }: CardDescriptionProps) {
   return (
-    <p className={clsx('text-xs text-gray-400 mt-0.5', className)} {...props}>
+    <p className={clsx('text-xs text-on-surface-variant mt-0.5', className)} {...props}>
       {children}
     </p>
   )

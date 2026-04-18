@@ -99,23 +99,23 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {/* Back Link */}
-      <Link href={`/${workspace}/sprints`} className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-6 transition-colors">
+      <Link href={`/${workspace}/sprints`} className="inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-white mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Sprints
       </Link>
 
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">{sprint.name}</h1>
-        <p className="text-gray-400 max-w-2xl">{sprint.description}</p>
+        <p className="text-on-surface-variant max-w-2xl">{sprint.description}</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-6 border-b border-gray-800 mb-8">
+      <div className="flex items-center gap-6 border-b border-outline-variant mb-8">
         <button
           onClick={() => setActiveTab('board')}
           className={clsx(
             "pb-3 text-sm font-medium transition-colors border-b-2",
-            activeTab === 'board' ? "border-brand-500 text-brand-400" : "border-transparent text-gray-400 hover:text-gray-200"
+            activeTab === 'board' ? "border-brand-500 text-brand-400" : "border-transparent text-on-surface-variant hover:text-on-surface"
           )}
         >
           Board
@@ -124,7 +124,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
           onClick={() => setActiveTab('standups')}
           className={clsx(
             "pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2",
-            activeTab === 'standups' ? "border-brand-500 text-brand-400" : "border-transparent text-gray-400 hover:text-gray-200"
+            activeTab === 'standups' ? "border-brand-500 text-brand-400" : "border-transparent text-on-surface-variant hover:text-on-surface"
           )}
         >
           <MessageSquare className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
           onClick={() => setActiveTab('retro')}
           className={clsx(
             "pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2",
-            activeTab === 'retro' ? "border-brand-500 text-brand-400" : "border-transparent text-gray-400 hover:text-gray-200"
+            activeTab === 'retro' ? "border-brand-500 text-brand-400" : "border-transparent text-on-surface-variant hover:text-on-surface"
           )}
         >
           <Sparkles className="w-4 h-4" />
@@ -152,21 +152,21 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
       {activeTab === 'standups' && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
           {mockStandups.map((standup, i) => (
-            <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-              <div className="bg-gray-800 px-5 py-3 border-b border-gray-700">
+            <div key={i} className="bg-surface-base border border-outline-variant rounded-xl overflow-hidden">
+              <div className="bg-surface-high px-5 py-3 border-b border-outline-variant">
                 <h3 className="text-sm font-medium text-white">{standup.date}</h3>
               </div>
               <div className="divide-y divide-gray-800 flex flex-col">
                 {standup.updates.map((update, j) => (
                   <div key={j} className="p-5 flex gap-4 items-start">
-                    <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot className="w-5 h-5 text-gray-400" />
+                    <div className="w-10 h-10 rounded-xl bg-surface-high border border-outline-variant flex items-center justify-center flex-shrink-0 mt-1">
+                      <Bot className="w-5 h-5 text-on-surface-variant" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <span className="font-semibold text-gray-200 mr-2">{update.agent}</span>
-                          <span className="text-xs text-gray-500">{update.role}</span>
+                          <span className="font-semibold text-on-surface mr-2">{update.agent}</span>
+                          <span className="text-xs text-on-surface-variant">{update.role}</span>
                         </div>
                         {update.status === 'blocked' ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-red-400 bg-red-400/10 px-2 py-1 rounded">
@@ -178,9 +178,9 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
                           </span>
                         )}
                       </div>
-                      <div className="space-y-2 text-sm text-gray-300">
-                        <p><strong className="text-gray-500 font-medium">Done:</strong> {update.done}</p>
-                        <p><strong className="text-gray-500 font-medium">Doing:</strong> {update.doing}</p>
+                      <div className="space-y-2 text-sm text-on-surface">
+                        <p><strong className="text-on-surface-variant font-medium">Done:</strong> {update.done}</p>
+                        <p><strong className="text-on-surface-variant font-medium">Doing:</strong> {update.doing}</p>
                         {update.blockers !== 'None.' && (
                           <p className="text-red-300"><strong className="text-red-400/70 font-medium">Blockers:</strong> {update.blockers}</p>
                         )}
@@ -209,7 +209,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
             <div className="space-y-6 relative z-10">
               <section>
                 <h3 className="text-sm font-semibold text-brand-300 uppercase tracking-wider mb-2">Sprint Summary</h3>
-                <p className="text-gray-300 leading-relaxed text-sm">
+                <p className="text-on-surface leading-relaxed text-sm">
                   The Swarm completed 61% of tasks currently, tracking slightly behind ideal velocity to complete the API v2 Migration goal by March 31.
                   The primary bottleneck encountered was a missing database index which blocked `Dev-2` from completing query analysis, failing task `t5`.
                 </p>
@@ -217,7 +217,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
 
               <section>
                 <h3 className="text-sm font-semibold text-brand-300 uppercase tracking-wider mb-2">Token Economics</h3>
-                <p className="text-gray-300 leading-relaxed text-sm">
+                <p className="text-on-surface leading-relaxed text-sm">
                   Total cost sits at <strong>$67.40</strong> burning <strong>4.82M tokens</strong>. 
                   Token efficiency dropped during the `UserService` refactoring loop due to multiple iterative context reprompts from `Dev-1`. 
                   Recommend breaking down context windows for large refactors.
@@ -226,7 +226,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
 
               <section>
                 <h3 className="text-sm font-semibold text-brand-300 uppercase tracking-wider mb-2">Action Items</h3>
-                <ul className="list-disc list-inside text-gray-300 space-y-1 text-sm">
+                <ul className="list-disc list-inside text-on-surface space-y-1 text-sm">
                   <li>Orchestrator to approve and run `users` table index migration to unblock Dev-2.</li>
                   <li>Adjust Agent `Dev-1`'s system prompt to handle testing in smaller file increments to save context tokens.</li>
                   <li>Schedule QA-Bot integration tests to run automatically once PR #248 merges.</li>

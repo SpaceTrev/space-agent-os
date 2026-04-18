@@ -36,7 +36,7 @@ function MeterBar({
 
   return (
     <div className="mt-2 space-y-1">
-      <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-surface-highest rounded-full overflow-hidden">
         {pct != null ? (
           <div
             className={clsx(
@@ -51,7 +51,7 @@ function MeterBar({
       </div>
       {pct != null && (
         <div className="flex items-center justify-between text-[10px]">
-          <span className={clsx(isDanger ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-gray-600')}>
+          <span className={clsx(isDanger ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-on-surface-variant')}>
             {pct}% used
           </span>
           {isDanger && <span className="text-red-400 font-medium">Near limit!</span>}
@@ -129,20 +129,20 @@ export function UsageMeter({
             : formatNumber(item.total)
 
         return (
-          <div key={item.label} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+          <div key={item.label} className="bg-surface-high border border-outline-variant rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
               <div className={clsx('w-6 h-6 rounded-md flex items-center justify-center', item.color.replace('bg-', 'bg-') + '/20')}>
                 <Icon className={clsx('w-3.5 h-3.5', item.color.replace('bg-', 'text-'))} />
               </div>
-              <span className="text-xs font-medium text-gray-400">{item.label}</span>
+              <span className="text-xs font-medium text-on-surface-variant">{item.label}</span>
             </div>
             <div className="mt-2">
               <span className="text-xl font-bold text-white">{displayUsed}</span>
               {item.total != null && (
-                <span className="text-xs text-gray-500 ml-1">/ {displayTotal}</span>
+                <span className="text-xs text-on-surface-variant ml-1">/ {displayTotal}</span>
               )}
               {item.total == null && (
-                <span className="text-xs text-gray-500 ml-1">this month</span>
+                <span className="text-xs text-on-surface-variant ml-1">this month</span>
               )}
             </div>
             <MeterBar used={item.used} total={item.total} color={item.color} />

@@ -26,7 +26,7 @@ interface TaskLogViewerProps {
 }
 
 const levelConfig: Record<TaskLogLevel, { icon: React.ElementType; color: string; bg: string }> = {
-  debug: { icon: Terminal, color: 'text-gray-500', bg: '' },
+  debug: { icon: Terminal, color: 'text-on-surface-variant', bg: '' },
   info: { icon: Info, color: 'text-blue-400', bg: '' },
   warn: { icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/5' },
   error: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/5' },
@@ -55,23 +55,23 @@ function LogLine({ entry }: { entry: LogEntry }) {
   })
 
   return (
-    <div className={clsx('flex gap-3 px-4 py-2 text-xs font-mono border-b border-gray-800/60 hover:bg-gray-800/40', config.bg)}>
-      <span className="text-gray-600 flex-shrink-0 w-20">{time}</span>
+    <div className={clsx('flex gap-3 px-4 py-2 text-xs font-mono border-b border-outline-variant/60 hover:bg-surface-high/40', config.bg)}>
+      <span className="text-on-surface-variant flex-shrink-0 w-20">{time}</span>
       <div className="flex items-center gap-1.5 flex-shrink-0 w-16">
         <Icon className={clsx('w-3 h-3 flex-shrink-0', config.color)} />
         <span className={clsx('uppercase text-[10px] font-semibold', config.color)}>
           {entry.level}
         </span>
       </div>
-      <span className="text-gray-600 flex-shrink-0 w-14 text-[10px] uppercase">{typeLabel}</span>
-      <span className={clsx('flex-1 break-all whitespace-pre-wrap', config.color === 'text-blue-400' ? 'text-gray-300' : config.color)}>
+      <span className="text-on-surface-variant flex-shrink-0 w-14 text-[10px] uppercase">{typeLabel}</span>
+      <span className={clsx('flex-1 break-all whitespace-pre-wrap', config.color === 'text-blue-400' ? 'text-on-surface' : config.color)}>
         {entry.message}
       </span>
       {entry.durationMs != null && (
-        <span className="text-gray-600 flex-shrink-0">{entry.durationMs}ms</span>
+        <span className="text-on-surface-variant flex-shrink-0">{entry.durationMs}ms</span>
       )}
       {entry.tokensInput != null && (
-        <span className="text-gray-600 flex-shrink-0">
+        <span className="text-on-surface-variant flex-shrink-0">
           {entry.tokensInput}↑ {entry.tokensOutput ?? 0}↓
         </span>
       )}
@@ -140,21 +140,21 @@ export function TaskLogViewer({ taskId, streaming = true, initialLogs = [] }: Ta
   }
 
   return (
-    <div className="flex flex-col bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
+    <div className="flex flex-col bg-surface-base border border-outline-variant rounded-xl overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-700 bg-gray-850">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-outline-variant bg-surface-low">
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-gray-500" />
-          <span className="text-xs font-medium text-gray-400">Task Logs</span>
+          <Terminal className="w-4 h-4 text-on-surface-variant" />
+          <span className="text-xs font-medium text-on-surface-variant">Task Logs</span>
           {streaming && (
             <div className="flex items-center gap-1.5 ml-2">
-              <div className={clsx('w-1.5 h-1.5 rounded-full', connected ? 'bg-green-400 animate-pulse' : 'bg-gray-600')} />
-              <span className="text-[10px] text-gray-500">{connected ? 'Live' : 'Disconnected'}</span>
+              <div className={clsx('w-1.5 h-1.5 rounded-full', connected ? 'bg-green-400 animate-pulse' : 'bg-on-surface-variant/40')} />
+              <span className="text-[10px] text-on-surface-variant">{connected ? 'Live' : 'Disconnected'}</span>
             </div>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-600">{logs.length} entries</span>
+          <span className="text-xs text-on-surface-variant">{logs.length} entries</span>
           <Button
             variant="ghost"
             size="sm"
@@ -174,7 +174,7 @@ export function TaskLogViewer({ taskId, streaming = true, initialLogs = [] }: Ta
         className="flex-1 overflow-y-auto min-h-[300px] max-h-[500px]"
       >
         {logs.length === 0 ? (
-          <div className="flex items-center justify-center py-12 text-xs text-gray-600">
+          <div className="flex items-center justify-center py-12 text-xs text-on-surface-variant">
             {streaming ? 'Waiting for logs...' : 'No logs available'}
           </div>
         ) : (

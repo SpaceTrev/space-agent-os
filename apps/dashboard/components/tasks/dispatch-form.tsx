@@ -126,10 +126,10 @@ export function DispatchForm({ agents, sprints = [], onDispatch, onCancel }: Dis
       </div>
 
       {/* Requires approval toggle */}
-      <div className="flex items-center justify-between p-3 bg-gray-900 border border-gray-700 rounded-lg">
+      <div className="flex items-center justify-between p-3 bg-surface-base border border-outline-variant rounded-lg">
         <div>
-          <p className="text-sm font-medium text-gray-200">Requires Approval</p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-sm font-medium text-on-surface">Requires Approval</p>
+          <p className="text-xs text-on-surface-variant mt-0.5">
             Task will pause for human review before finalizing
           </p>
         </div>
@@ -138,7 +138,7 @@ export function DispatchForm({ agents, sprints = [], onDispatch, onCancel }: Dis
           onClick={() => setRequiresApproval((v) => !v)}
           className={clsx(
             'relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0',
-            requiresApproval ? 'bg-brand-600' : 'bg-gray-700'
+            requiresApproval ? 'bg-brand-600' : 'bg-surface-highest'
           )}
         >
           <span

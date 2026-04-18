@@ -16,27 +16,27 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-gray-300 light:text-gray-700 mb-1.5">
+          <label htmlFor={inputId} className="block text-sm font-medium text-on-surface light:text-on-surface-variant mb-1.5">
             {label}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <span className="text-gray-500 text-sm">{leftIcon}</span>
+              <span className="text-on-surface-variant text-sm">{leftIcon}</span>
             </div>
           )}
           <input
             ref={ref}
             id={inputId}
             className={clsx(
-              'block w-full rounded-lg border bg-gray-900 light:bg-white text-sm text-white light:text-gray-900 placeholder-gray-500 light:placeholder-gray-400',
+              'block w-full rounded-lg border bg-surface-base light:bg-white text-sm text-white light:text-gray-900 placeholder-on-surface-variant/50 light:placeholder-gray-400',
               'transition-colors duration-150',
               'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               error
                 ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-600 light:border-gray-300 hover:border-gray-500 light:hover:border-gray-400',
+                : 'border-outline-variant light:border-gray-300 hover:border-gray-500 light:hover:border-gray-400',
               leftIcon ? 'pl-10' : 'pl-3',
               rightIcon ? 'pr-10' : 'pr-3',
               'py-2',
@@ -46,12 +46,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           />
           {rightIcon && (
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-              <span className="text-gray-500 text-sm">{rightIcon}</span>
+              <span className="text-on-surface-variant text-sm">{rightIcon}</span>
             </div>
           )}
         </div>
         {error && <p className="mt-1.5 text-xs text-red-400 light:text-red-600">{error}</p>}
-        {hint && !error && <p className="mt-1.5 text-xs text-gray-500 light:text-gray-600">{hint}</p>}
+        {hint && !error && <p className="mt-1.5 text-xs text-on-surface-variant light:text-on-surface-variant">{hint}</p>}
       </div>
     )
   }
@@ -72,7 +72,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={textareaId} className="block text-sm font-medium text-gray-300 light:text-gray-700 mb-1.5">
+          <label htmlFor={textareaId} className="block text-sm font-medium text-on-surface light:text-on-surface-variant mb-1.5">
             {label}
           </label>
         )}
@@ -80,20 +80,20 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={clsx(
-            'block w-full rounded-lg border bg-gray-900 light:bg-white text-sm text-white light:text-gray-900 placeholder-gray-500 light:placeholder-gray-400',
+            'block w-full rounded-lg border bg-surface-base light:bg-white text-sm text-white light:text-gray-900 placeholder-on-surface-variant/50 light:placeholder-gray-400',
             'transition-colors duration-150 resize-y min-h-[80px]',
             'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'px-3 py-2',
             error
               ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-600 light:border-gray-300 hover:border-gray-500 light:hover:border-gray-400',
+              : 'border-outline-variant light:border-gray-300 hover:border-gray-500 light:hover:border-gray-400',
             className
           )}
           {...props}
         />
         {error && <p className="mt-1.5 text-xs text-red-400 light:text-red-600">{error}</p>}
-        {hint && !error && <p className="mt-1.5 text-xs text-gray-500 light:text-gray-600">{hint}</p>}
+        {hint && !error && <p className="mt-1.5 text-xs text-on-surface-variant light:text-on-surface-variant">{hint}</p>}
       </div>
     )
   }
@@ -115,7 +115,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={selectId} className="block text-sm font-medium text-gray-300 light:text-gray-700 mb-1.5">
+          <label htmlFor={selectId} className="block text-sm font-medium text-on-surface light:text-on-surface-variant mb-1.5">
             {label}
           </label>
         )}
@@ -123,14 +123,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={selectId}
           className={clsx(
-            'block w-full rounded-lg border bg-gray-900 light:bg-white text-sm text-white light:text-gray-900',
+            'block w-full rounded-lg border bg-surface-base light:bg-white text-sm text-white light:text-gray-900',
             'transition-colors duration-150',
             'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'px-3 py-2',
             error
               ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-600 light:border-gray-300 hover:border-gray-500 light:hover:border-gray-400',
+              : 'border-outline-variant light:border-gray-300 hover:border-gray-500 light:hover:border-gray-400',
             className
           )}
           {...props}
@@ -142,7 +142,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && <p className="mt-1.5 text-xs text-red-400 light:text-red-600">{error}</p>}
-        {hint && !error && <p className="mt-1.5 text-xs text-gray-500 light:text-gray-600">{hint}</p>}
+        {hint && !error && <p className="mt-1.5 text-xs text-on-surface-variant light:text-on-surface-variant">{hint}</p>}
       </div>
     )
   }

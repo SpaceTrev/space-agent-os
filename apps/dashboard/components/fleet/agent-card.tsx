@@ -72,7 +72,7 @@ export function AgentCard({
             {/* Status dot */}
             <span
               className={clsx(
-                'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-gray-800',
+                'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-outline-variant',
                 config.dot
               )}
             />

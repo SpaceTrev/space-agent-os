@@ -144,7 +144,7 @@ export default function TasksPage({ params }: { params: Promise<{ workspace: str
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Tasks</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{tasks.length} total tasks</p>
+          <p className="text-sm text-on-surface-variant mt-0.5">{tasks.length} total tasks</p>
         </div>
         <Button variant="primary" onClick={() => setDispatchOpen(true)}>
           <Send className="w-4 h-4" />

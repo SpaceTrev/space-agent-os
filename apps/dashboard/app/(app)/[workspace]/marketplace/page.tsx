@@ -66,7 +66,7 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
   const categoryStyle = CATEGORY_COLORS[item.category]
 
   return (
-    <div className="group flex flex-col bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 hover:bg-gray-800/60 transition-all duration-150">
+    <div className="group flex flex-col bg-surface-base border border-outline-variant rounded-xl p-5 hover:border-outline-variant hover:bg-surface-high/60 transition-all duration-150">
       {/* Icon + tier badge */}
       <div className="flex items-start justify-between mb-4">
         <div className={clsx('w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0', gradient)}>
@@ -86,7 +86,7 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
           <h3 className="text-sm font-semibold text-white leading-snug">{item.name}</h3>
         </div>
         <div className="flex items-center gap-1 mt-0.5">
-          <p className="text-xs text-gray-500">{item.author}</p>
+          <p className="text-xs text-on-surface-variant">{item.author}</p>
           {item.author === 'Space OS Team' && (
             <BadgeCheck className="w-3 h-3 text-brand-400 flex-shrink-0" />
           )}
@@ -94,7 +94,7 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
       </div>
 
       {/* Description */}
-      <p className="text-xs text-gray-400 leading-relaxed flex-1 mb-4 line-clamp-2">
+      <p className="text-xs text-on-surface-variant leading-relaxed flex-1 mb-4 line-clamp-2">
         {item.description}
       </p>
 
@@ -106,7 +106,7 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
         {item.tags.slice(0, 2).map((tag) => (
           <span
             key={tag}
-            className="px-1.5 py-0.5 rounded bg-gray-800 text-gray-500 text-[10px] font-medium"
+            className="px-1.5 py-0.5 rounded bg-surface-high text-on-surface-variant text-[10px] font-medium"
           >
             {tag}
           </span>
@@ -114,8 +114,8 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
       </div>
 
       {/* Stats + CTA */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-800">
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+      <div className="flex items-center justify-between pt-3 border-t border-outline-variant">
+        <div className="flex items-center gap-3 text-xs text-on-surface-variant">
           <span className="flex items-center gap-1">
             <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
             {item.rating.toFixed(1)}
@@ -124,13 +124,13 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
             <Download className="w-3 h-3" />
             {formatInstalls(item.installCount)}
           </span>
-          <span className="text-gray-700">v{item.version}</span>
+          <span className="text-on-surface-variant">v{item.version}</span>
         </div>
         <button className={clsx(
           'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
           isFree
             ? 'bg-brand-600 hover:bg-brand-500 text-white'
-            : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+            : 'bg-surface-high hover:bg-surface-highest text-on-surface border border-outline-variant'
         )}>
           {isFree
             ? 'Install'
@@ -177,7 +177,7 @@ export default function MarketplacePage({ params }: { params: Promise<{ workspac
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Marketplace</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-on-surface-variant mt-1">
           Browse and install agents, tools, skills, and workflows for your workspace.
         </p>
       </div>
@@ -185,19 +185,19 @@ export default function MarketplacePage({ params }: { params: Promise<{ workspac
       {/* Search + sort bar */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant pointer-events-none" />
           <input
             type="text"
             placeholder="Search marketplace..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gray-600 transition-colors"
+            className="w-full pl-9 pr-3 py-2 bg-surface-base border border-outline-variant rounded-lg text-sm text-white placeholder-on-surface-variant/50 focus:outline-none focus:border-outline-variant transition-colors"
           />
         </div>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as typeof sort)}
-          className="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
+          className="px-3 py-2 bg-surface-base border border-outline-variant rounded-lg text-sm text-on-surface-variant focus:outline-none focus:border-outline-variant transition-colors"
         >
           <option value="popular">Most popular</option>
           <option value="rating">Highest rated</option>
@@ -214,8 +214,8 @@ export default function MarketplacePage({ params }: { params: Promise<{ workspac
             className={clsx(
               'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
               category === value
-                ? 'bg-gray-700 text-white'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                ? 'bg-surface-highest text-white'
+                : 'text-on-surface-variant hover:text-white hover:bg-surface-high'
             )}
           >
             <Icon className="w-3.5 h-3.5" />
@@ -226,7 +226,7 @@ export default function MarketplacePage({ params }: { params: Promise<{ workspac
 
       {/* Item count */}
       {!loading && (
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-xs text-on-surface-variant mb-4">
           {items.length} {items.length === 1 ? 'result' : 'results'}
           {category !== 'all' && ` in ${CATEGORY_LABELS[category as MarketplaceCategory]}`}
           {debouncedSearch && ` for "${debouncedSearch}"`}
@@ -240,11 +240,11 @@ export default function MarketplacePage({ params }: { params: Promise<{ workspac
         </div>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center mb-4">
-            <Search className="w-8 h-8 text-gray-600" />
+          <div className="w-16 h-16 rounded-2xl bg-surface-high border border-outline-variant flex items-center justify-center mb-4">
+            <Search className="w-8 h-8 text-on-surface-variant" />
           </div>
-          <p className="text-sm font-medium text-gray-300">No results found</p>
-          <p className="text-xs text-gray-500 mt-1">Try a different search term or category</p>
+          <p className="text-sm font-medium text-on-surface">No results found</p>
+          <p className="text-xs text-on-surface-variant mt-1">Try a different search term or category</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

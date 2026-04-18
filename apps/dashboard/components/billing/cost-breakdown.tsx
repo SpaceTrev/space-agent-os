@@ -57,13 +57,13 @@ export function CostBreakdown({
   const marginPct = yourMargin > 0 ? ((yourMargin / yourCost) * 100).toFixed(1) : '0'
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+    <div className="bg-surface-high border border-outline-variant rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-gray-700">
+      <div className="px-5 py-4 border-b border-outline-variant">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-white">Cost Breakdown</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{billingPeriod}</p>
+            <p className="text-xs text-on-surface-variant mt-0.5">{billingPeriod}</p>
           </div>
         </div>
       </div>
@@ -73,19 +73,19 @@ export function CostBreakdown({
         {items.map((item) => (
           <div key={item.label} className="flex items-center justify-between px-5 py-3">
             <div>
-              <p className="text-sm text-gray-200">{item.label}</p>
+              <p className="text-sm text-on-surface">{item.label}</p>
               {item.description && (
-                <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">{item.description}</p>
               )}
             </div>
-            <span className={clsx('text-sm font-mono font-medium', item.amount === 0 ? 'text-gray-600' : 'text-gray-200')}>
+            <span className={clsx('text-sm font-mono font-medium', item.amount === 0 ? 'text-on-surface-variant' : 'text-on-surface')}>
               {item.amount === 0 ? '—' : `$${item.amount.toFixed(2)}`}
             </span>
           </div>
         ))}
 
         {/* Total invoiced */}
-        <div className="flex items-center justify-between px-5 py-4 bg-gray-750/50">
+        <div className="flex items-center justify-between px-5 py-4 bg-surface-base/50">
           <p className="text-sm font-semibold text-white">Total Invoiced</p>
           <span className="text-base font-bold font-mono text-white">${totalInvoiced.toFixed(2)}</span>
         </div>
@@ -93,8 +93,8 @@ export function CostBreakdown({
         {/* Your cost (what you actually pay AI providers) */}
         <div className="flex items-center justify-between px-5 py-3">
           <div>
-            <p className="text-sm text-gray-300">Your AI Cost</p>
-            <p className="text-xs text-gray-500 mt-0.5">Actual tokens billed by providers</p>
+            <p className="text-sm text-on-surface">Your AI Cost</p>
+            <p className="text-xs text-on-surface-variant mt-0.5">Actual tokens billed by providers</p>
           </div>
           <span className="text-sm font-mono font-medium text-orange-400">${yourCost.toFixed(2)}</span>
         </div>
@@ -102,8 +102,8 @@ export function CostBreakdown({
         {/* Margin */}
         <div className="flex items-center justify-between px-5 py-3">
           <div>
-            <p className="text-sm text-gray-300">Your Margin</p>
-            <p className="text-xs text-gray-500 mt-0.5">Revenue minus AI costs</p>
+            <p className="text-sm text-on-surface">Your Margin</p>
+            <p className="text-xs text-on-surface-variant mt-0.5">Revenue minus AI costs</p>
           </div>
           <div className="flex items-center gap-2">
             <span className={clsx('text-sm font-mono font-medium', yourMargin >= 0 ? 'text-green-400' : 'text-red-400')}>
@@ -111,7 +111,7 @@ export function CostBreakdown({
             </span>
             <div className={clsx(
               'flex items-center gap-1 text-xs px-1.5 py-0.5 rounded',
-              yourMargin > 0 ? 'bg-green-500/10 text-green-400' : yourMargin < 0 ? 'bg-red-500/10 text-red-400' : 'bg-gray-700 text-gray-500'
+              yourMargin > 0 ? 'bg-green-500/10 text-green-400' : yourMargin < 0 ? 'bg-red-500/10 text-red-400' : 'bg-surface-highest text-on-surface-variant'
             )}>
               {yourMargin > 0 ? (
                 <TrendingUp className="w-3 h-3" />

@@ -43,7 +43,7 @@ const mockInitialLogs = [
 ]
 
 const priorityColors: Record<TaskPriority, string> = {
-  low: 'text-gray-400',
+  low: 'text-on-surface-variant',
   normal: 'text-blue-400',
   high: 'text-orange-400',
   critical: 'text-red-400',
@@ -83,7 +83,7 @@ export default function TaskDetailPage() {
       {/* Back */}
       <Link
         href={`/${workspace}/tasks`}
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors mb-6"
+        className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors mb-6"
       >
         <ChevronLeft className="w-4 h-4" />
         Back to tasks
@@ -100,7 +100,7 @@ export default function TaskDetailPage() {
           </div>
           <h1 className="text-xl font-bold text-white leading-snug">{mockTask.title}</h1>
           {mockTask.description && (
-            <p className="text-sm text-gray-400 mt-2">{mockTask.description}</p>
+            <p className="text-sm text-on-surface-variant mt-2">{mockTask.description}</p>
           )}
         </div>
 
@@ -140,72 +140,72 @@ export default function TaskDetailPage() {
         {/* Sidebar details */}
         <div className="space-y-4">
           {/* Task details */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Details</h3>
+          <div className="bg-surface-base border border-outline-variant rounded-xl p-4 space-y-3">
+            <h3 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Details</h3>
 
             <div className="space-y-2.5">
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-gray-500">
+                <div className="flex items-center gap-2 text-on-surface-variant">
                   <Bot className="w-3.5 h-3.5" />
                   Agent
                 </div>
-                <span className="text-gray-200 font-medium">{mockTask.agentName}</span>
+                <span className="text-on-surface font-medium">{mockTask.agentName}</span>
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-gray-500">
+                <div className="flex items-center gap-2 text-on-surface-variant">
                   <Zap className="w-3.5 h-3.5" />
                   Model
                 </div>
-                <span className="text-gray-400 text-xs font-mono truncate max-w-[140px]">
+                <span className="text-on-surface-variant text-xs font-mono truncate max-w-[140px]">
                   {mockTask.agentModel.split(':')[1]?.replace(/-\d{8}$/, '') || mockTask.agentModel}
                 </span>
               </div>
 
               {mockTask.sprint && (
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-gray-500">
+                  <div className="flex items-center gap-2 text-on-surface-variant">
                     <Calendar className="w-3.5 h-3.5" />
                     Sprint
                   </div>
-                  <span className="text-gray-400 text-xs truncate max-w-[140px]">{mockTask.sprint}</span>
+                  <span className="text-on-surface-variant text-xs truncate max-w-[140px]">{mockTask.sprint}</span>
                 </div>
               )}
 
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-gray-500">
+                <div className="flex items-center gap-2 text-on-surface-variant">
                   <Clock className="w-3.5 h-3.5" />
                   Created
                 </div>
-                <span className="text-gray-400 text-xs">{formatDistanceToNow(new Date(mockTask.createdAt), { addSuffix: true })}</span>
+                <span className="text-on-surface-variant text-xs">{formatDistanceToNow(new Date(mockTask.createdAt), { addSuffix: true })}</span>
               </div>
 
               {elapsed != null && (
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-gray-500">
+                  <div className="flex items-center gap-2 text-on-surface-variant">
                     <Clock className="w-3.5 h-3.5" />
                     Elapsed
                   </div>
-                  <span className="text-gray-400 text-xs">{Math.floor(elapsed / 60)}m {elapsed % 60}s</span>
+                  <span className="text-on-surface-variant text-xs">{Math.floor(elapsed / 60)}m {elapsed % 60}s</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Usage stats */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Token Usage</h3>
+          <div className="bg-surface-base border border-outline-variant rounded-xl p-4 space-y-3">
+            <h3 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Token Usage</h3>
             <div className="space-y-2.5">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Input tokens</span>
-                <span className="text-gray-300 font-mono">{mockTask.tokensInput.toLocaleString()}</span>
+                <span className="text-on-surface-variant">Input tokens</span>
+                <span className="text-on-surface font-mono">{mockTask.tokensInput.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Output tokens</span>
-                <span className="text-gray-300 font-mono">{mockTask.tokensOutput.toLocaleString()}</span>
+                <span className="text-on-surface-variant">Output tokens</span>
+                <span className="text-on-surface font-mono">{mockTask.tokensOutput.toLocaleString()}</span>
               </div>
-              <div className="border-t border-gray-800 pt-2.5 flex items-center justify-between text-sm">
-                <div className="flex items-center gap-1.5 text-gray-500">
+              <div className="border-t border-outline-variant pt-2.5 flex items-center justify-between text-sm">
+                <div className="flex items-center gap-1.5 text-on-surface-variant">
                   <DollarSign className="w-3.5 h-3.5" />
                   Cost
                 </div>

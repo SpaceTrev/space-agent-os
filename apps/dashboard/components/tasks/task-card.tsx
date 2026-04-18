@@ -19,7 +19,7 @@ interface TaskCardProps {
 }
 
 const priorityConfig: Record<TaskPriority, { color: string; label: string }> = {
-  low: { color: 'text-gray-500', label: 'Low' },
+  low: { color: 'text-on-surface-variant', label: 'Low' },
   normal: { color: 'text-blue-400', label: 'Normal' },
   high: { color: 'text-orange-400', label: 'High' },
   critical: { color: 'text-red-400', label: 'Critical' },

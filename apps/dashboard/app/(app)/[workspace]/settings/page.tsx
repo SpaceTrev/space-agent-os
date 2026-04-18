@@ -65,18 +65,18 @@ export default function SettingsPage({ params }: { params: Promise<{ workspace: 
     <div className="max-w-3xl mx-auto px-6 py-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center">
-          <Settings className="w-5 h-5 text-gray-400" />
+        <div className="w-10 h-10 rounded-xl bg-surface-high border border-outline-variant flex items-center justify-center">
+          <Settings className="w-5 h-5 text-on-surface-variant" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white">Workspace Settings</h1>
-          <p className="text-sm text-gray-500 capitalize">{workspace.replace(/-/g, ' ')}</p>
+          <p className="text-sm text-on-surface-variant capitalize">{workspace.replace(/-/g, ' ')}</p>
         </div>
       </div>
 
       {/* General settings */}
       <form onSubmit={handleSave} className="space-y-6 mb-8">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+        <div className="bg-surface-base border border-outline-variant rounded-xl p-5 space-y-4">
           <h2 className="text-sm font-semibold text-white">General</h2>
 
           <Input
@@ -128,12 +128,12 @@ export default function SettingsPage({ params }: { params: Promise<{ workspace: 
 
       {/* Members */}
       <div className="mb-8">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+        <div className="bg-surface-base border border-outline-variant rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant">
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-gray-500" />
+              <Users className="w-4 h-4 text-on-surface-variant" />
               <h2 className="text-sm font-semibold text-white">Members</h2>
-              <span className="text-xs text-gray-600">{members.length}</span>
+              <span className="text-xs text-on-surface-variant">{members.length}</span>
             </div>
           </div>
 
@@ -147,12 +147,12 @@ export default function SettingsPage({ params }: { params: Promise<{ workspace: 
                     {member.avatarChar}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-200">{member.name}</p>
-                    <p className="text-xs text-gray-500">{member.email}</p>
+                    <p className="text-sm font-medium text-on-surface">{member.name}</p>
+                    <p className="text-xs text-on-surface-variant">{member.email}</p>
                   </div>
                   <Badge variant={config.variant} size="sm">{config.label}</Badge>
                   {member.role !== 'owner' && (
-                    <button className="text-gray-600 hover:text-red-400 transition-colors">
+                    <button className="text-on-surface-variant hover:text-red-400 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
@@ -162,7 +162,7 @@ export default function SettingsPage({ params }: { params: Promise<{ workspace: 
           </div>
 
           {/* Invite form */}
-          <form onSubmit={handleInvite} className="px-5 py-4 border-t border-gray-800 flex items-end gap-3">
+          <form onSubmit={handleInvite} className="px-5 py-4 border-t border-outline-variant flex items-end gap-3">
             <Input
               label="Invite by email"
               type="email"
@@ -187,15 +187,15 @@ export default function SettingsPage({ params }: { params: Promise<{ workspace: 
       </div>
 
       {/* Danger zone */}
-      <div className="bg-gray-900 border border-red-500/20 rounded-xl p-5">
+      <div className="bg-surface-base border border-red-500/20 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="w-4 h-4 text-red-400" />
           <h2 className="text-sm font-semibold text-red-400">Danger Zone</h2>
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-300">Delete workspace</p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-sm text-on-surface">Delete workspace</p>
+            <p className="text-xs text-on-surface-variant mt-0.5">
               Permanently delete this workspace and all its agents, tasks, and data.
             </p>
           </div>

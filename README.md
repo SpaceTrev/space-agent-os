@@ -59,13 +59,13 @@ Together they form a full-stack AI operating system that runs autonomously on yo
 
 ## Model Architecture
 
-| Tier         | Model                 | Provider        |
-|--------------|-----------------------|-----------------|
-| Orchestrator | Llama 3.3 (8B)        | Ollama (local)  |
-| Worker       | Qwen3 Coder (30B-MoE) | Ollama (local)  |
-| Architect    | Claude Opus 4.6       | Anthropic API   |
+| Tier      | Model              | Provider        | Use Case                                     |
+|-----------|--------------------|-----------------|----------------------------------------------|
+| Primary   | Claude Sonnet 4.6  | OpenClaw        | All tasks — reasoning, code, orchestration   |
+| Secondary | Gemini 2.0 Flash   | Google API      | Parallel runs, very long context (>100k tok) |
+| Local     | Qwen3-Coder 30B    | Ollama          | Offline, cost-sensitive, privacy-sensitive   |
 
-All tasks default to local Ollama models (zero token cost). Cloud models are invoked only for deep reasoning or explicit escalation.
+Default to Claude Max (OpenClaw). Gemini for parallel/long-context runs. Ollama only when `OLLAMA_ENABLED=true` or `/local` invocation.
 
 ## Environment Variables
 

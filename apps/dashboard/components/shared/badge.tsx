@@ -13,7 +13,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   green: 'bg-green-500/15 light:bg-green-100 text-green-400 light:text-green-700',
   yellow: 'bg-yellow-500/15 light:bg-yellow-100 text-yellow-400 light:text-yellow-700',
   red: 'bg-red-500/15 light:bg-red-100 text-red-400 light:text-red-700',
-  gray: 'bg-gray-500/15 light:bg-gray-100 text-gray-400 light:text-gray-700',
+  gray: 'bg-gray-500/15 light:bg-gray-100 text-on-surface-variant light:text-on-surface-variant',
   blue: 'bg-blue-500/15 light:bg-blue-100 text-blue-400 light:text-blue-700',
   purple: 'bg-purple-500/15 light:bg-purple-100 text-purple-400 light:text-purple-700',
   orange: 'bg-orange-500/15 light:bg-orange-100 text-orange-400 light:text-orange-700',

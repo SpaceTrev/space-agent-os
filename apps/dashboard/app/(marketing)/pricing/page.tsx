@@ -6,8 +6,8 @@ const plans = [
     name: 'Starter',
     price: 29,
     description: 'Perfect for small teams and solo developers exploring AI automation.',
-    color: 'border-gray-700',
-    badgeColor: 'bg-gray-700 text-gray-300',
+    color: 'border-outline-variant',
+    badgeColor: 'bg-surface-highest text-on-surface',
     ctaVariant: 'outline',
     features: [
       '5 agents',
@@ -57,8 +57,8 @@ const plans = [
     name: 'Enterprise',
     price: 299,
     description: 'Unlimited scale, dedicated infrastructure, and white-label options.',
-    color: 'border-gray-700',
-    badgeColor: 'bg-gray-700 text-gray-300',
+    color: 'border-outline-variant',
+    badgeColor: 'bg-surface-highest text-on-surface',
     ctaVariant: 'outline',
     features: [
       'Unlimited agents',
@@ -84,9 +84,9 @@ const plans = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-surface text-white">
       {/* Nav */}
-      <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-40">
+      <nav className="border-b border-outline-variant bg-surface/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
@@ -95,7 +95,7 @@ export default function PricingPage() {
             <span className="text-sm font-bold text-white tracking-tight">Agent OS</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">
+            <Link href="/login" className="text-sm text-on-surface-variant hover:text-white transition-colors">
               Sign in
             </Link>
             <Link
@@ -113,7 +113,7 @@ export default function PricingPage() {
         <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
           Simple, transparent pricing
         </h1>
-        <p className="text-lg text-gray-400 max-w-xl mx-auto">
+        <p className="text-lg text-on-surface-variant max-w-xl mx-auto">
           Start free and scale as your team grows. No surprise fees.
         </p>
       </div>
@@ -124,7 +124,7 @@ export default function PricingPage() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative bg-gray-900 border rounded-2xl p-6 flex flex-col ${plan.color}`}
+              className={`relative bg-surface-base border rounded-2xl p-6 flex flex-col ${plan.color}`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -140,13 +140,13 @@ export default function PricingPage() {
                 </span>
                 <div className="flex items-baseline gap-1 mb-2">
                   <span className="text-4xl font-extrabold text-white">${plan.price}</span>
-                  <span className="text-gray-500 text-sm">/mo</span>
+                  <span className="text-on-surface-variant text-sm">/mo</span>
                 </div>
-                <p className="text-sm text-gray-400">{plan.description}</p>
+                <p className="text-sm text-on-surface-variant">{plan.description}</p>
               </div>
 
               {/* Limits summary */}
-              <div className="grid grid-cols-2 gap-2 mb-6 p-3 bg-gray-800 rounded-xl">
+              <div className="grid grid-cols-2 gap-2 mb-6 p-3 bg-surface-high rounded-xl">
                 {[
                   { label: 'Agents', value: plan.limits.agents === -1 ? '∞' : plan.limits.agents },
                   { label: 'Tasks/mo', value: plan.limits.tasks === -1 ? '∞' : plan.limits.tasks.toLocaleString() },
@@ -155,7 +155,7 @@ export default function PricingPage() {
                 ].map((limit) => (
                   <div key={limit.label} className="text-center">
                     <div className="text-lg font-bold text-white">{limit.value}</div>
-                    <div className="text-xs text-gray-500">{limit.label}</div>
+                    <div className="text-xs text-on-surface-variant">{limit.label}</div>
                   </div>
                 ))}
               </div>
@@ -163,7 +163,7 @@ export default function PricingPage() {
               {/* Features */}
               <ul className="space-y-2.5 flex-1 mb-6">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2.5 text-sm text-gray-300">
+                  <li key={feature} className="flex items-center gap-2.5 text-sm text-on-surface">
                     <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
                     {feature}
                   </li>
@@ -175,7 +175,7 @@ export default function PricingPage() {
                 className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   plan.ctaVariant === 'primary'
                     ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/30'
-                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 text-white'
+                    : 'bg-surface-high hover:bg-surface-highest border border-outline-variant hover:border-primary/50 text-white'
                 }`}
               >
                 {plan.cta}
@@ -207,9 +207,9 @@ export default function PricingPage() {
                 a: 'Yes. Changes take effect immediately and are prorated on your next invoice.',
               },
             ].map((item) => (
-              <div key={item.q} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              <div key={item.q} className="bg-surface-base border border-outline-variant rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-white mb-2">{item.q}</h3>
-                <p className="text-sm text-gray-400">{item.a}</p>
+                <p className="text-sm text-on-surface-variant">{item.a}</p>
               </div>
             ))}
           </div>
@@ -217,11 +217,11 @@ export default function PricingPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-600">
-          <Link href="/" className="hover:text-gray-400 transition-colors">Back to home</Link>
+      <footer className="border-t border-outline-variant py-8">
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-on-surface-variant">
+          <Link href="/" className="hover:text-on-surface-variant transition-colors">Back to home</Link>
           {' '}&middot;{' '}
-          <Link href="/signup" className="hover:text-gray-400 transition-colors">Sign up</Link>
+          <Link href="/signup" className="hover:text-on-surface-variant transition-colors">Sign up</Link>
         </div>
       </footer>
     </div>

@@ -59,7 +59,7 @@ function MarketplaceCard({
   onClick: () => void
 }) {
   const priceText = formatPrice(item.pricing)
-  const catColor = categoryColors[item.category] ?? 'bg-gray-500/15 text-gray-400'
+  const catColor = categoryColors[item.category] ?? 'bg-gray-500/15 text-on-surface-variant'
 
   return (
     <button
@@ -127,7 +127,7 @@ function DetailModal({
   if (!item) return null
 
   const priceText = formatPrice(item.pricing)
-  const catColor = categoryColors[item.category] ?? 'bg-gray-500/15 text-gray-400'
+  const catColor = categoryColors[item.category] ?? 'bg-gray-500/15 text-on-surface-variant'
   const isAgentTemplate = item.category === 'agent-template'
   const agentItem = isAgentTemplate ? (item as AgentTemplate) : null
 

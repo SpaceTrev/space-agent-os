@@ -85,7 +85,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
   if (error || !session) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <Link href={`/${workspace}/sessions`} className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors">
+        <Link href={`/${workspace}/sessions`} className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-white mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to sessions
         </Link>
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">
@@ -101,19 +101,19 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Back */}
-      <Link href={`/${workspace}/sessions`} className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors">
+      <Link href={`/${workspace}/sessions`} className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-white mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to sessions
       </Link>
 
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-surface-high border border-outline-variant flex items-center justify-center flex-shrink-0">
             <MessageSquare className="w-6 h-6 text-brand-400" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">{goal}</h1>
-            <p className="text-sm text-gray-500 mt-0.5 capitalize">{session.session_type} session</p>
+            <p className="text-sm text-on-surface-variant mt-0.5 capitalize">{session.session_type} session</p>
           </div>
         </div>
         <Badge variant={statusConfig.variant} dot size="sm">{statusConfig.label}</Badge>
@@ -121,22 +121,22 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
 
       {/* Meta */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-gray-400 mb-1">
+        <div className="bg-surface-base border border-outline-variant rounded-xl p-4">
+          <div className="flex items-center gap-2 text-on-surface-variant mb-1">
             <Users className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Participants</span>
           </div>
           <p className="text-lg font-semibold text-white">{session.participants?.length ?? 0} agents</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-gray-400 mb-1">
+        <div className="bg-surface-base border border-outline-variant rounded-xl p-4">
+          <div className="flex items-center gap-2 text-on-surface-variant mb-1">
             <Clock className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Duration</span>
           </div>
           <p className="text-lg font-semibold text-white">{formatDuration(session.started_at, session.ended_at)}</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-gray-400 mb-1">
+        <div className="bg-surface-base border border-outline-variant rounded-xl p-4">
+          <div className="flex items-center gap-2 text-on-surface-variant mb-1">
             <MessageSquare className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Messages</span>
           </div>
@@ -146,9 +146,9 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
 
       {/* Message thread */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Conversation</h2>
+        <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-4">Conversation</h2>
         {messages.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center text-sm text-gray-500">
+          <div className="bg-surface-base border border-outline-variant rounded-xl p-8 text-center text-sm text-on-surface-variant">
             No messages yet
           </div>
         ) : (
@@ -161,15 +161,15 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
                     'max-w-[75%] rounded-2xl px-4 py-3',
                     isUser
                       ? 'bg-brand-600/20 border border-brand-500/30'
-                      : 'bg-gray-800 border border-gray-700'
+                      : 'bg-surface-high border border-outline-variant'
                   )}>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={clsx('text-xs font-medium', isUser ? 'text-brand-400' : 'text-gray-400')}>
+                      <span className={clsx('text-xs font-medium', isUser ? 'text-brand-400' : 'text-on-surface-variant')}>
                         {isUser ? 'You' : 'Agent'}
                       </span>
-                      <span className="text-xs text-gray-600">{formatTime(msg.created_at)}</span>
+                      <span className="text-xs text-on-surface-variant">{formatTime(msg.created_at)}</span>
                     </div>
-                    <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    <p className="text-sm text-on-surface whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   </div>
                 </div>
               )
@@ -180,7 +180,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
 
       {/* Footer timestamps */}
       {session.started_at && (
-        <div className="mt-8 pt-6 border-t border-gray-800 flex items-center justify-between text-xs text-gray-600">
+        <div className="mt-8 pt-6 border-t border-outline-variant flex items-center justify-between text-xs text-on-surface-variant">
           <span>Started {formatDate(session.started_at)}</span>
           {session.ended_at && <span>Ended {formatDate(session.ended_at)}</span>}
         </div>

@@ -123,7 +123,7 @@ export default function NewAgentPage() {
       {/* Back link */}
       <Link
         href={`/${workspace}/agents`}
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors mb-6"
+        className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors mb-6"
       >
         <ChevronLeft className="w-4 h-4" />
         Back to agents
@@ -131,18 +131,18 @@ export default function NewAgentPage() {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-surface-high border border-outline-variant flex items-center justify-center">
           <Bot className="w-5 h-5 text-brand-400" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white">Create New Agent</h1>
-          <p className="text-sm text-gray-500">Configure your AI agent for the {workspace} workspace</p>
+          <p className="text-sm text-on-surface-variant">Configure your AI agent for the {workspace} workspace</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic info */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+        <div className="bg-surface-base border border-outline-variant rounded-xl p-5 space-y-4">
           <h2 className="text-sm font-semibold text-white mb-4">Basic Information</h2>
 
           <div className="grid grid-cols-2 gap-4">
@@ -179,7 +179,7 @@ export default function NewAgentPage() {
         </div>
 
         {/* Model selection */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <div className="bg-surface-base border border-outline-variant rounded-xl p-5">
           <h2 className="text-sm font-semibold text-white mb-4">Model Configuration</h2>
           <ModelPicker
             label="AI Model"
@@ -189,13 +189,13 @@ export default function NewAgentPage() {
             disabled={modelsLoading}
             placeholder={modelsLoading ? 'Loading models...' : 'Select a model...'}
           />
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-on-surface-variant">
             The model this agent will use for all tasks. Can be changed later.
           </p>
         </div>
 
         {/* System prompt */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+        <div className="bg-surface-base border border-outline-variant rounded-xl p-5 space-y-4">
           <h2 className="text-sm font-semibold text-white mb-1">Behavior</h2>
 
           <Textarea
@@ -218,21 +218,21 @@ export default function NewAgentPage() {
         </div>
 
         {/* Skill files */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <div className="bg-surface-base border border-outline-variant rounded-xl p-5">
           <h2 className="text-sm font-semibold text-white mb-1">Skill Files</h2>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-on-surface-variant mb-4">
             Add reference documents, API specs, or code snippets the agent can use.
           </p>
 
           {skills.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {skills.map((skill) => (
-                <div key={skill} className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300">
+                <div key={skill} className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-high border border-outline-variant rounded-lg text-xs text-on-surface">
                   {skill}
                   <button
                     type="button"
                     onClick={() => removeSkill(skill)}
-                    className="text-gray-500 hover:text-red-400 transition-colors"
+                    className="text-on-surface-variant hover:text-red-400 transition-colors"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -248,7 +248,7 @@ export default function NewAgentPage() {
               onChange={(e) => setNewSkill(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
               placeholder="Add skill file name..."
-              className="flex-1 rounded-lg border border-gray-700 bg-gray-800 text-sm text-white placeholder-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              className="flex-1 rounded-lg border border-outline-variant bg-surface-high text-sm text-white placeholder-on-surface-variant/50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
             />
             <Button type="button" variant="outline" size="sm" onClick={addSkill}>
               <Plus className="w-4 h-4" />

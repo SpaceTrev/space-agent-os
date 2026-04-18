@@ -85,7 +85,7 @@ export default function SessionsPage({ params }: { params: Promise<{ workspace: 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Sessions</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{sessions.length} sessions in this workspace</p>
+          <p className="text-sm text-on-surface-variant mt-0.5">{sessions.length} sessions in this workspace</p>
         </div>
         <button
           disabled
@@ -98,15 +98,15 @@ export default function SessionsPage({ params }: { params: Promise<{ workspace: 
 
       {sessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center mb-4">
-            <MessageSquare className="w-8 h-8 text-gray-600" />
+          <div className="w-16 h-16 rounded-2xl bg-surface-high border border-outline-variant flex items-center justify-center mb-4">
+            <MessageSquare className="w-8 h-8 text-on-surface-variant" />
           </div>
-          <p className="text-sm font-medium text-gray-300">No sessions yet</p>
-          <p className="text-xs text-gray-500 mt-1">Sessions are collaborative agent runs — standups, planning, retros</p>
+          <p className="text-sm font-medium text-on-surface">No sessions yet</p>
+          <p className="text-xs text-on-surface-variant mt-1">Sessions are collaborative agent runs — standups, planning, retros</p>
         </div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="grid grid-cols-[1fr_120px_100px_120px_100px_100px] text-xs font-semibold text-gray-500 uppercase tracking-wider px-5 py-3 border-b border-gray-800 bg-gray-900">
+        <div className="bg-surface-base border border-outline-variant rounded-xl overflow-hidden">
+          <div className="grid grid-cols-[1fr_120px_100px_120px_100px_100px] text-xs font-semibold text-on-surface-variant uppercase tracking-wider px-5 py-3 border-b border-outline-variant bg-surface-base">
             <span>Session</span>
             <span>Type</span>
             <span>Agents</span>
@@ -122,28 +122,28 @@ export default function SessionsPage({ params }: { params: Promise<{ workspace: 
                 <Link
                   key={session.id}
                   href={`/${workspace}/sessions/${session.id}`}
-                  className="grid grid-cols-[1fr_120px_100px_120px_100px_100px] items-center px-5 py-3.5 hover:bg-gray-800/50 transition-colors"
+                  className="grid grid-cols-[1fr_120px_100px_120px_100px_100px] items-center px-5 py-3.5 hover:bg-surface-high/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-surface-high border border-outline-variant flex items-center justify-center flex-shrink-0">
                       <MessageSquare className="w-4 h-4 text-brand-400" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white truncate">{goal}</p>
-                      <p className="text-xs text-gray-500 truncate">{session.id}</p>
+                      <p className="text-xs text-on-surface-variant truncate">{session.id}</p>
                     </div>
                   </div>
-                  <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium w-fit', typeColors[session.session_type] ?? 'text-gray-400 bg-gray-500/10')}>
+                  <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium w-fit', typeColors[session.session_type] ?? 'text-on-surface-variant bg-gray-500/10')}>
                     {session.session_type}
                   </span>
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                    <Users className="w-3.5 h-3.5 text-gray-600" />
+                  <div className="flex items-center gap-1 text-xs text-on-surface-variant">
+                    <Users className="w-3.5 h-3.5 text-on-surface-variant" />
                     {session.participants?.length ?? 0}
                   </div>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-on-surface-variant">
                     {session.started_at ? formatRelative(session.started_at) : '—'}
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-on-surface-variant">
                     {formatDuration(session.started_at, session.ended_at)}
                   </span>
                   <Badge variant={statusConfig.variant} dot size="sm">

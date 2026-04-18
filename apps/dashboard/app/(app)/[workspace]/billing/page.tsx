@@ -95,12 +95,12 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
     return (
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-800 rounded w-48" />
-          <div className="h-4 bg-gray-800 rounded w-32" />
-          <div className="h-24 bg-gray-900 border border-gray-800 rounded-xl mt-8" />
+          <div className="h-8 bg-surface-high rounded w-48" />
+          <div className="h-4 bg-surface-high rounded w-32" />
+          <div className="h-24 bg-surface-base border border-outline-variant rounded-xl mt-8" />
           <div className="grid grid-cols-4 gap-4 mt-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-28 bg-gray-800 rounded-xl" />
+              <div key={i} className="h-28 bg-surface-high rounded-xl" />
             ))}
           </div>
         </div>
@@ -147,10 +147,10 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Billing &amp; Usage</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{currentMonthLabel} billing period</p>
+          <p className="text-sm text-on-surface-variant mt-0.5">{currentMonthLabel} billing period</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white text-sm rounded-lg transition-colors">
+          <button className="inline-flex items-center gap-2 px-3 py-2 bg-surface-high border border-outline-variant hover:border-outline-variant text-on-surface hover:text-white text-sm rounded-lg transition-colors">
             <Download className="w-4 h-4" />
             Download invoice
           </button>
@@ -158,7 +158,7 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
             href="https://billing.stripe.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white text-sm rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 bg-surface-high border border-outline-variant hover:border-outline-variant text-on-surface hover:text-white text-sm rounded-lg transition-colors"
           >
             <CreditCard className="w-4 h-4" />
             Manage billing
@@ -174,7 +174,7 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
         </div>
         <div className="flex-1">
           <p className="text-sm font-semibold text-white">{planName} Plan</p>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-on-surface-variant mt-0.5">
             {taskLimit.toLocaleString()} tasks/mo &middot; Next billing: {nextBilling}
           </p>
         </div>
@@ -185,7 +185,7 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
 
       {/* Usage meters */}
       <div className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">This Month&apos;s Usage</h2>
+        <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-4">This Month&apos;s Usage</h2>
         <UsageMeter
           tasksUsed={currentMonth.tasks_completed}
           tasksTotal={taskLimit}
@@ -200,7 +200,7 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
 
       {/* Cost breakdown */}
       <div className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Cost Breakdown</h2>
+        <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-4">Cost Breakdown</h2>
         <CostBreakdown
           baseSubscription={99}
           extraTasks={0}
@@ -217,9 +217,9 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
 
       {/* Margin by department */}
       <div className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Margin by Department ({currentMonthLabel})</h2>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="grid grid-cols-[1fr_80px_100px_100px_120px_100px] text-xs font-semibold text-gray-500 uppercase tracking-wider px-5 py-3 border-b border-gray-800">
+        <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-4">Margin by Department ({currentMonthLabel})</h2>
+        <div className="bg-surface-base border border-outline-variant rounded-xl overflow-hidden">
+          <div className="grid grid-cols-[1fr_80px_100px_100px_120px_100px] text-xs font-semibold text-on-surface-variant uppercase tracking-wider px-5 py-3 border-b border-outline-variant">
             <span>Department</span>
             <span className="text-right">Tasks</span>
             <span className="text-right">Token Cost</span>
@@ -229,11 +229,11 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
           </div>
           <div className="divide-y divide-gray-800/50">
             {departmentMargins.map((dept) => (
-              <div key={dept.department} className="grid grid-cols-[1fr_80px_100px_100px_120px_100px] items-center px-5 py-3.5 hover:bg-gray-800/40 transition-colors">
-                <span className="text-sm font-medium text-gray-200">{dept.department}</span>
-                <span className="text-xs text-gray-400 text-right">{dept.tasks}</span>
-                <span className="text-xs text-gray-400 text-right">${dept.tokenCost.toFixed(2)}</span>
-                <span className="text-xs text-gray-400 text-right">${dept.computeCost.toFixed(2)}</span>
+              <div key={dept.department} className="grid grid-cols-[1fr_80px_100px_100px_120px_100px] items-center px-5 py-3.5 hover:bg-surface-high/40 transition-colors">
+                <span className="text-sm font-medium text-on-surface">{dept.department}</span>
+                <span className="text-xs text-on-surface-variant text-right">{dept.tasks}</span>
+                <span className="text-xs text-on-surface-variant text-right">${dept.tokenCost.toFixed(2)}</span>
+                <span className="text-xs text-on-surface-variant text-right">${dept.computeCost.toFixed(2)}</span>
                 <span className="text-sm text-white font-mono text-right">${dept.revenue.toLocaleString()}</span>
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-mono text-green-400">${dept.marginRaw.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -247,9 +247,9 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
 
       {/* Billing history */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Billing History</h2>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="grid grid-cols-[1fr_80px_80px_80px_100px] text-xs font-semibold text-gray-500 uppercase tracking-wider px-5 py-3 border-b border-gray-800">
+        <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-4">Billing History</h2>
+        <div className="bg-surface-base border border-outline-variant rounded-xl overflow-hidden">
+          <div className="grid grid-cols-[1fr_80px_80px_80px_100px] text-xs font-semibold text-on-surface-variant uppercase tracking-wider px-5 py-3 border-b border-outline-variant">
             <span>Period</span>
             <span>Tasks</span>
             <span>Tokens</span>
@@ -259,24 +259,24 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
           {history.map((m, i) => (
             <div
               key={m.month}
-              className="grid grid-cols-[1fr_80px_80px_80px_100px] items-center px-5 py-3.5 border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors"
+              className="grid grid-cols-[1fr_80px_80px_80px_100px] items-center px-5 py-3.5 border-b border-outline-variant/50 hover:bg-surface-high/40 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-200">{formatMonth(m.month)}</span>
+                <span className="text-sm text-on-surface">{formatMonth(m.month)}</span>
                 {i === 0 && (
                   <span className="text-[10px] px-1.5 py-0.5 bg-brand-500/10 text-brand-400 rounded font-medium">Current</span>
                 )}
               </div>
-              <span className="text-xs text-gray-400">{m.tasks_completed.toLocaleString()}</span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-on-surface-variant">{m.tasks_completed.toLocaleString()}</span>
+              <span className="text-xs text-on-surface-variant">
                 {m.tokens_used >= 1_000_000 ? `${(m.tokens_used / 1_000_000).toFixed(1)}M` : `${(m.tokens_used / 1000).toFixed(0)}K`}
               </span>
-              <span className="text-xs text-gray-400">{m.compute_hours.toFixed(1)}h</span>
+              <span className="text-xs text-on-surface-variant">{m.compute_hours.toFixed(1)}h</span>
               <span className="text-sm font-mono text-white text-right">${m.cost_usd.toFixed(2)}</span>
             </div>
           ))}
           {history.length === 0 && (
-            <div className="px-5 py-6 text-center text-sm text-gray-600">No billing history yet</div>
+            <div className="px-5 py-6 text-center text-sm text-on-surface-variant">No billing history yet</div>
           )}
         </div>
       </div>

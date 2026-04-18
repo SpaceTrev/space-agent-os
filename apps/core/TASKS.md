@@ -7,10 +7,6 @@
 - [URGENT] Wire discord_bot /ask -> CentralBrain.handle() @agent #discord #orchestration
 - [URGENT] Wire heartbeat.py dispatch -> CentralBrain.handle() @agent #orchestration
 
-## IN REVIEW
-- [HIGH] claude-mem agent memory layer — PR open on feat/claude-mem-agent-memory @space-claw #memory
-  memory/claude_mem.py (save + search), poll_commands.py hook, /memory/* API endpoints, CentralBrain CHAT enrichment
-
 ## HIGH
 - [HIGH] Wire Timescale DB into FastAPI backend for persistent storage @agent #infra #database
   Set TIMESCALE_URL (or DATABASE_URL) env var in Railway. Use asyncpg to write agent runs, task history,
@@ -20,8 +16,11 @@
           model_usage(model, provider, tokens_in, tokens_out, latency_s, created_at).
 - [HIGH] Wire Discord /ask command end-to-end smoke test @trev #discord
   Bot invite + ANTHROPIC_API_KEY needed. Once set: test /ask, /status, /swarm via real Discord slash commands.
-- [HIGH] Add Supabase env vars to apps/dashboard/.env.local @trev #infra
-  NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY needed for dashboard DB. health_check reports not_configured.
+- [HIGH] Set Vercel production env vars @trev #infra #BLOCKING
+  NEXT_PUBLIC_SUPABASE_URL=https://qsdtnnutusvkgnvnubxd.supabase.co and NEXT_PUBLIC_SUPABASE_ANON_KEY must be
+  added in Vercel dashboard → Project Settings → Environment Variables → Production. No CLI token found locally.
+  Without these, dashboard production runs in offline mode (Supabase not wired at build time).
+  trevbdev@gmail.com user exists in Supabase and login works — just needs the vars set + redeploy.
 - [HIGH] Run uv add sqlite-vec in apps/core/ (unlocks ANN vector search in VectorStore) @agent #memory
 - [HIGH] Boot worker agent: `python -m agents.worker` and connect to event pipeline @space-claw #infra
 
@@ -45,5 +44,14 @@
 - [LOW] Add LLM auto-summarisation retry/backoff for rate-limited envs (in-session OAuth token contention) @agent #skills
 
 ---
-*Last heartbeat: 2026-04-14T03:08:28Z*
-*Last updated: 2026-04-07 — merged task backlog, boot system in progress*
+*Last heartbeat: 2026-04-18T17:20:48Z*
+## DONE (overnight 2026-04-18)
+- [DONE] Merged PR #36 feat/marketplace-seed-live-status (12 FAM Core items + mission-control live Supabase)
+- [DONE] Pruned 8 stale remote branches (all merged PRs cleaned up)
+- [DONE] Full IK design system compliance sweep — zero gray-* violations across all TSX files
+- [DONE] Dashboard build passing (zero errors, 0 TypeScript warnings)
+- [DONE] FastAPI :8000, claude-mem :37777, sync daemon all running
+- [DONE] Supabase user trevbdev@gmail.com confirmed + login tested (password: SpaceClaw2025!)
+- [DONE] All production routes 200 OK: /, /login, /mission-control, /marketplace, /agents, /dispatch
+
+*Last updated: 2026-04-18 — overnight sweep by Space-Claw*

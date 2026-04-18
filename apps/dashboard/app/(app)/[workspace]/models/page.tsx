@@ -183,21 +183,21 @@ export default function ModelsPage({ params }: { params: Promise<{ workspace: st
     <div className="max-w-3xl mx-auto px-6 py-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-surface-high border border-outline-variant flex items-center justify-center">
           <Brain className="w-5 h-5 text-brand-400" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white">Model Providers</h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-on-surface-variant">
             {verifiedCount} verified · {configuredCount} configured of {KNOWN_PROVIDERS.length} providers
           </p>
         </div>
       </div>
 
       {/* Workspace default model */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+      <div className="bg-surface-base border border-outline-variant rounded-xl p-5 mb-6">
         <h2 className="text-sm font-semibold text-white mb-1">Workspace Default Model</h2>
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-xs text-on-surface-variant mb-4">
           Used when an agent doesn&apos;t have a specific model configured.
         </p>
         <ModelPicker
@@ -208,11 +208,11 @@ export default function ModelsPage({ params }: { params: Promise<{ workspace: st
       </div>
 
       {/* Routing Rules Engine */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+      <div className="bg-surface-base border border-outline-variant rounded-xl p-5 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-sm font-semibold text-white mb-1">Routing Rules Engine</h2>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-on-surface-variant">
               Dynamically route tasks to different active models based on context.
             </p>
           </div>
@@ -224,17 +224,17 @@ export default function ModelsPage({ params }: { params: Promise<{ workspace: st
 
         <div className="space-y-3">
           {mockRoutingRules.map(rule => (
-            <div key={rule.id} className={clsx("flex items-center gap-4 px-4 py-3 border rounded-lg", rule.isActive ? "border-brand-500/30 bg-gray-800/50" : "border-gray-800 bg-gray-900 opacity-60")}>
-              <GitMerge className={clsx("w-4 h-4", rule.isActive ? "text-brand-400" : "text-gray-600")} />
+            <div key={rule.id} className={clsx("flex items-center gap-4 px-4 py-3 border rounded-lg", rule.isActive ? "border-brand-500/30 bg-surface-high/50" : "border-outline-variant bg-surface-base opacity-60")}>
+              <GitMerge className={clsx("w-4 h-4", rule.isActive ? "text-brand-400" : "text-on-surface-variant")} />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-200">{rule.name}</p>
+                <p className="text-sm font-medium text-on-surface">{rule.name}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs font-mono text-gray-500 bg-gray-900 px-1.5 py-0.5 rounded border border-gray-800">{rule.condition}</span>
-                  <ArrowRight className="w-3 h-3 text-gray-600" />
+                  <span className="text-xs font-mono text-on-surface-variant bg-surface-base px-1.5 py-0.5 rounded border border-outline-variant">{rule.condition}</span>
+                  <ArrowRight className="w-3 h-3 text-on-surface-variant" />
                   <span className="text-xs font-mono text-brand-400/80">{rule.model.split(':').pop()}</span>
                 </div>
               </div>
-              <div className={clsx("text-xs font-medium px-2 py-1 rounded-md", rule.isActive ? "bg-green-500/10 text-green-400" : "bg-gray-800 text-gray-500")}>
+              <div className={clsx("text-xs font-medium px-2 py-1 rounded-md", rule.isActive ? "bg-green-500/10 text-green-400" : "bg-surface-high text-on-surface-variant")}>
                 {rule.isActive ? 'Active' : 'Disabled'}
               </div>
             </div>
@@ -245,7 +245,7 @@ export default function ModelsPage({ params }: { params: Promise<{ workspace: st
       {/* Provider configs */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Configured Providers</h2>
+          <h2 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Configured Providers</h2>
         </div>
         {mergedProviders.map((provider) => {
           const health = healthResults[provider.providerType]
@@ -267,7 +267,7 @@ export default function ModelsPage({ params }: { params: Promise<{ workspace: st
                 <div className="flex items-center gap-3 mt-1 ml-14 text-xs">
                   <button
                     onClick={() => handleHealthCheck(provider.providerType)}
-                    className="inline-flex items-center gap-1.5 text-gray-500 hover:text-brand-400 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-on-surface-variant hover:text-brand-400 transition-colors"
                     disabled={health?.loading}
                   >
                     {health?.loading ? (

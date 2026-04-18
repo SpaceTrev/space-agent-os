@@ -114,7 +114,7 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
       <div className="max-w-7xl mx-auto px-6 py-8 flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading workspace...</p>
+          <p className="text-sm text-on-surface-variant">Loading workspace...</p>
         </div>
       </div>
     )
@@ -128,7 +128,7 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
           <h1 className="text-2xl font-bold text-white capitalize">
             {workspace.replace(/-/g, ' ')} Fleet
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-on-surface-variant mt-0.5">
             {activeAgents} agent{activeAgents !== 1 ? 's' : ''} active
           </p>
         </div>
@@ -149,21 +149,21 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
       {/* Compute servers */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Compute Servers</h2>
+          <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Compute Servers</h2>
           <Link href={`/${workspace}/compute`} className="text-xs text-brand-400 hover:text-brand-300 transition-colors">
             Manage
           </Link>
         </div>
         {servers.length === 0 ? (
-          <p className="text-sm text-gray-600">No compute servers provisioned.</p>
+          <p className="text-sm text-on-surface-variant">No compute servers provisioned.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {servers.map((server) => (
-              <div key={server.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <div key={server.id} className="bg-surface-base border border-outline-variant rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
                     <div className="relative">
-                      <Server className="w-5 h-5 text-gray-500" />
+                      <Server className="w-5 h-5 text-on-surface-variant" />
                       <span className={clsx(
                         'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-gray-900',
                         statusDotColor[server.status] ?? 'bg-gray-500'
@@ -171,12 +171,12 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
                     </div>
                     <div>
                       <p className="text-sm font-medium text-white">{server.name}</p>
-                      <p className="text-xs text-gray-500">{server.provider} {server.region ? `· ${server.region}` : ''}</p>
+                      <p className="text-xs text-on-surface-variant">{server.provider} {server.region ? `· ${server.region}` : ''}</p>
                     </div>
                   </div>
                   <span className="text-xs font-mono text-yellow-400">${Number(server.cost_per_hour_usd ?? 0).toFixed(3)}/hr</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-xs text-gray-500">
+                <div className="grid grid-cols-2 gap-3 text-xs text-on-surface-variant">
                   <div className="flex items-center gap-1.5">
                     <Cpu className="w-3.5 h-3.5" />
                     {server.cpu} vCPU
@@ -195,7 +195,7 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
       {/* Usage meters */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Usage This Month</h2>
+          <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Usage This Month</h2>
           <Link href={`/${workspace}/billing`} className="text-xs text-brand-400 hover:text-brand-300 transition-colors">
             View billing
           </Link>

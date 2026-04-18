@@ -41,7 +41,7 @@ export function FullPageLoader({ message = 'Loading...' }: { message?: string })
   return (
     <div className="flex items-center justify-center min-h-[400px] flex-col gap-3">
       <Spinner size="lg" />
-      <p className="text-sm text-gray-500">{message}</p>
+      <p className="text-sm text-on-surface-variant">{message}</p>
     </div>
   )
 }
@@ -56,7 +56,7 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       className={clsx(
-        'animate-pulse bg-gray-700 rounded',
+        'animate-pulse bg-surface-highest rounded',
         className
       )}
     />
@@ -80,7 +80,7 @@ export function SkeletonCard({ className }: SkeletonProps) {
   return (
     <div
       className={clsx(
-        'bg-gray-800 border border-gray-700 rounded-xl p-5 space-y-4',
+        'bg-surface-high border border-outline-variant rounded-xl p-5 space-y-4',
         className
       )}
     >
@@ -106,7 +106,7 @@ export function SkeletonTable({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
     <div className="space-y-0">
       {/* Header */}
       <div
-        className="grid gap-4 px-4 py-3 border-b border-gray-700"
+        className="grid gap-4 px-4 py-3 border-b border-outline-variant"
         style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
       >
         {Array.from({ length: cols }).map((_, i) => (
@@ -117,7 +117,7 @@ export function SkeletonTable({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
       {Array.from({ length: rows }).map((_, rowIdx) => (
         <div
           key={rowIdx}
-          className="grid gap-4 px-4 py-4 border-b border-gray-700/50"
+          className="grid gap-4 px-4 py-4 border-b border-outline-variant/50"
           style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
         >
           {Array.from({ length: cols }).map((_, colIdx) => (

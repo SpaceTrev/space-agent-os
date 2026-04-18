@@ -69,7 +69,7 @@ export default function AgentsPage({ params }: { params: Promise<{ workspace: st
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Agents</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{agents.length} agents in this workspace</p>
+          <p className="text-sm text-on-surface-variant mt-0.5">{agents.length} agents in this workspace</p>
         </div>
         <Link
           href={`/${workspace}/agents/new`}
@@ -82,15 +82,15 @@ export default function AgentsPage({ params }: { params: Promise<{ workspace: st
 
       {agents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center mb-4">
-            <Bot className="w-8 h-8 text-gray-600" />
+          <div className="w-16 h-16 rounded-2xl bg-surface-high border border-outline-variant flex items-center justify-center mb-4">
+            <Bot className="w-8 h-8 text-on-surface-variant" />
           </div>
-          <p className="text-sm font-medium text-gray-300">No agents yet</p>
-          <p className="text-xs text-gray-500 mt-1">Create your first agent to get started</p>
+          <p className="text-sm font-medium text-on-surface">No agents yet</p>
+          <p className="text-xs text-on-surface-variant mt-1">Create your first agent to get started</p>
         </div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="grid grid-cols-[1fr_140px_140px_100px_100px] text-xs font-semibold text-gray-500 uppercase tracking-wider px-5 py-3 border-b border-gray-800 bg-gray-900">
+        <div className="bg-surface-base border border-outline-variant rounded-xl overflow-hidden">
+          <div className="grid grid-cols-[1fr_140px_140px_100px_100px] text-xs font-semibold text-on-surface-variant uppercase tracking-wider px-5 py-3 border-b border-outline-variant bg-surface-base">
             <span>Agent</span>
             <span>Type</span>
             <span>Model</span>
@@ -104,23 +104,23 @@ export default function AgentsPage({ params }: { params: Promise<{ workspace: st
                 <Link
                   key={agent.id}
                   href={`/${workspace}/agents/${agent.id}`}
-                  className="grid grid-cols-[1fr_140px_140px_100px_100px] items-center px-5 py-3.5 hover:bg-gray-800/50 transition-colors"
+                  className="grid grid-cols-[1fr_140px_140px_100px_100px] items-center px-5 py-3.5 hover:bg-surface-high/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-surface-high border border-outline-variant flex items-center justify-center flex-shrink-0">
                       <Bot className="w-4 h-4 text-brand-400" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white truncate">{agent.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{agent.description ?? agent.type}</p>
+                      <p className="text-xs text-on-surface-variant truncate">{agent.description ?? agent.type}</p>
                     </div>
                   </div>
-                  <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium w-fit', typeColors[agent.type] ?? 'text-gray-400 bg-gray-500/10')}>
+                  <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium w-fit', typeColors[agent.type] ?? 'text-on-surface-variant bg-gray-500/10')}>
                     {agent.type}
                   </span>
-                  <span className="text-xs text-gray-400 font-mono truncate">{modelShortName(agent.model)}</span>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <CheckCircle className="w-3.5 h-3.5 text-gray-600" />
+                  <span className="text-xs text-on-surface-variant font-mono truncate">{modelShortName(agent.model)}</span>
+                  <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
+                    <CheckCircle className="w-3.5 h-3.5 text-on-surface-variant" />
                     {agent.total_tasks_completed ?? 0}
                   </div>
                   <Badge variant={statusConfig.variant} dot size="sm">

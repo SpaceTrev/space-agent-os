@@ -81,7 +81,7 @@ export function ModelPicker({
         {selected ? (
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-white truncate">{selected.name}</span>
-            <span className="text-gray-500 text-xs flex-shrink-0">{selected.providerName}</span>
+            <span className="text-on-surface-variant text-xs flex-shrink-0">{selected.providerName}</span>
             {selected.isFree ? (
               <Badge variant="green" size="sm">Free</Badge>
             ) : (
@@ -89,9 +89,9 @@ export function ModelPicker({
             )}
           </div>
         ) : (
-          <span className="text-gray-500">{placeholder}</span>
+          <span className="text-on-surface-variant">{placeholder}</span>
         )}
-        <ChevronDown className={clsx('w-4 h-4 text-gray-500 flex-shrink-0 transition-transform', open && 'rotate-180')} />
+        <ChevronDown className={clsx('w-4 h-4 text-on-surface-variant flex-shrink-0 transition-transform', open && 'rotate-180')} />
       </button>
 
       {open && (
@@ -99,25 +99,25 @@ export function ModelPicker({
           {/* Search */}
           <div className="p-2 mb-1">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant" />
               <input
                 autoFocus
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search models..."
-                className="w-full pl-8 pr-3 py-1.5 bg-[var(--surface-container)] rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full pl-8 pr-3 py-1.5 bg-[var(--surface-container)] rounded-lg text-sm text-white placeholder-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
           </div>
 
           <div className="max-h-72 overflow-y-auto">
             {Object.keys(grouped).length === 0 ? (
-              <p className="px-4 py-6 text-sm text-gray-500 text-center">No models found</p>
+              <p className="px-4 py-6 text-sm text-on-surface-variant text-center">No models found</p>
             ) : (
               Object.entries(grouped).map(([providerName, providerModels]) => (
                 <div key={providerName}>
-                  <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider bg-gray-800/80">
+                  <div className="px-3 py-1.5 text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider bg-surface-high/80">
                     {providerName}
                   </div>
                   {providerModels.map((model) => (
@@ -135,9 +135,9 @@ export function ModelPicker({
                       )}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-gray-200 truncate">{model.name}</span>
+                        <span className="text-on-surface truncate">{model.name}</span>
                         {model.contextWindow && (
-                          <span className="text-[10px] text-gray-600 flex-shrink-0">
+                          <span className="text-[10px] text-on-surface-variant flex-shrink-0">
                             {model.contextWindow >= 1000 ? `${Math.round(model.contextWindow / 1000)}K ctx` : `${model.contextWindow} ctx`}
                           </span>
                         )}
@@ -149,7 +149,7 @@ export function ModelPicker({
                             Free
                           </Badge>
                         ) : model.inputCostPerMillion != null ? (
-                          <span className="text-xs text-gray-500 font-mono">
+                          <span className="text-xs text-on-surface-variant font-mono">
                             ${model.inputCostPerMillion.toFixed(2)}/1M
                           </span>
                         ) : null}
