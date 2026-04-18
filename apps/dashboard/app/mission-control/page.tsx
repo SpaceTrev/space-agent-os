@@ -88,7 +88,6 @@ interface SystemHealth {
 interface LiveCommand {
   id: string
   command?: string
-  type?: string
   status: string
   payload: Record<string, unknown> | null
   result: string | null
@@ -290,7 +289,7 @@ function BrainCard({ domain, total }: { domain: BrainDomain; total: number }) {
 }
 
 function CommandRow({ cmd }: { cmd: LiveCommand }) {
-  const label = cmd.command ?? cmd.type ?? 'command'
+  const label = cmd.command ?? 'command'
   const statusStyle = CMD_STATUS_STYLES[cmd.status] ?? CMD_STATUS_STYLES.pending
   const agentId = cmd.payload?.agent as string | undefined
 
@@ -344,7 +343,7 @@ export default function MissionControlPage() {
     const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString()
     const { data: cmds, error: cmdsErr } = await client
       .from('commands')
-      .select('id, command, type, status, payload, result, created_at, updated_at')
+      .select('id, command, status, payload, result, created_at, updated_at')
       .gte('created_at', cutoff)
       .order('created_at', { ascending: false })
       .limit(20)
@@ -365,7 +364,7 @@ export default function MissionControlPage() {
         agent_id: agent.id,
         status: running ? 'running' : latest?.status === 'error' || latest?.status === 'failed' ? 'error' : 'idle',
         last_active: latest?.updated_at ?? null,
-        current_task: running ? (running.command ?? running.type ?? null) : null,
+        current_task: running ? (running.command ?? null) : null,
       }
     }
     setAgentStatuses(statusMap)
