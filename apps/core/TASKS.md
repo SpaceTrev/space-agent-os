@@ -44,7 +44,7 @@
 - [LOW] Add LLM auto-summarisation retry/backoff for rate-limited envs (in-session OAuth token contention) @agent #skills
 
 ---
-*Last heartbeat: 2026-04-18T17:20:48Z*
+*Last heartbeat: 2026-04-18T18:50:48Z*
 ## DONE (overnight 2026-04-18)
 - [DONE] Merged PR #36 feat/marketplace-seed-live-status (12 FAM Core items + mission-control live Supabase)
 - [DONE] Pruned 8 stale remote branches (all merged PRs cleaned up)
