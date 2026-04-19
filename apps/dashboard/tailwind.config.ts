@@ -39,10 +39,18 @@ const config: Config = {
         // ── Outline ─────────────────────────────────────────────
         'outline-variant':  'var(--outline-variant)',
 
+        // ── Brand shades (alias for primary palette, theme-aware) ──
+        brand: {
+          300: 'var(--brand-300)',
+          400: 'var(--brand-400)',
+          500: 'var(--brand-500)',
+          600: 'var(--brand-600)',
+        },
+
         // ── Legacy aliases (keep marketplace + existing code working) ──
         background: 'var(--surface)',
         'surface-legacy': 'var(--surface-container)',
-        'border-base': 'var(--outline-variant)',
+        'border-base': 'var(--surface-container-high)',
         'text-primary': 'var(--on-surface)',
         'text-secondary': 'var(--on-surface-variant)',
         'text-muted': 'var(--color-text-muted)',

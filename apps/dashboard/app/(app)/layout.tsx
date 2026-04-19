@@ -45,7 +45,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Logo / Org */}
         <div className="px-4 py-4 ">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
               <Bot className="w-4 h-4 text-white" />
             </div>
             <div className="min-w-0">
@@ -155,7 +155,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               onClick={() => setUserMenuOpen((v) => !v)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-border-base transition-colors"
             >
-              <div className="w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                 <span className="text-[10px] font-bold text-white">
                   {user?.name?.charAt(0) ?? '?'}
                 </span>

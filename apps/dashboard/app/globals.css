@@ -28,6 +28,12 @@
   --tertiary:           #6c71c4;
   --tertiary-container: #e0e2f4;
 
+  /* ── Brand shades (primary palette scale) ──────────────── */
+  --brand-300:          #4bb8ae;
+  --brand-400:          #2aa198;
+  --brand-500:          #259991;
+  --brand-600:          #1f8880;
+
   /* ── Outline (ghost borders, accessibility only) ────────── */
   --outline-variant:    rgba(101, 123, 131, 0.20);
 
@@ -64,8 +70,14 @@
   --tertiary:           #aab3e8;
   --tertiary-container: #1e2048;
 
+  /* ── Brand shades (primary palette scale) ──────────────── */
+  --brand-300:          #93e1dd;
+  --brand-400:          #6cd8ce;
+  --brand-500:          #5cccc2;
+  --brand-600:          #4bbfb5;
+
   /* ── Outline ────────────────────────────────────────────── */
-  --outline-variant:    rgba(65, 72, 75, 0.20);
+  --outline-variant:    rgba(143, 168, 176, 0.15);
 
   /* ── Legacy compat ──────────────────────────────────────── */
   --color-background:      var(--surface);
