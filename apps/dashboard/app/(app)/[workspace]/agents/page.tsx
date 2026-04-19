@@ -68,7 +68,7 @@ export default function AgentsPage({ params }: { params: Promise<{ workspace: st
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Agents</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Agents</h1>
           <p className="text-sm text-on-surface-variant mt-0.5">{agents.length} agents in this workspace</p>
         </div>
         <Link
@@ -111,7 +111,7 @@ export default function AgentsPage({ params }: { params: Promise<{ workspace: st
                       <Bot className="w-4 h-4 text-brand-400" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{agent.name}</p>
+                      <p className="text-sm font-medium text-on-surface truncate">{agent.name}</p>
                       <p className="text-xs text-on-surface-variant truncate">{agent.description ?? agent.type}</p>
                     </div>
                   </div>

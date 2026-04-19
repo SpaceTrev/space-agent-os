@@ -98,7 +98,7 @@ export default function TaskDetailPage() {
               {mockTask.priority.charAt(0).toUpperCase() + mockTask.priority.slice(1)} priority
             </span>
           </div>
-          <h1 className="text-xl font-bold text-white leading-snug">{mockTask.title}</h1>
+          <h1 className="text-xl font-bold text-on-surface leading-snug">{mockTask.title}</h1>
           {mockTask.description && (
             <p className="text-sm text-on-surface-variant mt-2">{mockTask.description}</p>
           )}

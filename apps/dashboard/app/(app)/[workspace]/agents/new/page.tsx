@@ -135,7 +135,7 @@ export default function NewAgentPage() {
           <Bot className="w-5 h-5 text-brand-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white">Create New Agent</h1>
+          <h1 className="text-xl font-bold text-on-surface">Create New Agent</h1>
           <p className="text-sm text-on-surface-variant">Configure your AI agent for the {workspace} workspace</p>
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function NewAgentPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic info */}
         <div className="bg-surface-base border border-outline-variant rounded-xl p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-white mb-4">Basic Information</h2>
+          <h2 className="text-sm font-semibold text-on-surface mb-4">Basic Information</h2>
 
           <div className="grid grid-cols-2 gap-4">
             <Input
@@ -180,7 +180,7 @@ export default function NewAgentPage() {
 
         {/* Model selection */}
         <div className="bg-surface-base border border-outline-variant rounded-xl p-5">
-          <h2 className="text-sm font-semibold text-white mb-4">Model Configuration</h2>
+          <h2 className="text-sm font-semibold text-on-surface mb-4">Model Configuration</h2>
           <ModelPicker
             label="AI Model"
             models={models}
@@ -196,7 +196,7 @@ export default function NewAgentPage() {
 
         {/* System prompt */}
         <div className="bg-surface-base border border-outline-variant rounded-xl p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-white mb-1">Behavior</h2>
+          <h2 className="text-sm font-semibold text-on-surface mb-1">Behavior</h2>
 
           <Textarea
             label="System Prompt"
@@ -219,7 +219,7 @@ export default function NewAgentPage() {
 
         {/* Skill files */}
         <div className="bg-surface-base border border-outline-variant rounded-xl p-5">
-          <h2 className="text-sm font-semibold text-white mb-1">Skill Files</h2>
+          <h2 className="text-sm font-semibold text-on-surface mb-1">Skill Files</h2>
           <p className="text-xs text-on-surface-variant mb-4">
             Add reference documents, API specs, or code snippets the agent can use.
           </p>
@@ -248,7 +248,7 @@ export default function NewAgentPage() {
               onChange={(e) => setNewSkill(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
               placeholder="Add skill file name..."
-              className="flex-1 rounded-lg border border-outline-variant bg-surface-high text-sm text-white placeholder-on-surface-variant/50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              className="flex-1 rounded-lg border border-outline-variant bg-surface-high text-sm text-on-surface placeholder-on-surface-variant/50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
             />
             <Button type="button" variant="outline" size="sm" onClick={addSkill}>
               <Plus className="w-4 h-4" />

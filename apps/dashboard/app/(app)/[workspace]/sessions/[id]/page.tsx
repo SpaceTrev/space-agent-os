@@ -85,7 +85,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
   if (error || !session) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <Link href={`/${workspace}/sessions`} className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-white mb-6 transition-colors">
+        <Link href={`/${workspace}/sessions`} className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to sessions
         </Link>
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">
@@ -101,7 +101,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Back */}
-      <Link href={`/${workspace}/sessions`} className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-white mb-6 transition-colors">
+      <Link href={`/${workspace}/sessions`} className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to sessions
       </Link>
 
@@ -112,7 +112,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
             <MessageSquare className="w-6 h-6 text-brand-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">{goal}</h1>
+            <h1 className="text-xl font-bold text-on-surface">{goal}</h1>
             <p className="text-sm text-on-surface-variant mt-0.5 capitalize">{session.session_type} session</p>
           </div>
         </div>
@@ -126,21 +126,21 @@ export default function SessionDetailPage({ params }: { params: Promise<{ worksp
             <Users className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Participants</span>
           </div>
-          <p className="text-lg font-semibold text-white">{session.participants?.length ?? 0} agents</p>
+          <p className="text-lg font-semibold text-on-surface">{session.participants?.length ?? 0} agents</p>
         </div>
         <div className="bg-surface-base border border-outline-variant rounded-xl p-4">
           <div className="flex items-center gap-2 text-on-surface-variant mb-1">
             <Clock className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Duration</span>
           </div>
-          <p className="text-lg font-semibold text-white">{formatDuration(session.started_at, session.ended_at)}</p>
+          <p className="text-lg font-semibold text-on-surface">{formatDuration(session.started_at, session.ended_at)}</p>
         </div>
         <div className="bg-surface-base border border-outline-variant rounded-xl p-4">
           <div className="flex items-center gap-2 text-on-surface-variant mb-1">
             <MessageSquare className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Messages</span>
           </div>
-          <p className="text-lg font-semibold text-white">{messages.length}</p>
+          <p className="text-lg font-semibold text-on-surface">{messages.length}</p>
         </div>
       </div>
 

@@ -99,13 +99,13 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {/* Back Link */}
-      <Link href={`/${workspace}/sprints`} className="inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-white mb-6 transition-colors">
+      <Link href={`/${workspace}/sprints`} className="inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Sprints
       </Link>
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">{sprint.name}</h1>
+        <h1 className="text-3xl font-bold text-on-surface mb-2">{sprint.name}</h1>
         <p className="text-on-surface-variant max-w-2xl">{sprint.description}</p>
       </div>
 
@@ -154,7 +154,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
           {mockStandups.map((standup, i) => (
             <div key={i} className="bg-surface-base border border-outline-variant rounded-xl overflow-hidden">
               <div className="bg-surface-high px-5 py-3 border-b border-outline-variant">
-                <h3 className="text-sm font-medium text-white">{standup.date}</h3>
+                <h3 className="text-sm font-medium text-on-surface">{standup.date}</h3>
               </div>
               <div className="divide-y divide-gray-800 flex flex-col">
                 {standup.updates.map((update, j) => (
@@ -203,7 +203,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ workspa
             
             <div className="flex items-center gap-3 mb-6 relative z-10">
               <Sparkles className="w-6 h-6 text-brand-400" />
-              <h2 className="text-xl font-bold text-white">AI Generated Retrospective</h2>
+              <h2 className="text-xl font-bold text-on-surface">AI Generated Retrospective</h2>
             </div>
             
             <div className="space-y-6 relative z-10">

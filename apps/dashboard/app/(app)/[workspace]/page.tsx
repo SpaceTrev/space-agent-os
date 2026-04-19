@@ -125,7 +125,7 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
       {/* Page header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white capitalize">
+          <h1 className="text-2xl font-bold text-on-surface capitalize">
             {workspace.replace(/-/g, ' ')} Fleet
           </h1>
           <p className="text-sm text-on-surface-variant mt-0.5">
@@ -134,7 +134,7 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
         </div>
         <Link
           href={`/${workspace}/agents/new`}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-on-surface text-sm font-medium rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           New Agent
@@ -170,7 +170,7 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
                       )} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{server.name}</p>
+                      <p className="text-sm font-medium text-on-surface">{server.name}</p>
                       <p className="text-xs text-on-surface-variant">{server.provider} {server.region ? `· ${server.region}` : ''}</p>
                     </div>
                   </div>

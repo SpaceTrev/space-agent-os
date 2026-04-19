@@ -146,11 +146,11 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Billing &amp; Usage</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Billing &amp; Usage</h1>
           <p className="text-sm text-on-surface-variant mt-0.5">{currentMonthLabel} billing period</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-2 px-3 py-2 bg-surface-high border border-outline-variant hover:border-outline-variant text-on-surface hover:text-white text-sm rounded-lg transition-colors">
+          <button className="inline-flex items-center gap-2 px-3 py-2 bg-surface-high border border-outline-variant hover:border-outline-variant text-on-surface hover:text-on-surface text-sm rounded-lg transition-colors">
             <Download className="w-4 h-4" />
             Download invoice
           </button>
@@ -158,7 +158,7 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
             href="https://billing.stripe.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3 py-2 bg-surface-high border border-outline-variant hover:border-outline-variant text-on-surface hover:text-white text-sm rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 bg-surface-high border border-outline-variant hover:border-outline-variant text-on-surface hover:text-on-surface text-sm rounded-lg transition-colors"
           >
             <CreditCard className="w-4 h-4" />
             Manage billing
@@ -173,7 +173,7 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
           <CreditCard className="w-5 h-5 text-brand-400" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-white">{planName} Plan</p>
+          <p className="text-sm font-semibold text-on-surface">{planName} Plan</p>
           <p className="text-xs text-on-surface-variant mt-0.5">
             {taskLimit.toLocaleString()} tasks/mo &middot; Next billing: {nextBilling}
           </p>
@@ -234,7 +234,7 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
                 <span className="text-xs text-on-surface-variant text-right">{dept.tasks}</span>
                 <span className="text-xs text-on-surface-variant text-right">${dept.tokenCost.toFixed(2)}</span>
                 <span className="text-xs text-on-surface-variant text-right">${dept.computeCost.toFixed(2)}</span>
-                <span className="text-sm text-white font-mono text-right">${dept.revenue.toLocaleString()}</span>
+                <span className="text-sm text-on-surface font-mono text-right">${dept.revenue.toLocaleString()}</span>
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-mono text-green-400">${dept.marginRaw.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   <span className="text-[10px] text-green-500/70">{dept.marginPct}%</span>
@@ -272,7 +272,7 @@ export default function BillingPage({ params }: { params: Promise<{ workspace: s
                 {m.tokens_used >= 1_000_000 ? `${(m.tokens_used / 1_000_000).toFixed(1)}M` : `${(m.tokens_used / 1000).toFixed(0)}K`}
               </span>
               <span className="text-xs text-on-surface-variant">{m.compute_hours.toFixed(1)}h</span>
-              <span className="text-sm font-mono text-white text-right">${m.cost_usd.toFixed(2)}</span>
+              <span className="text-sm font-mono text-on-surface text-right">${m.cost_usd.toFixed(2)}</span>
             </div>
           ))}
           {history.length === 0 && (

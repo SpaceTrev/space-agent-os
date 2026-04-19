@@ -187,7 +187,7 @@ export default function ModelsPage({ params }: { params: Promise<{ workspace: st
           <Brain className="w-5 h-5 text-brand-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white">Model Providers</h1>
+          <h1 className="text-xl font-bold text-on-surface">Model Providers</h1>
           <p className="text-sm text-on-surface-variant">
             {verifiedCount} verified · {configuredCount} configured of {KNOWN_PROVIDERS.length} providers
           </p>
@@ -196,7 +196,7 @@ export default function ModelsPage({ params }: { params: Promise<{ workspace: st
 
       {/* Workspace default model */}
       <div className="bg-surface-base border border-outline-variant rounded-xl p-5 mb-6">
-        <h2 className="text-sm font-semibold text-white mb-1">Workspace Default Model</h2>
+        <h2 className="text-sm font-semibold text-on-surface mb-1">Workspace Default Model</h2>
         <p className="text-xs text-on-surface-variant mb-4">
           Used when an agent doesn&apos;t have a specific model configured.
         </p>
@@ -211,7 +211,7 @@ export default function ModelsPage({ params }: { params: Promise<{ workspace: st
       <div className="bg-surface-base border border-outline-variant rounded-xl p-5 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-sm font-semibold text-white mb-1">Routing Rules Engine</h2>
+            <h2 className="text-sm font-semibold text-on-surface mb-1">Routing Rules Engine</h2>
             <p className="text-xs text-on-surface-variant">
               Dynamically route tasks to different active models based on context.
             </p>

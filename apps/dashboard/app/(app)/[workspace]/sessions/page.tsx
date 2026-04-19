@@ -84,7 +84,7 @@ export default function SessionsPage({ params }: { params: Promise<{ workspace: 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Sessions</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Sessions</h1>
           <p className="text-sm text-on-surface-variant mt-0.5">{sessions.length} sessions in this workspace</p>
         </div>
         <button
@@ -129,7 +129,7 @@ export default function SessionsPage({ params }: { params: Promise<{ workspace: 
                       <MessageSquare className="w-4 h-4 text-brand-400" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{goal}</p>
+                      <p className="text-sm font-medium text-on-surface truncate">{goal}</p>
                       <p className="text-xs text-on-surface-variant truncate">{session.id}</p>
                     </div>
                   </div>

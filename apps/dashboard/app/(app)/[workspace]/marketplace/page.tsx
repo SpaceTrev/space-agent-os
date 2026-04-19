@@ -70,7 +70,7 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
       {/* Icon + tier badge */}
       <div className="flex items-start justify-between mb-4">
         <div className={clsx('w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0', gradient)}>
-          <CategoryIcon className="w-6 h-6 text-white" />
+          <CategoryIcon className="w-6 h-6 text-on-surface" />
         </div>
         {!isFree && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-brand-500/15 text-brand-400 text-xs font-medium capitalize">
@@ -83,7 +83,7 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
       {/* Name + author */}
       <div className="mb-2">
         <div className="flex items-center gap-1.5">
-          <h3 className="text-sm font-semibold text-white leading-snug">{item.name}</h3>
+          <h3 className="text-sm font-semibold text-on-surface leading-snug">{item.name}</h3>
         </div>
         <div className="flex items-center gap-1 mt-0.5">
           <p className="text-xs text-on-surface-variant">{item.author}</p>
@@ -176,7 +176,7 @@ export default function MarketplacePage({ params }: { params: Promise<{ workspac
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Marketplace</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Marketplace</h1>
         <p className="text-sm text-on-surface-variant mt-1">
           Browse and install agents, tools, skills, and workflows for your workspace.
         </p>
@@ -191,7 +191,7 @@ export default function MarketplacePage({ params }: { params: Promise<{ workspac
             placeholder="Search marketplace..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-surface-base border border-outline-variant rounded-lg text-sm text-white placeholder-on-surface-variant/50 focus:outline-none focus:border-outline-variant transition-colors"
+            className="w-full pl-9 pr-3 py-2 bg-surface-base border border-outline-variant rounded-lg text-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-outline-variant transition-colors"
           />
         </div>
         <select
@@ -214,8 +214,8 @@ export default function MarketplacePage({ params }: { params: Promise<{ workspac
             className={clsx(
               'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
               category === value
-                ? 'bg-surface-highest text-white'
-                : 'text-on-surface-variant hover:text-white hover:bg-surface-high'
+                ? 'bg-surface-highest text-on-surface'
+                : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-high'
             )}
           >
             <Icon className="w-3.5 h-3.5" />

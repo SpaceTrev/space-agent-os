@@ -172,7 +172,7 @@ export default function SprintsPage({ params }: { params: Promise<{ workspace: s
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Sprints</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Sprints</h1>
           <p className="text-sm text-on-surface-variant mt-0.5">{sprints.length} sprints total</p>
         </div>
         <Button variant="primary" onClick={() => setNewSprintOpen(true)}>

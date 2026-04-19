@@ -52,7 +52,7 @@ interface CardTitleProps extends HTMLAttributes<HTMLHeadingElement> {}
 
 export function CardTitle({ className, children, ...props }: CardTitleProps) {
   return (
-    <h3 className={clsx('text-sm font-semibold text-white', className)} {...props}>
+    <h3 className={clsx('text-sm font-semibold text-on-surface', className)} {...props}>
       {children}
     </h3>
   )

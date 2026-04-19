@@ -69,7 +69,7 @@ export default function SettingsPage({ params }: { params: Promise<{ workspace: 
           <Settings className="w-5 h-5 text-on-surface-variant" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white">Workspace Settings</h1>
+          <h1 className="text-xl font-bold text-on-surface">Workspace Settings</h1>
           <p className="text-sm text-on-surface-variant capitalize">{workspace.replace(/-/g, ' ')}</p>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function SettingsPage({ params }: { params: Promise<{ workspace: 
       {/* General settings */}
       <form onSubmit={handleSave} className="space-y-6 mb-8">
         <div className="bg-surface-base border border-outline-variant rounded-xl p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-white">General</h2>
+          <h2 className="text-sm font-semibold text-on-surface">General</h2>
 
           <Input
             label="Workspace Name"
@@ -132,7 +132,7 @@ export default function SettingsPage({ params }: { params: Promise<{ workspace: 
           <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-on-surface-variant" />
-              <h2 className="text-sm font-semibold text-white">Members</h2>
+              <h2 className="text-sm font-semibold text-on-surface">Members</h2>
               <span className="text-xs text-on-surface-variant">{members.length}</span>
             </div>
           </div>

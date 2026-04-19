@@ -15,15 +15,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   default:
-    'bg-[var(--surface-container-highest)] text-[var(--on-surface)] hover:bg-[var(--surface-bright)]',
+    'bg-surface-highest text-on-surface hover:bg-surface-bright',
   primary:
-    'bg-[var(--primary)] text-[var(--surface)] hover:opacity-90',
+    'bg-primary text-surface hover:opacity-90',
   destructive:
-    'bg-red-700 light:bg-red-600 text-white hover:bg-red-600 light:hover:bg-red-500',
+    'bg-red-700 text-white hover:bg-red-600',
   ghost:
-    'bg-transparent text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)] hover:text-[var(--on-surface)]',
+    'bg-transparent text-on-surface-variant hover:bg-surface-high hover:text-on-surface',
   outline:
-    'bg-transparent text-[var(--on-surface)] hover:bg-[var(--surface-container-high)] border border-[var(--outline-variant)]',
+    'bg-transparent text-on-surface hover:bg-surface-high border border-outline-variant',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -52,7 +52,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         className={clsx(
           'inline-flex items-center justify-center transition-all duration-150',
-          'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-900 light:focus:ring-offset-white',
+          'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           variantClasses[variant],
           sizeClasses[size],
