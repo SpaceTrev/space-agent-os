@@ -54,6 +54,31 @@ function StatusIcon({ status }: { status: Command['status'] }) {
   return <XCircle className="h-3.5 w-3.5" />;
 }
 
+function ResultBlock({ result, status }: { result: string; status: Command['status'] }) {
+  let parsed: Record<string, unknown> | null = null;
+  try { parsed = typeof result === 'string' ? JSON.parse(result) : result; } catch { /* not JSON */ }
+  const isError = status === 'failed' || (parsed && parsed.error);
+  const errorMsg = parsed?.error as string | undefined;
+  const output = parsed?.output as string | undefined;
+  const displayText = output ?? (typeof result === 'string' && !parsed ? result : null);
+  if (isError) {
+    return (
+      <div className="mt-2 rounded-sm border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs">
+        <p className="font-medium text-red-400 mb-0.5">Agent error</p>
+        <p className="text-red-300/80">{errorMsg || 'The agent could not process this request.'}</p>
+        {displayText && (
+          <details className="mt-1">
+            <summary className="cursor-pointer text-red-400/60 hover:text-red-400 transition-colors">Details</summary>
+            <pre className="mt-1 font-mono text-[10px] text-red-300/60 whitespace-pre-wrap">{displayText}</pre>
+          </details>
+        )}
+      </div>
+    );
+  }
+  const text = displayText ?? (parsed ? JSON.stringify(parsed, null, 2) : String(result));
+  return <div className="mt-2 rounded-sm bg-surface-high px-3 py-2 font-mono text-xs text-on-surface-variant whitespace-pre-wrap">{text}</div>;
+}
+
 function relativeTime(iso: string) {
   const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
   if (sec < 60) return sec + 's ago';
@@ -213,11 +238,7 @@ export default function DispatchPage() {
                     <StatusIcon status={cmd.status} />{cmd.status}
                   </span>
                 </div>
-                {cmd.result && (
-                  <div className="mt-2 rounded-sm bg-surface-high px-3 py-2 font-mono text-xs text-on-surface-variant">
-                    {typeof cmd.result === 'string' ? cmd.result : JSON.stringify(cmd.result)}
-                  </div>
-                )}
+                {cmd.result && <ResultBlock result={cmd.result} status={cmd.status} />}
                 <div className="mt-2 flex items-center gap-3 font-data text-[11px] text-on-surface-variant opacity-50">
                   <span>{relativeTime(cmd.created_at)}</span>
                   {cmd.payload?.agent && (
