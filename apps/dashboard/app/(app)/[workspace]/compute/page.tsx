@@ -173,7 +173,7 @@ export default function ComputePage({ params }: { params: Promise<{ workspace: s
                     <div className="relative w-10 h-10 rounded-xl bg-surface-high border border-outline-variant flex items-center justify-center flex-shrink-0">
                       <Server className="w-5 h-5 text-on-surface-variant" />
                       <span className={clsx(
-                        'absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-gray-900',
+                        'absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-surface',
                         config.dot
                       )} />
                     </div>

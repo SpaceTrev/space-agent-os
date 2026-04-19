@@ -165,7 +165,7 @@ export default function WorkspacePage({ params }: { params: Promise<{ workspace:
                     <div className="relative">
                       <Server className="w-5 h-5 text-on-surface-variant" />
                       <span className={clsx(
-                        'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-gray-900',
+                        'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-surface',
                         statusDotColor[server.status] ?? 'bg-gray-500'
                       )} />
                     </div>
